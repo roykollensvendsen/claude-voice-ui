@@ -201,6 +201,7 @@ describe("the focus bar", () => {
     const rule = css.slice(css.indexOf(".focus-bar {"), css.indexOf("}", css.indexOf(".focus-bar {")));
     expect(rule).not.toContain("text-overflow");
     expect(rule).not.toContain("nowrap");
+    expect(rule).not.toContain("line-clamp");
   });
 
   test("with nothing chosen the bar says how to choose", async () => {
