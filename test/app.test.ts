@@ -214,6 +214,12 @@ describe("the focus bar", () => {
     expect(css.slice(start, css.indexOf("}", start))).toContain("white-space: nowrap");
   });
 
+  test.each([".top h1 {", ".connection {"])("the top bar's own words never break: %s", (selector) => {
+    const css = readFileSync("src/style.css", "utf8");
+    const start = css.indexOf(selector);
+    expect(css.slice(start, css.indexOf("}", start))).toContain("white-space: nowrap");
+  });
+
   test("with nothing chosen the bar says how to choose", async () => {
     await open(fakeBridge([{ sessions: [ONE], active: null }]));
     expect(text(".focus-bar")).toContain("Tap a session");
