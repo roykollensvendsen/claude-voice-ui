@@ -718,18 +718,6 @@ button {
   border-radius: 50%;
   background: var(--text);
 }
-.tile .open-detail {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 40px;
-  height: 36px;
-  border: 0;
-  background: none;
-  color: var(--muted);
-  font-size: 1.1rem;
-  cursor: pointer;
-}
 .tile .name {
   padding-right: 18px;
 }
@@ -929,4 +917,24 @@ a.open-claude {
 }
 .tile:has(.number) {
   padding-bottom: 24px;
+}
+
+/* A terminal session: a small grey prompt in the corner where the arrow used to be. */
+.kind {
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.tile .kind {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+}
+.legend li.kind {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+.card-top .kind {
+  margin: 0 8px;
 }

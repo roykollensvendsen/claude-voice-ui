@@ -139,6 +139,8 @@ export function signInScreen(error: string | null, onSubmit: (secret: string) =>
 
 /** A speech bubble, marking the session the voice has just written to. */
 const mic = () => el("span", "mic", "💬");
+/** A terminal session's mark; a background session carries none. */
+const kindMark = (s: Session) => (s.kind === "terminal" ? [el("span", "kind", ">_")] : []);
 /** The session's short number, when the bridge gives one. */
 const number = (s: Session) => (s.number ? [el("span", "number", String(s.number))] : []);
 const numbered = (s: Session) => `${s.number ? `${s.number} ` : ""}${s.name || s.id}`;
@@ -235,6 +237,7 @@ function card(s: Session, home: Home, act: Actions): HTMLElement {
       el("span", "name", s.name || s.id),
       ...(focused ? [mic()] : []),
       ...peekMark(s, home),
+      ...kindMark(s),
       arrow,
     ),
     stateLine(s),
@@ -275,17 +278,7 @@ function card(s: Session, home: Home, act: Actions): HTMLElement {
       ),
     );
   }
-  box.addEventListener("click", (e) => {
-    // A tap on the arrow, a button or a link inside the card is theirs, not a choice of session.
-    if ((e.target as Element).closest("button, a")) return;
-    act.pick(s.id);
-  });
-  box.addEventListener("keydown", (e) => {
-    if (e.target === box && (e.key === "Enter" || e.key === " ")) {
-      e.preventDefault();
-      act.pick(s.id);
-    }
-  });
+  pressable(box, s, act, () => act.pick(s.id));
   return box;
 }
 
@@ -293,17 +286,11 @@ const WAITING = new Set(["answer", "approval", "input"]);
 /** How long a finger rests on a tile before its page opens instead of it being chosen. */
 const HOLD_MS = 500;
 
-/** A small square for the grid: the name, cut to fit, and the state as a colour and an icon. */
-function tile(s: Session, home: Home, act: Actions): HTMLElement {
-  const state = cardState(s);
-  const look = LOOK[state];
-  // A div, not a button, because the corner arrow inside it is a button.
-  const box = el("div", `tile tone-${look.tone}`);
-  box.setAttribute("role", "button");
-  box.tabIndex = 0;
-  box.dataset.session = s.id;
-  box.dataset.state = state;
-  box.title = t("session.tileTitle", { name: numbered(s), state: look.label });
+/**
+ * A tap chooses the session; a long press opens its page instead, as does the keyboard's menu key.
+ * Taps on a button or a link inside are theirs.
+ */
+function pressable(box: HTMLElement, s: Session, act: Actions, tap: () => void) {
   let held = false;
   let press: ReturnType<typeof setTimeout> | undefined;
   box.addEventListener("pointerdown", (e) => {
@@ -326,22 +313,40 @@ function tile(s: Session, home: Home, act: Actions): HTMLElement {
       held = false;
       return;
     }
+    tap();
+  });
+  box.addEventListener("keydown", (e) => {
+    if (e.target !== box) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      act.pick(s.id);
+    } else if (e.key === "ContextMenu") {
+      e.preventDefault();
+      act.openPage(s.id);
+    }
+  });
+}
+
+/** A small square for the grid: the name, cut to fit, and the state as a colour and an icon. */
+function tile(s: Session, home: Home, act: Actions): HTMLElement {
+  const state = cardState(s);
+  const look = LOOK[state];
+  // A div, not a button, because the link into the Claude app inside it is a link.
+  const box = el("div", `tile tone-${look.tone}`);
+  box.setAttribute("role", "button");
+  box.tabIndex = 0;
+  box.dataset.session = s.id;
+  box.dataset.state = state;
+  box.title = t("session.tileTitle", { name: numbered(s), state: look.label });
+  pressable(box, s, act, () => {
     // Shown at once, before the page catches up with the choice.
     box.classList.add("picked");
     act.pick(s.id);
-  });
-  box.addEventListener("keydown", (e) => {
-    if (e.target === box && (e.key === "Enter" || e.key === " ")) {
-      e.preventDefault();
-      act.pick(s.id);
-    }
   });
   if (WAITING.has(state)) box.classList.add("waiting");
   if (home.active?.id === s.id) box.classList.add("active");
   if (home.picked === s.id) box.classList.add("picked");
   if (matches(s, home.focus)) box.classList.add("focus");
-  const details = button("›", () => act.openPage(s.id), "open-detail");
-  details.setAttribute("aria-label", t("session.openNamed", { name: s.name || s.id }));
   box.append(
     el("span", "icon", look.icon),
     ...(matches(s, home.focus) ? [mic()] : []),
@@ -353,7 +358,7 @@ function tile(s: Session, home: Home, act: Actions): HTMLElement {
       a.setAttribute("aria-label", t("session.openNamedInClaude", { name: s.name || s.id }));
       return a;
     }),
-    details,
+    ...kindMark(s),
   );
   return box;
 }
@@ -449,6 +454,7 @@ function legend(): HTMLElement {
     el("li", "ring active", t("legend.chosen")),
     el("li", "ring focus", t("legend.talking")),
     el("li", "peek", t("legend.peek")),
+    el("li", "kind", el("span", "kind", ">_"), t("legend.kind")),
   );
 }
 

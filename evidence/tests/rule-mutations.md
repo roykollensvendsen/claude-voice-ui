@@ -32,7 +32,7 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | a hidden session comes back when it starts waiting | 1 | `test_a_hidden_session_comes_back_when_it_starts_waiting` | yes |
 | the view chosen is remembered | 20 | `test_the_view_chosen_is_remembered` | yes |
 | every kind of waiting is amber, as in the design draft | 2 | `test_every_kind_of_waiting_is_amber_as_in_the_design_draft` | yes |
-| a long press opens the session's page without choosing it | 1 | `test_a_long_press_opens_the_session_s_page_without_choosing_it` | yes |
+| a long press opens the session's page without choosing it | 3 | `test_a_long_press_opens_the_session_s_page_without_choosing_it` | yes |
 | the order holds still while a finger is on the screen | 2 | `test_the_order_holds_still_while_a_finger_is_on_the_screen` | yes |
 | a tap just after the sessions moved chooses nothing | 1 | `test_a_tap_just_after_the_sessions_moved_chooses_nothing` | yes |
 | the percentage turns from grey to yellow to red near the limit | 5 | `test_the_percentage_turns_from_grey_to_yellow_to_red_near_the_limit` | yes |
