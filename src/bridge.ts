@@ -68,6 +68,39 @@ export interface UpdateStart {
   note: string;
 }
 
+/** One turn of a session's conversation; texts are cut to 600 characters. */
+export interface Turn {
+  index: number;
+  role: string;
+  text: string;
+  cut: boolean;
+  length: number;
+}
+
+export interface Output {
+  status: string;
+  turns: Turn[];
+  next_after: number;
+  turns_left: number;
+}
+
+export interface Pending {
+  waiting: boolean;
+  question: { text: string; options?: string[] } | null;
+  approvals: { id: string; number: number; tool: string; summary: string }[];
+}
+
+export interface Pr {
+  number: number;
+  title: string;
+  url: string;
+  draft: boolean;
+}
+
+export interface Prs {
+  prs: Pr[];
+}
+
 export type SignIn = "ok" | "wrong" | "too-many" | "unreachable";
 
 /** The bridge answered 401: the sign-in cookie is missing or has run out. */
@@ -87,12 +120,17 @@ export interface Bridge {
   bridgeInfo(): Promise<BridgeInfo>;
   startUpdate(): Promise<UpdateStart>;
   lastUpdate(): Promise<UpdateRun>;
+  output(session: string, after?: number): Promise<Output>;
+  pending(session: string): Promise<Pending>;
+  prs(session: string): Promise<Prs>;
 }
 
 /** The API is always at /api/v1 on the page's own origin, wherever the page itself is served. */
 const BASE = "/api/v1";
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
+
+const one = (session: string) => `${BASE}/sessions/${encodeURIComponent(session)}`;
 
 type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
 
@@ -144,6 +182,16 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
     },
     async lastUpdate() {
       return read<UpdateRun>(await fetch(`${BASE}/update`, { cache: "no-store" }));
+    },
+    async output(session, after) {
+      const more = after === undefined ? "" : `&after=${after}`;
+      return read<Output>(await fetch(`${one(session)}/output?limit=6${more}`, { cache: "no-store" }));
+    },
+    async pending(session) {
+      return read<Pending>(await fetch(`${one(session)}/pending`, { cache: "no-store" }));
+    },
+    async prs(session) {
+      return read<Prs>(await fetch(`${one(session)}/prs`, { cache: "no-store" }));
     },
     async choose(session) {
       return read<Active>(

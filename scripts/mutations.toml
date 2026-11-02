@@ -92,3 +92,15 @@ name = "the update starts only after the owner confirms"
 file = "src/app.ts"
 find = 'home\.update = \{ \.\.\.IDLE, phase: "confirm" \};'
 replace = 'void updating.confirm();'
+
+[[rule]]
+name = "an approval it waits on is shown, to be answered by voice or at the screen"
+file = "src/view.ts"
+find = 'if \(p\.approvals\.length\) parts\.push\(el\("p", "muted", "Answer by voice or at the screen\."\)\);'
+replace = 'if (false) parts.push(el("p", "muted", ""));'
+
+[[rule]]
+name = "a new turn announced on the stream is fetched after the last one shown"
+file = "src/app.ts"
+find = '\(\) => deps\.bridge\.output\(id, home\.open\?\.lastIndex\),'
+replace = '() => deps.bridge.output(id, undefined),'

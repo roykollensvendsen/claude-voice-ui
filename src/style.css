@@ -440,3 +440,56 @@ button {
 .result.rolled_back {
   color: var(--amber);
 }
+
+.detail h2 {
+  margin: 8px 0 2px;
+  font-size: 1.2rem;
+  overflow-wrap: anywhere;
+}
+.detail h3 {
+  font-size: 0.95rem;
+  margin: 16px 0 6px;
+}
+.back {
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+}
+.pending {
+  margin-top: 12px;
+}
+.turns {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+.turn {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.turn.user {
+  border-color: #3a3f4f;
+}
+.turn .who {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.turn .cut {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.prs {
+  padding-left: 18px;
+}
+.prs a {
+  color: var(--accent);
+}

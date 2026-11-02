@@ -2,7 +2,7 @@
 import { type Bridge, SignedOut, type SignIn, type UpdateStep } from "./bridge";
 import { type EventSourceLike, follow } from "./live";
 import { IDLE } from "./update";
-import { type Home, homeScreen, signInScreen, type UpdateActions } from "./view";
+import { type Actions, type Home, homeScreen, signInScreen, type UpdateActions } from "./view";
 
 export interface Deps {
   bridge: Bridge;
@@ -40,6 +40,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     usage: null,
     bridge: null,
     update: { ...IDLE },
+    open: null,
     doctorOpen: false,
   };
   let watching = false;
@@ -49,7 +50,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   let doctorTimer: ReturnType<typeof setInterval> | undefined;
   let usageTimer: ReturnType<typeof setInterval> | undefined;
 
-  const draw = () => root.replaceChildren(homeScreen(home, pick, signOut, toggleDoctor, updating));
+  const draw = () => root.replaceChildren(homeScreen(home, actions));
 
   const updating: UpdateActions = {
     ask() {
@@ -81,6 +82,66 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       draw();
     },
   };
+
+  const actions: Actions = {
+    pick: (id) => void pick(id),
+    back() {
+      home.open = null;
+      draw();
+    },
+    signOut: () => void signOut(),
+    toggleDoctor,
+    update: updating,
+  };
+
+  /** Read one part of the open page, unless the owner has moved on to another. */
+  async function load<T>(id: string, read: () => Promise<T>, put: (value: T) => void) {
+    try {
+      const value = await read();
+      if (home.open?.id !== id) return;
+      put(value);
+      draw();
+    } catch (error) {
+      if (error instanceof SignedOut) failed(error);
+    }
+  }
+
+  function openPage(id: string) {
+    home.open = { id, turns: [], lastIndex: undefined, pending: null, prs: [] };
+    draw();
+    void moreOutput(id);
+    void readPending(id);
+    void load(
+      id,
+      () => deps.bridge.prs(id),
+      (r) => {
+        if (home.open) home.open.prs = r.prs;
+      },
+    );
+  }
+
+  function moreOutput(id: string) {
+    return load(
+      id,
+      // RULE: a new turn announced on the stream is fetched after the last one shown
+      () => deps.bridge.output(id, home.open?.lastIndex),
+      (out) => {
+        if (!home.open) return;
+        home.open.turns.push(...out.turns);
+        home.open.lastIndex = out.next_after || home.open.turns.at(-1)?.index;
+      },
+    );
+  }
+
+  function readPending(id: string) {
+    return load(
+      id,
+      () => deps.bridge.pending(id),
+      (p) => {
+        if (home.open) home.open.pending = p;
+      },
+    );
+  }
 
   function updateStep(step: UpdateStep) {
     if (home.update.phase !== "running") home.update = { ...IDLE, phase: "running" };
@@ -202,7 +263,11 @@ export function start(root: HTMLElement, deps: Deps): () => void {
         draw();
       },
       news: () => void refresh(),
+      output(t) {
+        if (home.open?.id === t.session) void moreOutput(t.session);
+      },
       status(st) {
+        if (home.open?.id === st.session) void readPending(st.session);
         const s = home.sessions.find((x) => x.id === st.session);
         // A session the page has not seen yet comes with the rest of the list.
         if (!s) return void refresh();
@@ -245,6 +310,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   }
 
   async function pick(id: string) {
+    openPage(id);
     try {
       home.active = await deps.bridge.choose(id);
       draw();

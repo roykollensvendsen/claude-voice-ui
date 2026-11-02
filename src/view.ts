@@ -1,5 +1,5 @@
 // Drawing the screens. Each function builds fresh elements from the state it is given.
-import type { Active, BridgeInfo, Doctor } from "./bridge";
+import type { Active, BridgeInfo, Doctor, Pending, Pr, Turn } from "./bridge";
 import { gitLine } from "./git";
 import { cardState, LOOK, minutesInState, type Session, sortForCards, timeInState } from "./states";
 import { resultText, stepText, type UpdateState } from "./update";
@@ -18,8 +18,27 @@ export interface Home {
   usage: Usage | null;
   bridge: BridgeInfo | null;
   update: UpdateState;
+  /** The session whose page is open, or null for the cards. */
+  open: Detail | null;
   /** Whether the owner has opened the list of what is missing. */
   doctorOpen: boolean;
+}
+
+export interface Detail {
+  id: string;
+  turns: Turn[];
+  /** The last turn shown, so the next fetch asks only for what came after. */
+  lastIndex: number | undefined;
+  pending: Pending | null;
+  prs: Pr[];
+}
+
+export interface Actions {
+  pick(id: string): void;
+  back(): void;
+  signOut(): void;
+  toggleDoctor(): void;
+  update: UpdateActions;
 }
 
 const CONNECTION: Record<Connection, string> = {
@@ -78,6 +97,41 @@ function focusBar(home: Home): HTMLElement {
   return el("div", "focus-bar", "Tap a session to choose who the voice talks to.");
 }
 
+function stateLine(s: Session): HTMLElement {
+  const look = LOOK[cardState(s)];
+  // The tone is set here too, so the line keeps its colour on a session's own page.
+  return el(
+    "div",
+    `state tone-${look.tone}`,
+    el("span", "icon", look.icon),
+    ` ${look.label}`,
+    el("span", "since", ` · ${timeInState(minutesInState(s, Date.now()))}`),
+    ...(s.context
+      ? [
+          el(
+            "span",
+            `context ${contextTone(s.context.used_percentage)}`,
+            `context ${Math.round(s.context.used_percentage)}%`,
+          ),
+        ]
+      : []),
+  );
+}
+
+function gitRow(s: Session): HTMLElement[] {
+  if (!s.git) return [];
+  const g = gitLine(s.git);
+  return [
+    el(
+      "div",
+      "git",
+      el("span", "branch", `⎇ ${g.branch}`),
+      el("span", "commit", g.commit),
+      ...g.marks.map((m) => el("span", `mark ${m.kind}`, m.text)),
+    ),
+  ];
+}
+
 function card(s: Session, home: Home, onPick: (id: string) => void): HTMLElement {
   const state = cardState(s);
   const look = LOOK[state];
@@ -96,37 +150,11 @@ function card(s: Session, home: Home, onPick: (id: string) => void): HTMLElement
       ...(focused ? [el("span", "chip", "Talking now")] : []),
     ),
     el("div", "meta", [s.project, s.kind].filter(Boolean).join(" · ")),
-    el(
-      "div",
-      "state",
-      el("span", "icon", look.icon),
-      ` ${look.label}`,
-      el("span", "since", ` · ${timeInState(minutesInState(s, Date.now()))}`),
-      ...(s.context
-        ? [
-            el(
-              "span",
-              `context ${contextTone(s.context.used_percentage)}`,
-              `context ${Math.round(s.context.used_percentage)}%`,
-            ),
-          ]
-        : []),
-    ),
+    stateLine(s),
   );
   // The bridge's one line repeats the question while it waits, and the question is shown in full below.
   if (s.doing && !s.question) button.append(el("div", "doing", s.doing));
-  if (s.git) {
-    const g = gitLine(s.git);
-    button.append(
-      el(
-        "div",
-        "git",
-        el("span", "branch", `⎇ ${g.branch}`),
-        el("span", "commit", g.commit),
-        ...g.marks.map((m) => el("span", `mark ${m.kind}`, m.text)),
-      ),
-    );
-  }
+  button.append(...gitRow(s));
   if (s.question) {
     const options = el("ul", "options", ...(s.question.options ?? []).map((o) => el("li", undefined, o)));
     button.append(el("div", "question", el("div", undefined, s.question.text), options));
@@ -258,34 +286,85 @@ function missing(home: Home, onToggle: () => void): HTMLElement[] {
   return [banner, el("ul", "doctor-panel", ...items)];
 }
 
-export function homeScreen(
-  home: Home,
-  onPick: (id: string) => void,
-  onSignOut: () => void,
-  onToggleDoctor: () => void = () => {},
-  update: UpdateActions = { ask() {}, cancel() {}, confirm() {} },
-): HTMLElement {
-  const signOut = el("button", "signout", "Sign out");
-  signOut.type = "button";
-  signOut.addEventListener("click", onSignOut);
+function pendingBlock(p: Pending | null): HTMLElement[] {
+  if (!p || (!p.question && !p.approvals.length)) return [];
+  const parts: HTMLElement[] = [];
+  if (p.question) {
+    const options = el("ul", "options", ...(p.question.options ?? []).map((o) => el("li", undefined, o)));
+    parts.push(
+      el(
+        "div",
+        "question",
+        el("b", undefined, "Waiting for your choice"),
+        el("div", undefined, p.question.text),
+        options,
+      ),
+    );
+  }
+  for (const a of p.approvals) {
+    parts.push(el("div", "question", `Approval ${a.number}: ${a.tool} ${a.summary}`.trim()));
+  }
+  // RULE: an approval it waits on is shown, to be answered by voice or at the screen
+  if (p.approvals.length) parts.push(el("p", "muted", "Answer by voice or at the screen."));
+  return [el("section", "pending", ...parts)];
+}
+
+function turn(t: Turn): HTMLElement {
+  return el(
+    "div",
+    `turn ${t.role}`,
+    el("div", "who", t.role === "user" ? "You" : "Claude"),
+    el("div", "text", t.text),
+    ...(t.cut ? [el("div", "cut", `cut short; ${t.length} characters in all`)] : []),
+  );
+}
+
+function detailScreen(home: Home, d: Detail, act: Actions): HTMLElement {
+  const s = home.sessions.find((x) => x.id === d.id);
+  const back = button("‹ Sessions", act.back, "back");
+  const prs = d.prs.map((pr) => {
+    const link = el("a", undefined, `#${pr.number} ${pr.title}${pr.draft ? " (draft)" : ""}`);
+    link.href = pr.url;
+    link.target = "_blank";
+    link.rel = "noopener";
+    return el("li", undefined, link);
+  });
+  return el(
+    "section",
+    "detail",
+    back,
+    el("h2", undefined, s?.name ?? d.id),
+    ...(s
+      ? [el("div", "meta", [s.project, s.kind].filter(Boolean).join(" · ")), stateLine(s), ...gitRow(s)]
+      : [el("p", "notice", "This session is no longer running.")]),
+    ...pendingBlock(d.pending),
+    el("div", "turns", ...d.turns.map(turn)),
+    ...(prs.length ? [el("h3", undefined, "Open pull requests"), el("ul", "prs", ...prs)] : []),
+  );
+}
+
+export function homeScreen(home: Home, act: Actions): HTMLElement {
+  const signOut = button("Sign out", act.signOut, "signout");
   const connection = el("span", `connection ${home.connection}`, CONNECTION[home.connection]);
   const sessions = sortForCards(home.sessions);
   const cards = el(
     "div",
     "cards",
     ...(sessions.length
-      ? sessions.map((s) => card(s, home, onPick))
+      ? sessions.map((s) => card(s, home, act.pick))
       : [el("p", "muted", "No sessions are running right now.")]),
   );
+  const top = [el("header", "top", el("h1", undefined, "Claude voice"), connection, signOut), focusBar(home)];
+  const problem = home.problem ? [el("p", "notice", home.problem)] : [];
+  if (home.open) return el("section", "home", ...top, ...problem, detailScreen(home, home.open, act));
   return el(
     "section",
     "home",
-    el("header", "top", el("h1", undefined, "Claude voice"), connection, signOut),
-    focusBar(home),
-    ...missing(home, onToggleDoctor),
-    ...updatePanel(home, update),
+    ...top,
+    ...missing(home, act.toggleDoctor),
+    ...updatePanel(home, act.update),
     ...usagePanel(home),
-    ...(home.problem ? [el("p", "notice", home.problem)] : []),
+    ...problem,
     cards,
   );
 }

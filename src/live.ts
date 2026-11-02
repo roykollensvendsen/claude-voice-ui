@@ -1,4 +1,4 @@
-// The bridge's stream of live events: focus, active, news, status, git and update.
+// The bridge's stream of live events: focus, active, news, status, git, update and output.
 import type { Active, UpdateStep } from "./bridge";
 import type { Git } from "./git";
 
@@ -40,6 +40,13 @@ export interface GitChange {
   git: Git | null;
 }
 
+/** A session's transcript gained a turn. */
+export interface NewTurn {
+  session: string;
+  index: number;
+  role: string;
+}
+
 export interface Handlers {
   focus(focus: Focus): void;
   active(active: Active | null): void;
@@ -47,6 +54,7 @@ export interface Handlers {
   status(status: Status): void;
   git(change: GitChange): void;
   update(step: UpdateStep): void;
+  output(turn: NewTurn): void;
   connection(state: "live" | "reconnecting"): void;
 }
 
@@ -64,5 +72,6 @@ export function follow(open: (url: string) => EventSourceLike, on: Handlers): ()
   source.addEventListener("status", (e) => on.status(parse(e)));
   source.addEventListener("git", (e) => on.git(parse(e)));
   source.addEventListener("update", (e) => on.update(parse(e)));
+  source.addEventListener("output", (e) => on.output(parse(e)));
   return () => source.close();
 }
