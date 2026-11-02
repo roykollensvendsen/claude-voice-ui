@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { cardState, LOOK, type Session, sortForCards, timeInState } from "../src/states";
+import { cardState, LOOK, minutesInState, type Session, sortForCards, timeInState } from "../src/states";
 
 function session(over: Partial<Session> = {}): Session {
   return {
@@ -56,6 +56,19 @@ describe("the state a card shows", () => {
     },
   );
 
+  test("the state the bridge reports wins over the app's own reading", () => {
+    expect(cardState(session({ status: "waiting", state: "approval" }))).toBe("approval");
+    expect(cardState(session({ status: "busy", state: "idle" }))).toBe("idle");
+  });
+
+  test("a session waiting for input has its own state", () => {
+    expect(cardState(session({ status: "waiting", state: "input", waiting_kind: "input" }))).toBe("input");
+  });
+
+  test("a state the app does not know falls back to the app's own reading", () => {
+    expect(cardState(session({ status: "busy", state: "something-new" }))).toBe("working");
+  });
+
   test("a status the app does not know is shown as idle", () => {
     expect(cardState(session({ status: "something-new" }))).toBe("idle");
   });
@@ -64,10 +77,10 @@ describe("the state a card shows", () => {
 describe("how each state looks", () => {
   test("every state has its own colour, icon and label", () => {
     const looks = Object.values(LOOK);
-    expect(looks).toHaveLength(7);
-    expect(new Set(looks.map((l) => l.tone)).size).toBe(7);
-    expect(new Set(looks.map((l) => l.icon)).size).toBe(7);
-    expect(new Set(looks.map((l) => l.label)).size).toBe(7);
+    expect(looks).toHaveLength(8);
+    expect(new Set(looks.map((l) => l.tone)).size).toBe(8);
+    expect(new Set(looks.map((l) => l.icon)).size).toBe(8);
+    expect(new Set(looks.map((l) => l.label)).size).toBe(8);
   });
 });
 
@@ -85,6 +98,14 @@ describe("the order of the cards", () => {
     const sorted = sortForCards([
       session({ id: "a", minutes_since_update: 9 }),
       session({ id: "b", minutes_since_update: 2 }),
+    ]);
+    expect(sorted.map((s) => s.id)).toEqual(["b", "a"]);
+  });
+
+  test("a session waiting for input also comes first", () => {
+    const sorted = sortForCards([
+      session({ id: "a", status: "busy", minutes_since_update: 0 }),
+      session({ id: "b", state: "input", minutes_since_update: 30 }),
     ]);
     expect(sorted.map((s) => s.id)).toEqual(["b", "a"]);
   });
@@ -110,5 +131,22 @@ describe("the time a card has been in its state", () => {
     [3 * 24 * 60 + 5, "3 d"],
   ])("%i minutes reads %s", (minutes, text) => {
     expect(timeInState(minutes)).toBe(text);
+  });
+});
+
+describe("how long a session has been in its state", () => {
+  const now = Date.parse("2026-11-02T15:00:00Z");
+
+  test("time in state counts from when the state changed, when the bridge says", () => {
+    const s = session({ minutes_since_update: 1, state_since: "2026-11-02T14:48:30Z" });
+    expect(minutesInState(s, now)).toBe(11);
+  });
+
+  test("without a time of change the last update is used", () => {
+    expect(minutesInState(session({ minutes_since_update: 4 }), now)).toBe(4);
+  });
+
+  test("a time of change in the future reads as just now", () => {
+    expect(minutesInState(session({ state_since: "2026-11-02T15:02:00Z" }), now)).toBe(0);
   });
 });

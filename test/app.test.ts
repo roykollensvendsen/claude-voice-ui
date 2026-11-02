@@ -283,14 +283,49 @@ describe("staying live", () => {
     expect(card("a1")?.dataset.state).toBe("idle");
   });
 
-  test("the sessions are fetched again every fifteen seconds", async () => {
+  test("the sessions are fetched again every minute", async () => {
     const b = fakeBridge([{ sessions: [ONE], active: null }]);
     await open(b);
     const before = b.snapshotCalls();
-    await vi.advanceTimersByTimeAsync(14_999);
+    await vi.advanceTimersByTimeAsync(59_999);
     expect(b.snapshotCalls()).toBe(before);
     await vi.advanceTimersByTimeAsync(1);
     expect(b.snapshotCalls()).toBe(before + 1);
+  });
+
+  test("a change of state from the bridge updates the card at once", async () => {
+    const b = fakeBridge([{ sessions: [ONE, TWO], active: null }]);
+    await open(b);
+    const calls = b.snapshotCalls();
+    FakeSource.last?.emit("status", {
+      session: "a1",
+      name: "billing-ab",
+      state: "approval",
+      previous: "working",
+      since: new Date().toISOString(),
+      doing: "Wants to run the tests.",
+      at: "",
+    });
+    expect(card("a1")?.dataset.state).toBe("approval");
+    expect(card("a1")?.textContent).toContain("Wants to run the tests.");
+    expect(card("a1")?.textContent).toContain("just now");
+    expect(b.snapshotCalls()).toBe(calls);
+  });
+
+  test("a change of state for a session not on the page fetches the list", async () => {
+    const b = fakeBridge([{ sessions: [ONE], active: null }]);
+    await open(b);
+    const calls = b.snapshotCalls();
+    FakeSource.last?.emit("status", {
+      session: "new",
+      name: "new",
+      state: "working",
+      since: "",
+      doing: "",
+      at: "",
+    });
+    await settle();
+    expect(b.snapshotCalls()).toBe(calls + 1);
   });
 
   test("a lost stream shows that the page is reconnecting", async () => {
@@ -303,7 +338,7 @@ describe("staying live", () => {
 
   test("being signed out while watching returns to the sign-in page", async () => {
     await open(fakeBridge([{ sessions: [ONE], active: null }, "signed-out"]));
-    await vi.advanceTimersByTimeAsync(15_000);
+    await vi.advanceTimersByTimeAsync(60_000);
     expect(root.querySelector("form.signin")).not.toBeNull();
     expect(FakeSource.last?.closed).toBe(true);
   });
