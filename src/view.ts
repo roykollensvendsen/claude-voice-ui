@@ -134,13 +134,17 @@ export function signInScreen(error: string | null, onSubmit: (secret: string) =>
 
 function focusBar(home: Home): HTMLElement {
   const focused = home.focus ? (home.sessions.find((s) => matches(s, home.focus))?.name ?? home.focus) : null;
-  if (focused) return el("div", "focus-bar talking", el("b", undefined, focused), t("focus.talkingNow"));
+  if (focused)
+    return el("div", "focus-bar talking", "🎙 ", el("b", undefined, focused), t("focus.talkingNow"));
   if (home.active) {
     const who =
       home.active.set_by === "page"
         ? t("focus.chosenHere")
         : t("focus.chosenBy", { who: home.active.set_by });
-    return el("div", "focus-bar", t("focus.voiceTalksTo"), el("b", undefined, home.active.name), ` · ${who}`);
+    // The name gets the room: a microphone stands for the words, which a screen reader still hears.
+    const bar = el("div", "focus-bar", "🎙 ", el("b", undefined, home.active.name), ` · ${who}`);
+    bar.setAttribute("aria-label", t("focus.voiceTalksToFull", { name: home.active.name, who }));
+    return bar;
   }
   return el("div", "focus-bar", t("focus.tapToChoose"));
 }
