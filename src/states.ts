@@ -14,6 +14,8 @@ export interface Session {
   question?: { text: string; options?: string[] };
   waiting_for?: string | null;
   moved_to?: { id?: string; name?: string };
+  /** A short number, steady while the session runs, that the voice also understands: "number 3". */
+  number?: number;
   /** Opens the session in the Claude app while it is connected to Remote Control; null otherwise. */
   app_url?: string | null;
   /** The bridge's own state; older bridges send only `status`. */
