@@ -9,6 +9,7 @@ import {
   type Session,
   sortForCards,
   timeInState,
+  timeInWords,
 } from "./states";
 import { resultText, stepText, type UpdateState } from "./update";
 import { contextTone, planBars, type Usage, voiceLine, warningText } from "./usage";
@@ -234,15 +235,45 @@ function card(s: Session, home: Home, act: Actions): HTMLElement {
 }
 
 const WAITING = new Set(["answer", "approval", "input"]);
+/** How long a finger rests on a tile before its state is said in words, and how long they stay. */
+const HOLD_MS = 500;
+const TIP_MS = 3000;
 
 /** A small square for the grid: the name, cut to fit, and the state as a colour and an icon. */
 function tile(s: Session, home: Home, act: Actions): HTMLElement {
   const state = cardState(s);
   const look = LOOK[state];
-  const t = button("", () => act.pick(s.id), `tile tone-${look.tone}`);
+  const words = `${look.label} – ${timeInWords(minutesInState(s, Date.now()))}`;
+  let held = false;
+  const t = button(
+    "",
+    () => {
+      // A long press only shows the words; the click that ends it is not a choice.
+      // RULE: holding a finger on a tile says its state in plain words, without opening it
+      if (held) held = false;
+      else act.pick(s.id);
+    },
+    `tile tone-${look.tone}`,
+  );
   t.dataset.session = s.id;
   t.dataset.state = state;
-  t.title = `${s.name || s.id}: ${look.label}`;
+  // A resting pointer on a desktop shows the same words as a long press on a phone.
+  t.title = `${s.name || s.id}: ${words}`;
+  let press: ReturnType<typeof setTimeout> | undefined;
+  t.addEventListener("pointerdown", () => {
+    held = false;
+    press = setTimeout(() => {
+      held = true;
+      t.querySelector(".tip")?.remove();
+      t.append(el("span", "tip", words));
+      setTimeout(() => t.querySelector(".tip")?.remove(), TIP_MS);
+    }, HOLD_MS);
+  });
+  for (const end of ["pointerup", "pointerleave", "pointercancel"]) {
+    t.addEventListener(end, () => clearTimeout(press));
+  }
+  // The phone's own long-press menu would cover the words.
+  t.addEventListener("contextmenu", (e) => e.preventDefault());
   if (WAITING.has(state)) t.classList.add("waiting");
   if (home.active?.id === s.id) t.classList.add("active");
   if (matches(s, home.focus)) t.classList.add("focus");

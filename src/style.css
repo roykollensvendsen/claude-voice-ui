@@ -580,6 +580,8 @@ button {
 /* Every tile carries a tone class, which sets --tone; a default here would win over it. */
 .tile {
   position: relative;
+  -webkit-touch-callout: none;
+  user-select: none;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -662,4 +664,20 @@ button {
 }
 .legend .ring.active::before {
   box-shadow: 0 0 0 2px var(--text);
+}
+
+.tile .tip {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 6px);
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 0.8rem;
+  line-height: 1.3;
+  box-shadow: 0 4px 12px #0008;
+  pointer-events: none;
 }

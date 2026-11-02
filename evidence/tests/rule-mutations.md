@@ -10,7 +10,7 @@ Where a rule already exists, this is the substitute. Each rule is disabled in
 turn, by replacing its one line with something that can never hold, and the
 suite is run. A rule whose removal breaks no test is a rule nothing protects.
 
-**Result: 18 of 18 rules turned off the test that names them.** None survived.
+**Result: 19 of 19 rules turned off the test that names them.** None survived.
 
 | Rule turned off | Tests that went red | The test that names it | Did that one go red? |
 |---|---|---|---|
@@ -32,6 +32,7 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | a hidden session comes back when it starts waiting | 1 | `test_a_hidden_session_comes_back_when_it_starts_waiting` | yes |
 | the view chosen is remembered | 17 | `test_the_view_chosen_is_remembered` | yes |
 | every kind of waiting is amber, as in the design draft | 2 | `test_every_kind_of_waiting_is_amber_as_in_the_design_draft` | yes |
+| holding a finger on a tile says its state in plain words, without opening it | 1 | `test_holding_a_finger_on_a_tile_says_its_state_in_plain_words_without_opening_it` | yes |
 
 ## What this does not prove
 

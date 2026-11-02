@@ -122,3 +122,9 @@ name = "every kind of waiting is amber, as in the design draft"
 file = "src/states.ts"
 find = 'const WAITING_TONE = "amber";'
 replace = 'const WAITING_TONE = "gold";'
+
+[[rule]]
+name = "holding a finger on a tile says its state in plain words, without opening it"
+file = "src/view.ts"
+find = 'if \(held\) held = false;'
+replace = '      if (false) held = false;'

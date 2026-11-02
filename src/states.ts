@@ -107,6 +107,15 @@ export function minutesInState(s: Session, now: number): number {
   return Math.max(0, Math.floor((now - since) / 60_000));
 }
 
+/** The same span spelled out, for words read on their own: "3 days" rather than "3 d". */
+export function timeInWords(minutes: number): string {
+  const say = (n: number, unit: string) => `${n} ${unit}${n === 1 ? "" : "s"}`;
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return say(minutes, "minute");
+  if (minutes < 24 * 60) return say(Math.floor(minutes / 60), "hour");
+  return say(Math.floor(minutes / (24 * 60)), "day");
+}
+
 export function timeInState(minutes: number): string {
   if (minutes < 1) return "just now";
   if (minutes < 60) return `${minutes} min`;
