@@ -39,8 +39,8 @@ describe("the state a card shows", () => {
     expect(cardState(session({ status: "idle" }))).toBe("idle");
   });
 
-  test("a session running a command is working", () => {
-    expect(cardState(session({ status: "shell" }))).toBe("working");
+  test("a session that finished with a command still running in the background is idle", () => {
+    expect(cardState(session({ status: "shell" }))).toBe("idle");
   });
 
   test("a session with a question waits for an answer", () => {
