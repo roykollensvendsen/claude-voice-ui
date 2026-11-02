@@ -1,5 +1,6 @@
 // The app: signs in, shows the cards, and keeps them current.
 import { type Bridge, SignedOut, type SignIn, type UpdateStep } from "./bridge";
+import { type Change, whatsNew } from "./changes";
 import { type Key, LANGUAGES, type Language, pickLanguage, setLanguage, t } from "./i18n";
 import { type EventSourceLike, follow } from "./live";
 import { browserKeep, type Keep, recall, remember } from "./remember";
@@ -21,7 +22,7 @@ export interface Deps {
   /** Where this phone remembers open and hidden cards; the browser's storage when left out. */
   keep?: Keep;
   /** The build this page came from, and how to ask which build is deployed now. */
-  version?: { built: string; latest(): Promise<string> };
+  version?: { built: string; latest(): Promise<string>; changes?(): Promise<Change[]> };
   /** Load the page again; the browser's own reload when left out. */
   reload?: () => void;
 }
@@ -101,6 +102,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     legendOpen: false,
     usageOpen: false,
     newVersion: false,
+    whatsNew: null,
     // RULE: the theme chosen is remembered
     theme: (["light", "dark"] as const).find((t) => t === recall<string>(keep, THEME, "system")) ?? "system",
     menuOpen: false,
@@ -301,6 +303,20 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       home.theme = theme;
       applyTheme(theme);
       remember(keep, THEME, theme);
+      draw();
+    },
+    async toggleWhatsNew() {
+      if (home.whatsNew) {
+        home.whatsNew = null;
+        draw();
+        return;
+      }
+      try {
+        // Asked for only now, on the owner's tap; the page never fetches it by itself.
+        home.whatsNew = whatsNew((await deps.version?.changes?.()) ?? [], deps.version?.built ?? "");
+      } catch {
+        home.whatsNew = { feat: [], fix: [] };
+      }
       draw();
     },
     reload() {

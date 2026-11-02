@@ -127,6 +127,10 @@
   "detail.gone": "Denne økten kjører ikke lenger.",
   "detail.prs": "Åpne pull requests",
   "page.newVersion": "Ny versjon – trykk for å oppdatere",
+  "page.whatsNew": "Hva er nytt",
+  "page.new": "Nytt",
+  "page.fixed": "Rettet",
+  "page.noChanges": "Ingen endringer på lista.",
   "git.changedCount": "{count} endret",
   "git.changed": "endret",
   "git.detached": "frakoblet"

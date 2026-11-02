@@ -44,6 +44,8 @@ export interface Home {
   usageOpen: boolean;
   /** A newer build of the page has been deployed. */
   newVersion: boolean;
+  /** The list behind What's new, once tapped open; null while closed. */
+  whatsNew: { feat: string[]; fix: string[] } | null;
   theme: Theme;
   menuOpen: boolean;
   /** "system" follows the phone's own language. */
@@ -82,6 +84,7 @@ export interface Actions {
   toggleLegend(): void;
   toggleUsage(): void;
   reload(): void;
+  toggleWhatsNew(): void;
   toggleMenu(): void;
   setTheme(theme: Theme): void;
   setLanguage(language: Language | "system"): void;
@@ -385,6 +388,33 @@ function menu(home: Home, act: Actions): HTMLElement[] {
   ];
 }
 
+/** The notice of a newer build, with what it brings behind a tap. Commit subjects are shown as written. */
+function newVersion(home: Home, act: Actions): HTMLElement[] {
+  if (!home.newVersion) return [];
+  const toggle = button(t("page.whatsNew"), act.toggleWhatsNew, "whats-new-toggle");
+  toggle.setAttribute("aria-expanded", String(Boolean(home.whatsNew)));
+  const w = home.whatsNew;
+  const group = (title: string, items: string[]) =>
+    items.length
+      ? [el("h3", undefined, title), el("ul", undefined, ...items.map((x) => el("li", undefined, x)))]
+      : [];
+  const list = w
+    ? [
+        el(
+          "div",
+          "whats-new",
+          ...group(t("page.new"), w.feat),
+          ...group(t("page.fixed"), w.fix),
+          ...(w.feat.length || w.fix.length ? [] : [el("p", "muted", t("page.noChanges"))]),
+        ),
+      ]
+    : [];
+  return [
+    el("div", "new-version-row", button(t("page.newVersion"), act.reload, "new-version"), toggle),
+    ...list,
+  ];
+}
+
 function viewSwitch(home: Home, act: Actions): HTMLElement {
   const choice = (label: string, view: View) => {
     const b = button(label, () => act.setView(view));
@@ -664,7 +694,7 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
     ),
     ...menu(home, act),
     ...usagePanel(home),
-    ...(home.newVersion ? [button(t("page.newVersion"), act.reload, "new-version")] : []),
+    ...newVersion(home, act),
   ];
   const problem = home.problem ? [el("p", "notice", home.problem)] : [];
   if (home.open) return el("section", "home", ...top, ...problem, detailScreen(home, home.open, act));

@@ -790,10 +790,40 @@ button {
   background: radial-gradient(circle, var(--text) 35%, transparent 40%);
 }
 
+.new-version-row {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.whats-new-toggle {
+  flex: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.whats-new {
+  margin: -4px 0 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--card);
+  font-size: 0.85rem;
+}
+.whats-new h3 {
+  margin: 4px 0;
+  font-size: 0.85rem;
+}
+.whats-new ul {
+  margin: 0 0 6px;
+  padding-left: 18px;
+}
 .new-version {
   display: block;
-  width: 100%;
-  margin: 0 0 10px;
+  flex: 1;
+  margin: 0;
   padding: 6px 10px;
   border-radius: 8px;
   border: 1px solid var(--focus);
