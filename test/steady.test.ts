@@ -40,7 +40,7 @@ afterEach(() => {
 
 describe("tiles that hold still under a finger", () => {
   test("the order holds still while a finger is on the screen", async () => {
-    await open(fakeBridge([{ sessions: [ONE, TWO], active: null }]));
+    await open(fakeBridge([{ sessions: [{ ...ONE }, { ...TWO }], active: null }]));
     expect(order()).toEqual(["a1", "b2"]);
     press("a1");
     twoStartsWaiting();
@@ -51,7 +51,7 @@ describe("tiles that hold still under a finger", () => {
   });
 
   test("a tap that ends on another session than it began on chooses nothing", async () => {
-    const b = fakeBridge([{ sessions: [ONE, TWO], active: null }]);
+    const b = fakeBridge([{ sessions: [{ ...ONE }, { ...TWO }], active: null }]);
     await open(b);
     await vi.advanceTimersByTimeAsync(2000);
     press("a1");
@@ -61,7 +61,7 @@ describe("tiles that hold still under a finger", () => {
   });
 
   test("a tap just after the sessions moved chooses nothing", async () => {
-    const b = fakeBridge([{ sessions: [ONE, TWO], active: null }]);
+    const b = fakeBridge([{ sessions: [{ ...ONE }, { ...TWO }], active: null }]);
     await open(b);
     await vi.advanceTimersByTimeAsync(2000);
     twoStartsWaiting();

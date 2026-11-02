@@ -13,6 +13,9 @@ export interface Deps {
   keep?: Keep;
 }
 
+/** How long after the sessions move a tap is taken as aimed at where they were. */
+const SETTLE_MS = 800;
+
 const EXPANDED = "cvu.expanded";
 const HIDDEN = "cvu.hidden";
 const VIEW = "cvu.view";
@@ -66,10 +69,52 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   let doctorTimer: ReturnType<typeof setInterval> | undefined;
   let usageTimer: ReturnType<typeof setInterval> | undefined;
 
+  // Tiles re-sort live, so a finger could land on one that has just slid under it.
+  let pressing = false;
+  let waitingDraw = false;
+  let pressedId: string | undefined;
+  let pressedAt = 0;
+  let movedAt = 0;
+  let shownOrder = "";
+
   const draw = () => {
+    // RULE: the order holds still while a finger is on the screen
+    if (pressing) {
+      waitingDraw = true;
+      return;
+    }
+    waitingDraw = false;
     bringBackWaiting();
     root.replaceChildren(homeScreen(home, actions));
+    const order = [...root.querySelectorAll<HTMLElement>("[data-session]")]
+      .map((x) => x.dataset.session)
+      .join(" ");
+    if (shownOrder && order !== shownOrder) movedAt = Date.now();
+    shownOrder = order;
   };
+
+  const onPress = (e: Event) => {
+    pressing = true;
+    pressedAt = Date.now();
+    pressedId = (e.target as Element | null)?.closest<HTMLElement>("[data-session]")?.dataset.session;
+  };
+  const onLift = () => {
+    pressing = false;
+    // After the click that follows, so the click still finds the tile it was aimed at.
+    if (waitingDraw) setTimeout(draw, 0);
+  };
+  root.addEventListener("pointerdown", onPress);
+  document.addEventListener("pointerup", onLift);
+  document.addEventListener("pointercancel", onLift);
+
+  /** A tap counts only if it began on the same session, and not just after the sessions moved. */
+  function steadyTap(id: string): boolean {
+    const began = pressedId;
+    pressedId = undefined;
+    if (began === undefined) return true;
+    // RULE: a tap just after the sessions moved chooses nothing
+    return began === id && pressedAt - movedAt >= SETTLE_MS;
+  }
 
   /** What a session was doing, and since when, so a later wait can be told from the one it was hidden in. */
   const moment = (s: Session) => `${cardState(s)}|${s.state_since ?? ""}`;
@@ -120,7 +165,9 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   };
 
   const actions: Actions = {
-    pick: (id) => void pick(id),
+    pick: (id) => {
+      if (steadyTap(id)) void pick(id);
+    },
     back() {
       home.open = null;
       draw();
@@ -412,5 +459,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   return () => {
     stopWatching();
     document.removeEventListener("visibilitychange", onVisible);
+    document.removeEventListener("pointerup", onLift);
+    document.removeEventListener("pointercancel", onLift);
   };
 }

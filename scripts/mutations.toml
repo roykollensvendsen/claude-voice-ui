@@ -128,3 +128,15 @@ name = "holding a finger on a tile says its state in plain words, without openin
 file = "src/view.ts"
 find = 'if \(held\) held = false;'
 replace = '      if (false) held = false;'
+
+[[rule]]
+name = "the order holds still while a finger is on the screen"
+file = "src/app.ts"
+find = '^    if \(pressing\) \{$'
+replace = '    if (false) {'
+
+[[rule]]
+name = "a tap just after the sessions moved chooses nothing"
+file = "src/app.ts"
+find = 'return began === id && pressedAt - movedAt >= SETTLE_MS;'
+replace = '    return began === id;'
