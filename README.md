@@ -44,23 +44,28 @@ keeps no data of its own beyond being signed in.
 
 ## Where things stand
 
-The first version works against the bridge on the owner's computer:
+The app works against the bridge on the owner's computer:
 
 - signing in with the bridge's login secret, with a reason when it is refused;
-- a card for every session, in one of the states above, waiting sessions first,
-  changing within seconds of the session itself;
+- a grid of small tiles, one per session, in one of the states above, waiting
+  sessions first, changing within seconds of the session itself; a switch
+  turns it into a list of cards that can be opened in place, and sessions can
+  be hidden;
+- one tap on a tile makes it the session the voice talks to; a long press, or
+  the arrow in its corner, opens the session's page instead;
+- the session's page: its latest turns as they arrive, what it waits for, and
+  its open pull requests;
+- each session's branch, last commit and distance from main, and how full its
+  context is;
+- the plan's use with its reset time, and an estimate of voice activity;
 - a banner naming anything the bridge is missing on the computer, and how to
-  fix it;
-- tapping a card makes it the session the voice talks to;
-- a bar naming the session the voice is talking to right now, from the bridge's
-  live `focus` events, falling back to the chosen session after two quiet
-  minutes;
-- live updates from the bridge's event stream, and a fresh list every minute in
-  case the stream dropped something.
+  fix it, and a button to update the bridge when it is behind;
+- a bar naming the session the voice is talking to right now, and a legend for
+  the colours.
 
-Still to come, each agreed with the bridge first: a detail view with live
-output, answering questions and approvals, git status per session, an update
-button for the bridge, usage bars, and a pinned card for contributing.
+Still to come, each agreed with the bridge first: answering questions and
+approvals from the phone, once the owner decides to allow it, and a pinned
+card for contributing.
 
 ## Try it
 

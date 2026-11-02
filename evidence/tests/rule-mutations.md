@@ -15,14 +15,14 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | Rule turned off | Tests that went red | The test that names it | Did that one go red? |
 |---|---|---|---|
 | a session with a question waits for an answer | 1 | `test_a_session_with_a_question_waits_for_an_answer` | yes |
-| sessions waiting for the owner come first | 5 | `test_sessions_waiting_for_the_owner_come_first` | yes |
-| a focus event matches a session by id as well as by name | 2 | `test_a_focus_event_matches_a_session_by_id_as_well_as_by_name` | yes |
+| sessions waiting for the owner come first | 6 | `test_sessions_waiting_for_the_owner_come_first` | yes |
+| a focus event matches a session by id as well as by name | 3 | `test_a_focus_event_matches_a_session_by_id_as_well_as_by_name` | yes |
 | the sessions are fetched again every minute | 3 | `test_the_sessions_are_fetched_again_every_minute` | yes |
 | after two quiet minutes the bar goes back to the active session | 1 | `test_after_two_quiet_minutes_the_bar_goes_back_to_the_active_session` | yes |
 | being signed out while watching returns to the sign-in page | 6 | `test_being_signed_out_while_watching_returns_to_the_sign_in_page` | yes |
 | a missing required thing shows a red banner | 1 | `test_a_missing_required_thing_shows_a_red_banner` | yes |
 | the check is asked again every five minutes, not on every refresh | 1 | `test_the_check_is_asked_again_every_five_minutes_not_on_every_refresh` | yes |
-| the state the bridge reports wins over the app's own reading | 8 | `test_the_state_the_bridge_reports_wins_over_the_app_s_own_reading` | yes |
+| the state the bridge reports wins over the app's own reading | 9 | `test_the_state_the_bridge_reports_wins_over_the_app_s_own_reading` | yes |
 | being behind is marked as behind even when also ahead | 3 | `test_being_behind_is_marked_as_behind_even_when_also_ahead` | yes |
 | a reached limit says so | 1 | `test_a_reached_limit_says_so` | yes |
 | usage is asked again every minute | 1 | `test_usage_is_asked_again_every_minute` | yes |
@@ -32,8 +32,8 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | a hidden session comes back when it starts waiting | 1 | `test_a_hidden_session_comes_back_when_it_starts_waiting` | yes |
 | the view chosen is remembered | 17 | `test_the_view_chosen_is_remembered` | yes |
 | every kind of waiting is amber, as in the design draft | 2 | `test_every_kind_of_waiting_is_amber_as_in_the_design_draft` | yes |
-| holding a finger on a tile says its state in plain words, without opening it | 1 | `test_holding_a_finger_on_a_tile_says_its_state_in_plain_words_without_opening_it` | yes |
-| the order holds still while a finger is on the screen | 1 | `test_the_order_holds_still_while_a_finger_is_on_the_screen` | yes |
+| a long press opens the session's page without choosing it | 1 | `test_a_long_press_opens_the_session_s_page_without_choosing_it` | yes |
+| the order holds still while a finger is on the screen | 2 | `test_the_order_holds_still_while_a_finger_is_on_the_screen` | yes |
 | a tap just after the sessions moved chooses nothing | 1 | `test_a_tap_just_after_the_sessions_moved_chooses_nothing` | yes |
 
 ## What this does not prove

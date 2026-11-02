@@ -124,10 +124,10 @@ find = 'const WAITING_TONE = "amber";'
 replace = 'const WAITING_TONE = "gold";'
 
 [[rule]]
-name = "holding a finger on a tile says its state in plain words, without opening it"
+name = "a long press opens the session's page without choosing it"
 file = "src/view.ts"
-find = 'if \(held\) held = false;'
-replace = '      if (false) held = false;'
+find = '^    if \(held\) \{$'
+replace = '    if (false) {'
 
 [[rule]]
 name = "the order holds still while a finger is on the screen"

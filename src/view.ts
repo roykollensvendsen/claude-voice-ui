@@ -34,6 +34,8 @@ export interface Home {
   /** Cards whose long question is shown in full. */
   more: Set<string>;
   hiddenOpen: boolean;
+  /** The session just tapped, flashed for a moment as the tap's confirmation. */
+  picked: string | null;
   view: View;
   legendOpen: boolean;
   /** The session whose page is open, or null for the cards. */
@@ -55,6 +57,7 @@ export type View = "grid" | "cards";
 
 export interface Actions {
   pick(id: string): void;
+  openPage(id: string): void;
   back(): void;
   signOut(): void;
   toggleDoctor(): void;
@@ -235,49 +238,64 @@ function card(s: Session, home: Home, act: Actions): HTMLElement {
 }
 
 const WAITING = new Set(["answer", "approval", "input"]);
-/** How long a finger rests on a tile before its state is said in words, and how long they stay. */
+/** How long a finger rests on a tile before its page opens instead of it being chosen. */
 const HOLD_MS = 500;
-const TIP_MS = 3000;
 
 /** A small square for the grid: the name, cut to fit, and the state as a colour and an icon. */
 function tile(s: Session, home: Home, act: Actions): HTMLElement {
   const state = cardState(s);
   const look = LOOK[state];
-  const words = `${look.label} – ${timeInWords(minutesInState(s, Date.now()))}`;
-  let held = false;
-  const t = button(
-    "",
-    () => {
-      // A long press only shows the words; the click that ends it is not a choice.
-      // RULE: holding a finger on a tile says its state in plain words, without opening it
-      if (held) held = false;
-      else act.pick(s.id);
-    },
-    `tile tone-${look.tone}`,
-  );
+  // A div, not a button, because the corner arrow inside it is a button.
+  const t = el("div", `tile tone-${look.tone}`);
+  t.setAttribute("role", "button");
+  t.tabIndex = 0;
   t.dataset.session = s.id;
   t.dataset.state = state;
-  // A resting pointer on a desktop shows the same words as a long press on a phone.
-  t.title = `${s.name || s.id}: ${words}`;
+  t.title = `${s.name || s.id}: ${look.label}`;
+  let held = false;
   let press: ReturnType<typeof setTimeout> | undefined;
-  t.addEventListener("pointerdown", () => {
+  t.addEventListener("pointerdown", (e) => {
+    if ((e.target as Element).closest("button")) return;
     held = false;
     press = setTimeout(() => {
       held = true;
-      t.querySelector(".tip")?.remove();
-      t.append(el("span", "tip", words));
-      setTimeout(() => t.querySelector(".tip")?.remove(), TIP_MS);
+      act.openPage(s.id);
     }, HOLD_MS);
   });
   for (const end of ["pointerup", "pointerleave", "pointercancel"]) {
     t.addEventListener(end, () => clearTimeout(press));
   }
-  // The phone's own long-press menu would cover the words.
+  // The phone's own long-press menu would cover the page opening.
   t.addEventListener("contextmenu", (e) => e.preventDefault());
+  t.addEventListener("click", (e) => {
+    if ((e.target as Element).closest("button")) return;
+    // RULE: a long press opens the session's page without choosing it
+    if (held) {
+      held = false;
+      return;
+    }
+    // Shown at once, before the page catches up with the choice.
+    t.classList.add("picked");
+    act.pick(s.id);
+  });
+  t.addEventListener("keydown", (e) => {
+    if (e.target === t && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      act.pick(s.id);
+    }
+  });
   if (WAITING.has(state)) t.classList.add("waiting");
   if (home.active?.id === s.id) t.classList.add("active");
+  if (home.picked === s.id) t.classList.add("picked");
   if (matches(s, home.focus)) t.classList.add("focus");
-  t.append(el("span", "icon", look.icon), el("span", "name", s.name || s.id));
+  const details = button("›", () => act.openPage(s.id), "open-detail");
+  details.setAttribute("aria-label", `Open ${s.name || s.id}`);
+  t.append(
+    el("span", "icon", look.icon),
+    el("span", "name", s.name || s.id),
+    ...(home.active?.id === s.id ? [el("span", "pin")] : []),
+    details,
+  );
   return t;
 }
 
@@ -302,8 +320,16 @@ function legend(): HTMLElement {
     "ul",
     "legend",
     ...states,
-    el("li", "ring focus", "Blue ring: the voice is talking to it right now"),
-    el("li", "ring active", "White ring: the session the voice talks to, chosen by a tap or by voice"),
+    el(
+      "li",
+      "ring active",
+      "White dot and ring: the session the voice talks to, chosen by a tap or by voice",
+    ),
+    el(
+      "li",
+      "ring focus",
+      "Blue ring: the voice is talking to it right now; with a white dot, it is also the chosen one",
+    ),
   );
 }
 
@@ -503,7 +529,12 @@ function detailScreen(home: Home, d: Detail, act: Actions): HTMLElement {
     back,
     el("h2", undefined, s?.name ?? d.id),
     ...(s
-      ? [el("div", "meta", [s.project, s.kind].filter(Boolean).join(" · ")), stateLine(s), ...gitRow(s)]
+      ? [
+          el("div", "meta", [s.project, s.kind].filter(Boolean).join(" · ")),
+          el("p", "words", `${LOOK[cardState(s)].label} – ${timeInWords(minutesInState(s, Date.now()))}`),
+          stateLine(s),
+          ...gitRow(s),
+        ]
       : [el("p", "notice", "This session is no longer running.")]),
     ...pendingBlock(d.pending),
     el("div", "turns", ...d.turns.map(turn)),

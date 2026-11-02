@@ -15,6 +15,10 @@ export interface Deps {
 
 /** How long after the sessions move a tap is taken as aimed at where they were. */
 const SETTLE_MS = 800;
+/** How long the order stays still after the finger lifts. */
+const AFTER_LIFT_MS = 400;
+/** How long a tapped tile flashes. */
+const PICKED_MS = 700;
 
 const EXPANDED = "cvu.expanded";
 const HIDDEN = "cvu.hidden";
@@ -60,6 +64,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     // RULE: the view chosen is remembered
     view: recall<View>(keep, VIEW, "grid") === "cards" ? "cards" : "grid",
     legendOpen: false,
+    picked: null,
     doctorOpen: false,
   };
   let watching = false;
@@ -71,6 +76,8 @@ export function start(root: HTMLElement, deps: Deps): () => void {
 
   // Tiles re-sort live, so a finger could land on one that has just slid under it.
   let pressing = false;
+  let liftTimer: ReturnType<typeof setTimeout> | undefined;
+  let pickedTimer: ReturnType<typeof setTimeout> | undefined;
   let waitingDraw = false;
   let pressedId: string | undefined;
   let pressedAt = 0;
@@ -94,14 +101,19 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   };
 
   const onPress = (e: Event) => {
+    clearTimeout(liftTimer);
     pressing = true;
     pressedAt = Date.now();
     pressedId = (e.target as Element | null)?.closest<HTMLElement>("[data-session]")?.dataset.session;
   };
   const onLift = () => {
-    pressing = false;
-    // After the click that follows, so the click still finds the tile it was aimed at.
-    if (waitingDraw) setTimeout(draw, 0);
+    // Still for a moment after the finger lifts, so the click that follows finds the tile it was
+    // aimed at, and the owner sees where they tapped.
+    clearTimeout(liftTimer);
+    liftTimer = setTimeout(() => {
+      pressing = false;
+      if (waitingDraw) draw();
+    }, AFTER_LIFT_MS);
   };
   root.addEventListener("pointerdown", onPress);
   document.addEventListener("pointerup", onLift);
@@ -168,6 +180,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     pick: (id) => {
       if (steadyTap(id)) void pick(id);
     },
+    openPage: (id) => openPage(id),
     back() {
       home.open = null;
       draw();
@@ -433,7 +446,18 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   }
 
   async function pick(id: string) {
-    openPage(id);
+    home.picked = id;
+    try {
+      navigator.vibrate?.(30);
+    } catch {
+      // A phone that will not buzz still shows the flash.
+    }
+    clearTimeout(pickedTimer);
+    pickedTimer = setTimeout(() => {
+      home.picked = null;
+      draw();
+    }, PICKED_MS);
+    draw();
     try {
       home.active = await deps.bridge.choose(id);
       draw();
@@ -461,5 +485,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     document.removeEventListener("visibilitychange", onVisible);
     document.removeEventListener("pointerup", onLift);
     document.removeEventListener("pointercancel", onLift);
+    clearTimeout(liftTimer);
+    clearTimeout(pickedTimer);
   };
 }
