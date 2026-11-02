@@ -198,6 +198,17 @@ describe("the top line and the session the voice talks to", () => {
     expect(card("a1")?.querySelector(".mic")).toBeNull();
   });
 
+  test("a card shows the session's short number before its name", async () => {
+    await open(fakeBridge([{ sessions: [{ ...ONE, number: 7 }], active: null }]));
+    expect(card("a1")?.querySelector(".number")?.textContent).toBe("7");
+  });
+
+  test("the speech bubble at the top carries the number of the session it leads to", async () => {
+    await open(fakeBridge([{ sessions: [ONE, { ...TWO, number: 2 }], active: null }]));
+    FakeSource.last?.emit("focus", { session: "b2", tool: "ask_active_session", at: "" });
+    expect(root.querySelector("header .mic-jump")?.textContent).toBe("💬 2");
+  });
+
   test("a focus event matches a session by id as well as by name", async () => {
     await open(fakeBridge([{ sessions: [ONE, TWO], active: null }]));
     FakeSource.last?.emit("focus", { session: "b2", tool: "read_session_output", at: "" });
