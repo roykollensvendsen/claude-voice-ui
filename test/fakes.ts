@@ -2,12 +2,15 @@
 import { vi } from "vitest";
 import {
   type Active,
+  type Answered,
   type Bridge,
   type BridgeInfo,
   type Doctor,
   type Output,
   type Pending,
+  type Prompt,
   type Prs,
+  type Reply,
   SignedOut,
   type SignIn,
   type Snapshot,
@@ -140,6 +143,8 @@ export function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignI
       async (_id: string): Promise<Pending> => ({ waiting: false, question: null, approvals: [] }),
     ),
     prs: vi.fn(async (_id: string): Promise<Prs> => ({ prs: [] })),
+    prompts: vi.fn(async (): Promise<Prompt[]> => []),
+    answer: vi.fn(async (_id: string, _reply: Reply): Promise<Answered> => "ok"),
   } satisfies Bridge & { snapshotCalls: () => number };
 }
 
