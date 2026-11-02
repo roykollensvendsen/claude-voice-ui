@@ -4,7 +4,7 @@ import { type EventSourceLike, follow } from "./live";
 import { browserKeep, type Keep, recall, remember } from "./remember";
 import { cardState, type Session } from "./states";
 import { IDLE } from "./update";
-import { type Actions, type Home, homeScreen, signInScreen, type UpdateActions } from "./view";
+import { type Actions, type Home, homeScreen, signInScreen, type UpdateActions, type View } from "./view";
 
 export interface Deps {
   bridge: Bridge;
@@ -15,6 +15,7 @@ export interface Deps {
 
 const EXPANDED = "cvu.expanded";
 const HIDDEN = "cvu.hidden";
+const VIEW = "cvu.view";
 
 /** Changes of state arrive on the stream; the timer catches what a dropped stream missed. */
 // RULE: the sessions are fetched again every minute
@@ -53,6 +54,8 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     hidden: recall<Record<string, string>>(keep, HIDDEN, {}),
     more: new Set(),
     hiddenOpen: false,
+    // RULE: the view chosen is remembered
+    view: recall<View>(keep, VIEW, "grid") === "cards" ? "cards" : "grid",
     doctorOpen: false,
   };
   let watching = false;
@@ -143,6 +146,11 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     unhide(id) {
       delete home.hidden[id];
       remember(keep, HIDDEN, home.hidden);
+      draw();
+    },
+    setView(view) {
+      home.view = view;
+      remember(keep, VIEW, view);
       draw();
     },
     toggleHidden() {

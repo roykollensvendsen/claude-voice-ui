@@ -174,10 +174,10 @@ describe("one session's page", () => {
     expect(b.pending.mock.calls.length).toBe(calls + 1);
   });
 
-  test("the back button returns to the cards", async () => {
+  test("the back button returns to the sessions", async () => {
     await openDetail();
     root.querySelector<HTMLButtonElement>(".detail .back")?.click();
-    expect(root.querySelector(".cards")).not.toBeNull();
+    expect(root.querySelector(".grid")).not.toBeNull();
     expect(root.querySelector(".detail")).toBeNull();
   });
 

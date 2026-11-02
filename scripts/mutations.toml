@@ -110,3 +110,9 @@ name = "a hidden session comes back when it starts waiting"
 file = "src/app.ts"
 find = 'if \(at !== undefined && WAITS\.has\(cardState\(s\)\) && at !== moment\(s\)\) \{'
 replace = '      if (false) {'
+
+[[rule]]
+name = "the view chosen is remembered"
+file = "src/app.ts"
+find = 'view: recall<View>\(keep, VIEW, "grid"\) === "cards" \? "cards" : "grid",'
+replace = '    view: "grid" as View,'

@@ -161,6 +161,10 @@ describe("hiding sessions", () => {
       throw new Error("blocked");
     });
     await open(fakeBridge([{ sessions: [ONE, TWO], active: null }]));
+    // Nothing kept means the page starts on the grid.
+    [...root.querySelectorAll<HTMLButtonElement>(".view-switch button")]
+      .find((b) => b.textContent === "Cards")
+      ?.click();
     inCard("b2", ".expand")?.click();
     buttonIn("b2", "Hide")?.click();
     expect(card("b2")).toBeNull();

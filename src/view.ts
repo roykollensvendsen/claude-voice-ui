@@ -25,6 +25,7 @@ export interface Home {
   /** Cards whose long question is shown in full. */
   more: Set<string>;
   hiddenOpen: boolean;
+  view: View;
   /** The session whose page is open, or null for the cards. */
   open: Detail | null;
   /** Whether the owner has opened the list of what is missing. */
@@ -40,6 +41,8 @@ export interface Detail {
   prs: Pr[];
 }
 
+export type View = "grid" | "cards";
+
 export interface Actions {
   pick(id: string): void;
   back(): void;
@@ -50,6 +53,7 @@ export interface Actions {
   hide(id: string): void;
   unhide(id: string): void;
   toggleHidden(): void;
+  setView(view: View): void;
   update: UpdateActions;
 }
 
@@ -217,6 +221,32 @@ function card(s: Session, home: Home, act: Actions): HTMLElement {
     }
   });
   return box;
+}
+
+const WAITING = new Set(["answer", "approval", "input"]);
+
+/** A small square for the grid: the name, cut to fit, and the state as a colour and an icon. */
+function tile(s: Session, home: Home, act: Actions): HTMLElement {
+  const state = cardState(s);
+  const look = LOOK[state];
+  const t = button("", () => act.pick(s.id), `tile tone-${look.tone}`);
+  t.dataset.session = s.id;
+  t.dataset.state = state;
+  t.title = `${s.name || s.id}: ${look.label}`;
+  if (WAITING.has(state)) t.classList.add("waiting");
+  if (home.active?.id === s.id) t.classList.add("active");
+  if (matches(s, home.focus)) t.classList.add("focus");
+  t.append(el("span", "icon", look.icon), el("span", "name", s.name || s.id));
+  return t;
+}
+
+function viewSwitch(home: Home, act: Actions): HTMLElement {
+  const choice = (label: string, view: View) => {
+    const b = button(label, () => act.setView(view));
+    b.setAttribute("aria-pressed", String(home.view === view));
+    return b;
+  };
+  return el("div", "view-switch", choice("Grid", "grid"), choice("Cards", "cards"));
 }
 
 /** Hidden sessions that are running, as a count that opens into a list with a way back for each. */
@@ -429,19 +459,14 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
   const sorted = sortForCards(home.sessions);
   const sessions = sorted.filter((s) => !(s.id in home.hidden));
   const hidden = sorted.filter((s) => s.id in home.hidden);
-  const cards = el(
-    "div",
-    "cards",
-    ...(sessions.length
-      ? sessions.map((s) => card(s, home, act))
-      : [
-          el(
-            "p",
-            "muted",
-            hidden.length ? "Every running session is hidden." : "No sessions are running right now.",
-          ),
-        ]),
+  const none = el(
+    "p",
+    "muted",
+    hidden.length ? "Every running session is hidden." : "No sessions are running right now.",
   );
+  const items =
+    home.view === "grid" ? sessions.map((s) => tile(s, home, act)) : sessions.map((s) => card(s, home, act));
+  const list = el("div", home.view, ...(items.length ? items : [none]));
   const top = [el("header", "top", el("h1", undefined, "Claude voice"), connection, signOut), focusBar(home)];
   const problem = home.problem ? [el("p", "notice", home.problem)] : [];
   if (home.open) return el("section", "home", ...top, ...problem, detailScreen(home, home.open, act));
@@ -453,7 +478,8 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
     ...updatePanel(home, act.update),
     ...usagePanel(home),
     ...problem,
-    cards,
+    viewSwitch(home, act),
+    list,
     ...hiddenBlock(hidden, home, act),
   );
 }
