@@ -1,5 +1,13 @@
 import { describe, expect, test } from "vitest";
-import { cardState, LOOK, minutesInState, type Session, sortForCards, timeInState } from "../src/states";
+import {
+  cardState,
+  LOOK,
+  minutesInState,
+  type Session,
+  sortForCards,
+  timeInState,
+  timeInWords,
+} from "../src/states";
 
 function session(over: Partial<Session> = {}): Session {
   return {
@@ -158,5 +166,19 @@ describe("how long a session has been in its state", () => {
 
   test("a time of change in the future reads as just now", () => {
     expect(minutesInState(session({ state_since: "2026-11-02T15:02:00Z" }), now)).toBe(0);
+  });
+});
+
+describe("time in a state, in words", () => {
+  test.each([
+    [0, "just now"],
+    [1, "1 minute"],
+    [57, "57 minutes"],
+    [60, "1 hour"],
+    [150, "2 hours"],
+    [24 * 60, "1 day"],
+    [3 * 24 * 60 + 5, "3 days"],
+  ])("%i minutes reads as %s", (minutes, words) => {
+    expect(timeInWords(minutes)).toBe(words);
   });
 });

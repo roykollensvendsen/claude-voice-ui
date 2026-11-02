@@ -47,7 +47,7 @@ describe("the grid of sessions", () => {
     expect(tile("a1")?.querySelector(".name")?.textContent).toBe("billing-ab");
     expect(tile("a1")?.querySelector(".icon")?.textContent).toBe("●");
     expect(tile("a1")?.classList.contains("tone-green")).toBe(true);
-    expect(tile("a1")?.getAttribute("title")).toBe("billing-ab: Working");
+    expect(tile("a1")?.getAttribute("title")).toBe("billing-ab: Working – just now");
   });
 
   test("a waiting tile is marked as waiting and comes first", async () => {
@@ -122,5 +122,37 @@ describe("the grid of sessions", () => {
     expect(rows.find((r) => r.textContent?.startsWith("!"))?.classList.contains("tone-amber")).toBe(true);
     expect(text).toContain("Blue ring: the voice is talking to it right now");
     expect(text).toContain("White ring: the session the voice talks to, chosen by a tap or by voice");
+  });
+
+  test("holding a finger on a tile says its state in plain words, without opening it", async () => {
+    const b = fakeBridge([{ sessions: [WAITING], active: null }]);
+    await open(b);
+    tile("w")?.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(500);
+    expect(tile("w")?.querySelector(".tip")?.textContent).toBe("Waiting for an answer – 57 minutes");
+    tile("w")?.dispatchEvent(new Event("pointerup", { bubbles: true }));
+    tile("w")?.click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(b.choose).not.toHaveBeenCalled();
+    expect(root.querySelector(".detail")).toBeNull();
+  });
+
+  test("a short tap still opens the session", async () => {
+    const b = fakeBridge([{ sessions: [WAITING], active: null }]);
+    await open(b);
+    tile("w")?.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(100);
+    tile("w")?.dispatchEvent(new Event("pointerup", { bubbles: true }));
+    tile("w")?.click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(b.choose).toHaveBeenCalledWith("w");
+  });
+
+  test("the words go away by themselves", async () => {
+    await open(fakeBridge([{ sessions: [WAITING], active: null }]));
+    tile("w")?.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(500);
+    await vi.advanceTimersByTimeAsync(4000);
+    expect(tile("w")?.querySelector(".tip")).toBeNull();
   });
 });
