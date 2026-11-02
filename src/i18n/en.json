@@ -127,6 +127,10 @@
   "detail.gone": "This session is no longer running.",
   "detail.prs": "Open pull requests",
   "page.newVersion": "New version – tap to update",
+  "page.whatsNew": "What's new",
+  "page.new": "New",
+  "page.fixed": "Fixed",
+  "page.noChanges": "No listed changes.",
   "git.changedCount": "{count} changed",
   "git.changed": "changed",
   "git.detached": "detached"

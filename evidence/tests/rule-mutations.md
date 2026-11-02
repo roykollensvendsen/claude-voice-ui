@@ -36,7 +36,7 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | the order holds still while a finger is on the screen | 2 | `test_the_order_holds_still_while_a_finger_is_on_the_screen` | yes |
 | a tap just after the sessions moved chooses nothing | 1 | `test_a_tap_just_after_the_sessions_moved_chooses_nothing` | yes |
 | the percentage turns from grey to yellow to red near the limit | 5 | `test_the_percentage_turns_from_grey_to_yellow_to_red_near_the_limit` | yes |
-| a new version is loaded only when the notice is tapped | 1 | `test_a_new_version_is_loaded_only_when_the_notice_is_tapped` | yes |
+| a new version is loaded only when the notice is tapped | 2 | `test_a_new_version_is_loaded_only_when_the_notice_is_tapped` | yes |
 | the theme chosen is remembered | 1 | `test_the_theme_chosen_is_remembered` | yes |
 | the language chosen is remembered | 2 | `test_the_language_chosen_is_remembered` | yes |
 
