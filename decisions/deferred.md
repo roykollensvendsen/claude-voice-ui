@@ -13,3 +13,4 @@ read whenever a decision record is written and when a phase ends.
 | `CODEOWNERS` | A second person who reviews | It would name one person as the owner of everything |
 | `pre-commit` as a requirement rather than an option | A second contributor | The gates run in CI, and a hook one person installs is a hook one person maintains |
 | A service worker, so the app opens offline | Milestone 5 (install, offline shell, notifications), or the phone showing a blank page when the bridge is down | The app is useless without the bridge, and a cached old version is a new way to be confused |
+| The last seven days of voice activity, drawn as a small chart | Roy asks how voice use changes over the week, or the bridge has a week of counts | Counting began on 2026-11-02, so there is nothing to draw yet |

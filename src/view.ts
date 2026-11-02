@@ -2,6 +2,7 @@
 import type { Active, Doctor } from "./bridge";
 import { gitLine } from "./git";
 import { cardState, LOOK, minutesInState, type Session, sortForCards, timeInState } from "./states";
+import { contextTone, planBars, type Usage, voiceLine, warningText } from "./usage";
 
 export type Connection = "connecting" | "live" | "reconnecting";
 
@@ -13,6 +14,7 @@ export interface Home {
   connection: Connection;
   problem: string | null;
   doctor: Doctor | null;
+  usage: Usage | null;
   /** Whether the owner has opened the list of what is missing. */
   doctorOpen: boolean;
 }
@@ -97,6 +99,15 @@ function card(s: Session, home: Home, onPick: (id: string) => void): HTMLElement
       el("span", "icon", look.icon),
       ` ${look.label}`,
       el("span", "since", ` · ${timeInState(minutesInState(s, Date.now()))}`),
+      ...(s.context
+        ? [
+            el(
+              "span",
+              `context ${contextTone(s.context.used_percentage)}`,
+              `context ${Math.round(s.context.used_percentage)}%`,
+            ),
+          ]
+        : []),
     ),
   );
   // The bridge's one line repeats the question while it waits, and the question is shown in full below.
@@ -120,6 +131,42 @@ function card(s: Session, home: Home, onPick: (id: string) => void): HTMLElement
   if (s.moved_to?.name) button.append(el("div", "doing", `Continues in ${s.moved_to.name}`));
   button.addEventListener("click", () => onPick(s.id));
   return button;
+}
+
+function usagePanel(home: Home): HTMLElement[] {
+  const u = home.usage;
+  if (!u) return [];
+  const bars = planBars(u, Date.now()).map((b) => {
+    const fill = el("div", "fill");
+    fill.style.width = `${b.percent}%`;
+    return el(
+      "div",
+      `bar${b.stale ? " stale" : ""}`,
+      el(
+        "div",
+        "bar-head",
+        el("span", undefined, b.title),
+        el("span", undefined, `${b.percent}% · ${b.note}`),
+      ),
+      el("div", "track", fill),
+    );
+  });
+  const warning = warningText(u);
+  return [
+    el(
+      "section",
+      "usage",
+      ...(warning ? [el("div", `usage-warning ${warning.severity}`, warning.text)] : []),
+      ...(bars.length ? bars : [el("p", "muted", "No plan figures yet.")]),
+      ...(u.plan?.label ? [el("p", "label", u.plan.label)] : []),
+      el(
+        "p",
+        "voice",
+        el("span", undefined, `Voice today: ${voiceLine(u)}`),
+        el("span", "label", ` (${u.voice.label})`),
+      ),
+    ),
+  ];
 }
 
 function missing(home: Home, onToggle: () => void): HTMLElement[] {
@@ -182,6 +229,7 @@ export function homeScreen(
     el("header", "top", el("h1", undefined, "Claude voice"), connection, signOut),
     focusBar(home),
     ...missing(home, onToggleDoctor),
+    ...usagePanel(home),
     ...(home.problem ? [el("p", "notice", home.problem)] : []),
     cards,
   );

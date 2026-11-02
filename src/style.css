@@ -325,3 +325,71 @@ button {
   color: var(--orange);
   border-color: var(--orange);
 }
+
+.usage {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+}
+.usage p {
+  margin: 0;
+}
+.usage .label {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.bar-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+.track {
+  height: 8px;
+  margin-top: 4px;
+  border-radius: 4px;
+  background: var(--line);
+  overflow: hidden;
+}
+.fill {
+  height: 100%;
+  background: var(--focus);
+}
+.bar.stale {
+  opacity: 0.55;
+}
+.usage-warning {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: var(--amber);
+  border: 1px solid var(--amber);
+}
+.usage-warning.stop {
+  color: var(--red);
+  border-color: var(--red);
+}
+.voice {
+  font-size: 0.85rem;
+}
+.context {
+  margin-left: 8px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+.context.warn {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+.context.full {
+  color: var(--red);
+  border-color: var(--red);
+}

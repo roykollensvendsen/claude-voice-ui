@@ -20,6 +20,8 @@ export interface Session {
   waiting_kind?: "question" | "approval" | "input" | null;
   /** The folder's git status; null outside a repository, absent from an older bridge. */
   git?: Git | null;
+  /** How full its context is, from its own latest status line. */
+  context?: { used_percentage: number; as_of: string } | null;
 }
 
 export type CardState = "working" | "idle" | "answer" | "approval" | "input" | "shell" | "moved" | "stopped";

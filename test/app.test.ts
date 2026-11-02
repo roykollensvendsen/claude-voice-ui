@@ -528,7 +528,7 @@ describe("usage", () => {
   test("the voice estimate is labelled as an estimate", async () => {
     await openWith(WEEKLY);
     expect(text(".voice")).toContain("estimate, voice activity via the bridge");
-    expect(text(".voice")).toContain("No voice activity today");
+    expect(text(".voice")).toContain("Voice today: none yet");
   });
 
   test("a card shows how full its session's context is", async () => {

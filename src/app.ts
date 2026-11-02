@@ -17,6 +17,9 @@ const FOCUS_MS = 2 * 60_000;
 /** The bridge's dependency check runs other programs and takes seconds, so it is asked seldom. */
 // RULE: the check is asked again every five minutes, not on every refresh
 const DOCTOR_MS = 5 * 60_000;
+/** The plan's figures move only when a session answers, so once a minute is plenty. */
+// RULE: usage is asked again every minute
+const USAGE_MS = 60_000;
 
 const REFUSED: Record<Exclude<SignIn, "ok">, string> = {
   wrong: "Wrong secret.",
@@ -33,6 +36,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     connection: "connecting",
     problem: null,
     doctor: null,
+    usage: null,
     doctorOpen: false,
   };
   let watching = false;
@@ -40,6 +44,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   let poll: ReturnType<typeof setInterval> | undefined;
   let focusTimer: ReturnType<typeof setTimeout> | undefined;
   let doctorTimer: ReturnType<typeof setInterval> | undefined;
+  let usageTimer: ReturnType<typeof setInterval> | undefined;
 
   const draw = () => root.replaceChildren(homeScreen(home, pick, signOut, toggleDoctor));
 
@@ -65,6 +70,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     clearInterval(poll);
     clearTimeout(focusTimer);
     clearInterval(doctorTimer);
+    clearInterval(usageTimer);
   }
 
   function showSignIn(error: string | null = null) {
@@ -78,6 +84,16 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     else {
       home.problem = "Can't reach the bridge. Trying again.";
       if (watching) draw();
+    }
+  }
+
+  async function checkUsage() {
+    try {
+      home.usage = await deps.bridge.usage();
+      if (watching) draw();
+    } catch (error) {
+      // Figures that did not come leave the last ones up; the cards matter more than the bars.
+      if (error instanceof SignedOut) failed(error);
     }
   }
 
@@ -136,6 +152,8 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     poll = setInterval(() => void refresh(), POLL_MS);
     doctorTimer = setInterval(() => void checkDoctor(), DOCTOR_MS);
     void checkDoctor();
+    usageTimer = setInterval(() => void checkUsage(), USAGE_MS);
+    void checkUsage();
   }
 
   async function signIn(secret: string) {

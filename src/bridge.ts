@@ -1,5 +1,6 @@
 // The bridge's event API, as this app uses it. The specification is API.md.
 import type { Session } from "./states";
+import type { Usage } from "./usage";
 
 /** The session the voice sends to by default. */
 export interface Active {
@@ -50,6 +51,7 @@ export interface Bridge {
   snapshot(): Promise<Snapshot>;
   choose(session: string): Promise<Active>;
   doctor(): Promise<Doctor>;
+  usage(): Promise<Usage>;
 }
 
 /** The API is always at /api/v1 on the page's own origin, wherever the page itself is served. */
@@ -91,6 +93,9 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
     },
     async doctor() {
       return read<Doctor>(await fetch(`${BASE}/doctor`, { cache: "no-store" }));
+    },
+    async usage() {
+      return read<Usage>(await fetch(`${BASE}/usage`, { cache: "no-store" }));
     },
     async choose(session) {
       return read<Active>(

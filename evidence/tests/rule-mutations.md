@@ -10,7 +10,7 @@ Where a rule already exists, this is the substitute. Each rule is disabled in
 turn, by replacing its one line with something that can never hold, and the
 suite is run. A rule whose removal breaks no test is a rule nothing protects.
 
-**Result: 10 of 10 rules turned off the test that names them.** None survived.
+**Result: 12 of 12 rules turned off the test that names them.** None survived.
 
 | Rule turned off | Tests that went red | The test that names it | Did that one go red? |
 |---|---|---|---|
@@ -24,6 +24,8 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | the check is asked again every five minutes, not on every refresh | 1 | `test_the_check_is_asked_again_every_five_minutes_not_on_every_refresh` | yes |
 | the state the bridge reports wins over the app's own reading | 4 | `test_the_state_the_bridge_reports_wins_over_the_app_s_own_reading` | yes |
 | being behind is marked as behind even when also ahead | 3 | `test_being_behind_is_marked_as_behind_even_when_also_ahead` | yes |
+| a reached limit says so | 1 | `test_a_reached_limit_says_so` | yes |
+| usage is asked again every minute | 1 | `test_usage_is_asked_again_every_minute` | yes |
 
 ## What this does not prove
 

@@ -74,3 +74,15 @@ name = "being behind is marked as behind even when also ahead"
 file = "src/git.ts"
 find = 'return \[\{ text: `\$\{arrows\} \$\{name\}`, kind: d\.behind \? "behind" : "ahead" \}\];'
 replace = 'return [{ text: `${arrows} ${name}`, kind: d.ahead ? "ahead" : "behind" }];'
+
+[[rule]]
+name = "a reached limit says so"
+file = "src/usage.ts"
+find = 'if \(w\.status === "rejected"\) return \{ text: "The plan.s limit is reached", severity: "stop" \};'
+replace = 'if (false) return { text: "", severity: "stop" };'
+
+[[rule]]
+name = "usage is asked again every minute"
+file = "src/app.ts"
+find = '^const USAGE_MS = 60_000;'
+replace = 'const USAGE_MS = 120_000;'

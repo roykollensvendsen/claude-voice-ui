@@ -95,7 +95,7 @@ describe("the voice estimate", () => {
   });
 
   test("no voice today says so", () => {
-    expect(voiceLine(usage())).toBe("No voice activity today");
+    expect(voiceLine(usage())).toBe("none yet");
   });
 });
 
