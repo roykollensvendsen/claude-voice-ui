@@ -64,6 +64,13 @@ describe("the git line on a card", () => {
     expect(line.marks).toEqual([{ text: "↑1 origin/feat/totals", kind: "ahead" }]);
   });
 
+  test("a branch that tracks main itself shows the distance once", () => {
+    const behind = { name: "origin/main", ahead: 0, behind: 6 };
+    expect(gitLine(git({ branch: "main", tracking: behind, main: behind })).marks).toEqual([
+      { text: "↓6 main", kind: "behind" },
+    ]);
+  });
+
   test("a fork shows how far it is from its parent", () => {
     const line = gitLine(git({ parent: { name: "upstream/main", ahead: 0, behind: 7 } }));
     expect(line.marks).toEqual([{ text: "↓7 upstream/main", kind: "behind" }]);
