@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { defineConfig } from "vitest/config";
 
 // The bridge to talk to while developing. The page itself always calls its own
@@ -7,7 +8,28 @@ const bridge = process.env.CLAUDE_VOICE_URL ?? "http://127.0.0.1:8811";
 // developer need not type it. It stays in the dev server; the page never sees it.
 const token = process.env.CLAUDE_VOICE_TOKEN;
 
+// One id per build: the commit, and when it was built, so a rebuild of the same commit counts too.
+// The page carries it, and version.json beside the page names the one deployed now.
+function commit(): string {
+  try {
+    return execFileSync("git", ["rev-parse", "--short", "HEAD"], { encoding: "utf8" }).trim();
+  } catch {
+    return "unknown";
+  }
+}
+const build = `${commit()}-${Date.now()}`;
+
 export default defineConfig({
+  define: { __BUILD_ID__: JSON.stringify(build) },
+  plugins: [
+    {
+      name: "version-file",
+      apply: "build",
+      generateBundle() {
+        this.emitFile({ type: "asset", fileName: "version.json", source: `${JSON.stringify({ build })}\n` });
+      },
+    },
+  ],
   // Relative paths, so the same build works at the bridge's /ui/ and anywhere else.
   base: "./",
   server: {
