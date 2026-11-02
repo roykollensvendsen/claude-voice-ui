@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
 import {
+  byNumber,
   cardState,
   LOOK,
   minutesInState,
   type Session,
-  sortForCards,
   timeInState,
   timeInWords,
 } from "../src/states";
@@ -102,38 +102,28 @@ describe("how each state looks", () => {
   });
 });
 
-describe("the order of the cards", () => {
-  test("sessions waiting for the owner come first", () => {
-    const sorted = sortForCards([
-      session({ id: "a", status: "busy", minutes_since_update: 0 }),
-      session({ id: "b", status: "waiting", minutes_since_update: 30 }),
-      session({ id: "c", status: "idle", minutes_since_update: 1 }),
+describe("the order of the sessions", () => {
+  test("sessions keep the order of their numbers, whatever their state", () => {
+    const sorted = byNumber([
+      session({ id: "a", number: 3, status: "busy" }),
+      session({ id: "b", number: 1, status: "waiting" }),
+      session({ id: "c", number: 2, status: "idle" }),
     ]);
-    expect(sorted.map((s) => s.id)).toEqual(["b", "a", "c"]);
+    expect(sorted.map((s) => s.id)).toEqual(["b", "c", "a"]);
   });
 
-  test("otherwise the most recently changed session comes first", () => {
-    const sorted = sortForCards([
-      session({ id: "a", minutes_since_update: 9 }),
-      session({ id: "b", minutes_since_update: 2 }),
+  test("a session without a number goes after the numbered ones, by name", () => {
+    const sorted = byNumber([
+      session({ id: "x", name: "zeta" }),
+      session({ id: "y", name: "alpha" }),
+      session({ id: "z", number: 5 }),
     ]);
-    expect(sorted.map((s) => s.id)).toEqual(["b", "a"]);
-  });
-
-  test("a session waiting for input also comes first", () => {
-    const sorted = sortForCards([
-      session({ id: "a", status: "busy", minutes_since_update: 0 }),
-      session({ id: "b", state: "input", minutes_since_update: 30 }),
-    ]);
-    expect(sorted.map((s) => s.id)).toEqual(["b", "a"]);
+    expect(sorted.map((s) => s.id)).toEqual(["z", "y", "x"]);
   });
 
   test("sorting leaves the list it was given as it was", () => {
-    const given = [
-      session({ id: "a", minutes_since_update: 9 }),
-      session({ id: "b", minutes_since_update: 2 }),
-    ];
-    sortForCards(given);
+    const given = [session({ id: "a", number: 2 }), session({ id: "b", number: 1 })];
+    byNumber(given);
     expect(given.map((s) => s.id)).toEqual(["a", "b"]);
   });
 });
