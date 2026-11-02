@@ -226,3 +226,61 @@ button {
     animation: none;
   }
 }
+
+.doctor-banner {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  text-align: left;
+  border-radius: 12px;
+  border: 1px solid var(--amber);
+  background: #f0b43c14;
+  color: var(--amber);
+  cursor: pointer;
+}
+.doctor-banner.required {
+  border-color: var(--red);
+  background: #ef5b5b14;
+  color: var(--red);
+}
+.doctor-panel {
+  list-style: none;
+  margin: -4px 0 12px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+.doctor-panel li {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+.doctor-panel .affects,
+.doctor-panel .detail {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.doctor-panel .fix {
+  margin: 8px 0 4px;
+  padding: 8px;
+  border-radius: 8px;
+  background: #000;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font:
+    0.85rem / 1.4 ui-monospace,
+    "SFMono-Regular",
+    Menlo,
+    monospace;
+  user-select: all;
+}
+.doctor-panel a {
+  color: var(--accent);
+}

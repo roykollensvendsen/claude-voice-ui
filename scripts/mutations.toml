@@ -50,3 +50,15 @@ name = "being signed out while watching returns to the sign-in page"
 file = "src/app.ts"
 find = 'if \(error instanceof SignedOut\) showSignIn\(\);'
 replace = 'if (false) showSignIn();'
+
+[[rule]]
+name = "a missing required thing shows a red banner"
+file = "src/view.ts"
+find = 'const severity = failing\.some\(\(c\) => c\.required\) \? "required" : "optional";'
+replace = 'const severity = "optional";'
+
+[[rule]]
+name = "the check is asked again every five minutes, not on every refresh"
+file = "src/app.ts"
+find = '^const DOCTOR_MS = 5 \* 60_000;'
+replace = 'const DOCTOR_MS = 60_000;'

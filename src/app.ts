@@ -14,6 +14,9 @@ const POLL_MS = 15_000;
 /** How long the bar keeps showing the session the voice last reached, once nothing more happens. */
 // RULE: after two quiet minutes the bar goes back to the active session
 const FOCUS_MS = 2 * 60_000;
+/** The bridge's dependency check runs other programs and takes seconds, so it is asked seldom. */
+// RULE: the check is asked again every five minutes, not on every refresh
+const DOCTOR_MS = 5 * 60_000;
 
 const REFUSED: Record<Exclude<SignIn, "ok">, string> = {
   wrong: "Wrong secret.",
@@ -23,13 +26,37 @@ const REFUSED: Record<Exclude<SignIn, "ok">, string> = {
 
 /** Start the app in `root`. The returned function stops it: no more timers, no more stream. */
 export function start(root: HTMLElement, deps: Deps): () => void {
-  const home: Home = { sessions: [], active: null, focus: null, connection: "connecting", problem: null };
+  const home: Home = {
+    sessions: [],
+    active: null,
+    focus: null,
+    connection: "connecting",
+    problem: null,
+    doctor: null,
+    doctorOpen: false,
+  };
   let watching = false;
   let unfollow: (() => void) | null = null;
   let poll: ReturnType<typeof setInterval> | undefined;
   let focusTimer: ReturnType<typeof setTimeout> | undefined;
+  let doctorTimer: ReturnType<typeof setInterval> | undefined;
 
-  const draw = () => root.replaceChildren(homeScreen(home, pick, signOut));
+  const draw = () => root.replaceChildren(homeScreen(home, pick, signOut, toggleDoctor));
+
+  function toggleDoctor() {
+    home.doctorOpen = !home.doctorOpen;
+    draw();
+  }
+
+  async function checkDoctor() {
+    try {
+      home.doctor = await deps.bridge.doctor();
+      if (watching) draw();
+    } catch (error) {
+      // An unanswered check says nothing about what is missing, so the banner stays as it was.
+      if (error instanceof SignedOut) failed(error);
+    }
+  }
 
   function stopWatching() {
     watching = false;
@@ -37,6 +64,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     unfollow = null;
     clearInterval(poll);
     clearTimeout(focusTimer);
+    clearInterval(doctorTimer);
   }
 
   function showSignIn(error: string | null = null) {
@@ -91,6 +119,8 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       },
     });
     poll = setInterval(() => void refresh(), POLL_MS);
+    doctorTimer = setInterval(() => void checkDoctor(), DOCTOR_MS);
+    void checkDoctor();
   }
 
   async function signIn(secret: string) {

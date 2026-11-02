@@ -15,6 +15,26 @@ export interface Snapshot {
   active: Active | null;
 }
 
+/** One dependency the bridge checks, as GET /api/v1/doctor gives it. */
+export interface Check {
+  id: string;
+  title: string;
+  ok: boolean;
+  required: boolean;
+  /** What the owner loses while it is missing, in words. */
+  affects: string;
+  detail: string;
+  /** Text for a person to run or follow. Never a secret. */
+  fix: string;
+  fix_url: string | null;
+}
+
+export interface Doctor {
+  ready: boolean;
+  checked_at: string;
+  checks: Check[];
+}
+
 export type SignIn = "ok" | "wrong" | "too-many" | "unreachable";
 
 /** The bridge answered 401: the sign-in cookie is missing or has run out. */
@@ -29,6 +49,7 @@ export interface Bridge {
   signOut(): Promise<void>;
   snapshot(): Promise<Snapshot>;
   choose(session: string): Promise<Active>;
+  doctor(): Promise<Doctor>;
 }
 
 /** The API is always at /api/v1 on the page's own origin, wherever the page itself is served. */
@@ -67,6 +88,9 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
     },
     async snapshot() {
       return read<Snapshot>(await fetch(`${BASE}/sessions`, { cache: "no-store" }));
+    },
+    async doctor() {
+      return read<Doctor>(await fetch(`${BASE}/doctor`, { cache: "no-store" }));
     },
     async choose(session) {
       return read<Active>(

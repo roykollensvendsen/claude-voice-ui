@@ -10,7 +10,7 @@ Where a rule already exists, this is the substitute. Each rule is disabled in
 turn, by replacing its one line with something that can never hold, and the
 suite is run. A rule whose removal breaks no test is a rule nothing protects.
 
-**Result: 6 of 6 rules turned off the test that names them.** None survived.
+**Result: 8 of 8 rules turned off the test that names them.** None survived.
 
 | Rule turned off | Tests that went red | The test that names it | Did that one go red? |
 |---|---|---|---|
@@ -20,6 +20,8 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | the sessions are fetched again every fifteen seconds | 2 | `test_the_sessions_are_fetched_again_every_fifteen_seconds` | yes |
 | after two quiet minutes the bar goes back to the active session | 1 | `test_after_two_quiet_minutes_the_bar_goes_back_to_the_active_session` | yes |
 | being signed out while watching returns to the sign-in page | 6 | `test_being_signed_out_while_watching_returns_to_the_sign_in_page` | yes |
+| a missing required thing shows a red banner | 1 | `test_a_missing_required_thing_shows_a_red_banner` | yes |
+| the check is asked again every five minutes, not on every refresh | 1 | `test_the_check_is_asked_again_every_five_minutes_not_on_every_refresh` | yes |
 
 ## What this does not prove
 

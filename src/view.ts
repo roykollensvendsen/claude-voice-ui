@@ -1,5 +1,5 @@
 // Drawing the screens. Each function builds fresh elements from the state it is given.
-import type { Active } from "./bridge";
+import type { Active, Doctor } from "./bridge";
 import { cardState, LOOK, type Session, sortForCards, timeInState } from "./states";
 
 export type Connection = "connecting" | "live" | "reconnecting";
@@ -11,6 +11,9 @@ export interface Home {
   focus: string | null;
   connection: Connection;
   problem: string | null;
+  doctor: Doctor | null;
+  /** Whether the owner has opened the list of what is missing. */
+  doctorOpen: boolean;
 }
 
 const CONNECTION: Record<Connection, string> = {
@@ -106,7 +109,48 @@ function card(s: Session, home: Home, onPick: (id: string) => void): HTMLElement
   return button;
 }
 
-export function homeScreen(home: Home, onPick: (id: string) => void, onSignOut: () => void): HTMLElement {
+function missing(home: Home, onToggle: () => void): HTMLElement[] {
+  const failing = home.doctor?.checks.filter((c) => !c.ok) ?? [];
+  if (!failing.length) return [];
+  // RULE: a missing required thing shows a red banner
+  const severity = failing.some((c) => c.required) ? "required" : "optional";
+  const count = failing.length === 1 ? "1 thing missing" : `${failing.length} things missing`;
+  const banner = el(
+    "button",
+    `doctor-banner ${severity}`,
+    `${count}: ${failing.map((c) => c.title).join(", ")}`,
+  );
+  banner.type = "button";
+  banner.setAttribute("aria-expanded", String(home.doctorOpen));
+  banner.addEventListener("click", onToggle);
+  if (!home.doctorOpen) return [banner];
+  const items = failing.map((c) => {
+    const item = el(
+      "li",
+      c.required ? "required" : "optional",
+      el("b", undefined, c.title),
+      ...(c.affects ? [el("div", "affects", `Without it: ${c.affects}`)] : []),
+      ...(c.detail ? [el("div", "detail", c.detail)] : []),
+    );
+    if (c.fix) item.append(el("pre", "fix", el("code", undefined, c.fix)));
+    if (c.fix_url) {
+      const link = el("a", undefined, "How to fix it");
+      link.href = c.fix_url;
+      link.target = "_blank";
+      link.rel = "noopener";
+      item.append(link);
+    }
+    return item;
+  });
+  return [banner, el("ul", "doctor-panel", ...items)];
+}
+
+export function homeScreen(
+  home: Home,
+  onPick: (id: string) => void,
+  onSignOut: () => void,
+  onToggleDoctor: () => void = () => {},
+): HTMLElement {
   const signOut = el("button", "signout", "Sign out");
   signOut.type = "button";
   signOut.addEventListener("click", onSignOut);
@@ -124,6 +168,7 @@ export function homeScreen(home: Home, onPick: (id: string) => void, onSignOut: 
     "home",
     el("header", "top", el("h1", undefined, "Claude voice"), connection, signOut),
     focusBar(home),
+    ...missing(home, onToggleDoctor),
     ...(home.problem ? [el("p", "notice", home.problem)] : []),
     cards,
   );

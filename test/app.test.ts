@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { type Deps, start } from "../src/app";
-import { type Active, type Bridge, SignedOut, type SignIn, type Snapshot } from "../src/bridge";
+import { type Active, type Bridge, type Doctor, SignedOut, type SignIn, type Snapshot } from "../src/bridge";
 import type { EventSourceLike } from "../src/live";
 import type { Session } from "../src/states";
 
