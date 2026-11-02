@@ -84,6 +84,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     sessions: [],
     active: null,
     focus: null,
+    peeks: [],
     connection: "connecting",
     problem: null,
     doctor: null,
@@ -112,6 +113,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   let unfollow: (() => void) | null = null;
   let poll: ReturnType<typeof setInterval> | undefined;
   let focusTimer: ReturnType<typeof setTimeout> | undefined;
+  const peekTimers = new Map<string, ReturnType<typeof setTimeout>>();
   let doctorTimer: ReturnType<typeof setInterval> | undefined;
   let usageTimer: ReturnType<typeof setInterval> | undefined;
   let versionTimer: ReturnType<typeof setInterval> | undefined;
@@ -434,6 +436,8 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     unfollow = null;
     clearInterval(poll);
     clearTimeout(focusTimer);
+    for (const timer of peekTimers.values()) clearTimeout(timer);
+    peekTimers.clear();
     clearInterval(doctorTimer);
     clearInterval(usageTimer);
     clearInterval(versionTimer);
@@ -488,6 +492,20 @@ export function start(root: HTMLElement, deps: Deps): () => void {
           home.focus = null;
           draw();
         }, FOCUS_MS);
+        draw();
+      },
+      peek(p) {
+        // Each look keeps its own two minutes; a new look at the same session starts them again.
+        clearTimeout(peekTimers.get(p.session));
+        if (!home.peeks.includes(p.session)) home.peeks = [...home.peeks, p.session];
+        peekTimers.set(
+          p.session,
+          setTimeout(() => {
+            peekTimers.delete(p.session);
+            home.peeks = home.peeks.filter((key) => key !== p.session);
+            draw();
+          }, FOCUS_MS),
+        );
         draw();
       },
       active(a) {
