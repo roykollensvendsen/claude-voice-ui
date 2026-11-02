@@ -204,6 +204,16 @@ describe("the focus bar", () => {
     expect(rule).not.toContain("line-clamp");
   });
 
+  test("the words after the name stay together on one line; only the name may wrap", async () => {
+    await open(fakeBridge([{ sessions: [ONE], active: ACTIVE_ONE }]));
+    expect(root.querySelector(".focus-bar .who")?.textContent).toBe(" · chosen by voice");
+    FakeSource.last?.emit("focus", { session: "a1", tool: "ask_active_session", at: "" });
+    expect(root.querySelector(".focus-bar .who")?.textContent).toBe(" · talking now");
+    const css = readFileSync("src/style.css", "utf8");
+    const start = css.indexOf(".focus-bar .who {");
+    expect(css.slice(start, css.indexOf("}", start))).toContain("white-space: nowrap");
+  });
+
   test("with nothing chosen the bar says how to choose", async () => {
     await open(fakeBridge([{ sessions: [ONE], active: null }]));
     expect(text(".focus-bar")).toContain("Tap a session");
