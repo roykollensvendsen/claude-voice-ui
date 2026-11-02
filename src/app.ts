@@ -120,7 +120,9 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     );
   }
 
-  function moreOutput(id: string) {
+  function moreOutput(id: string): Promise<void> {
+    const after = home.open?.lastIndex;
+    let more = false;
     return load(
       id,
       // RULE: a new turn announced on the stream is fetched after the last one shown
@@ -129,8 +131,11 @@ export function start(root: HTMLElement, deps: Deps): () => void {
         if (!home.open) return;
         home.open.turns.push(...out.turns);
         home.open.lastIndex = out.next_after || home.open.turns.at(-1)?.index;
+        // The stream names only the last of several new turns, and one read brings at most six.
+        // A first read without `after` is the latest six; what is left then is older, and stays out.
+        more = after !== undefined && out.turns_left > 0 && out.turns.length > 0;
       },
-    );
+    ).then(() => (more ? moreOutput(id) : undefined));
   }
 
   function readPending(id: string) {
