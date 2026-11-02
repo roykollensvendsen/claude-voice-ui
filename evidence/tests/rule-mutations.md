@@ -10,7 +10,7 @@ Where a rule already exists, this is the substitute. Each rule is disabled in
 turn, by replacing its one line with something that can never hold, and the
 suite is run. A rule whose removal breaks no test is a rule nothing protects.
 
-**Result: 21 of 21 rules turned off the test that names them.** None survived.
+**Result: 22 of 22 rules turned off the test that names them.** None survived.
 
 | Rule turned off | Tests that went red | The test that names it | Did that one go red? |
 |---|---|---|---|
@@ -25,7 +25,7 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | the state the bridge reports wins over the app's own reading | 9 | `test_the_state_the_bridge_reports_wins_over_the_app_s_own_reading` | yes |
 | being behind is marked as behind even when also ahead | 3 | `test_being_behind_is_marked_as_behind_even_when_also_ahead` | yes |
 | a reached limit says so | 1 | `test_a_reached_limit_says_so` | yes |
-| usage is asked again every minute | 1 | `test_usage_is_asked_again_every_minute` | yes |
+| usage is asked again every minute | 2 | `test_usage_is_asked_again_every_minute` | yes |
 | the update starts only after the owner confirms | 1 | `test_the_update_starts_only_after_the_owner_confirms` | yes |
 | an approval it waits on is shown, to be answered by voice or at the screen | 1 | `test_an_approval_it_waits_on_is_shown_to_be_answered_by_voice_or_at_the_screen` | yes |
 | a new turn announced on the stream is fetched after the last one shown | 2 | `test_a_new_turn_announced_on_the_stream_is_fetched_after_the_last_one_shown` | yes |
@@ -35,6 +35,7 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | a long press opens the session's page without choosing it | 1 | `test_a_long_press_opens_the_session_s_page_without_choosing_it` | yes |
 | the order holds still while a finger is on the screen | 2 | `test_the_order_holds_still_while_a_finger_is_on_the_screen` | yes |
 | a tap just after the sessions moved chooses nothing | 1 | `test_a_tap_just_after_the_sessions_moved_chooses_nothing` | yes |
+| the percentage turns from grey to yellow to red near the limit | 5 | `test_the_percentage_turns_from_grey_to_yellow_to_red_near_the_limit` | yes |
 
 ## What this does not prove
 

@@ -443,8 +443,19 @@ describe("usage", () => {
   });
 
   test("the percentage turns from grey to yellow to red near the limit", async () => {
-    await openWith(WEEKLY);
-    expect(usageButton()?.classList.contains("level-ok")).toBe(true);
+    const at = (percent: number) => {
+      const u = structuredClone(WEEKLY);
+      if (u.plan?.seven_day) u.plan.seven_day.used_percentage = percent;
+      return u;
+    };
+    const b = await openWith(at(41));
+    expect(usageButton()?.className).toContain("level-ok");
+    b.usage.mockResolvedValue(at(75));
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(usageButton()?.className).toContain("level-warn");
+    b.usage.mockResolvedValue(at(95));
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(usageButton()?.className).toContain("level-full");
   });
 
   test("tapping the percentage opens the bars, and tapping again closes them", async () => {
