@@ -1,0 +1,34 @@
+# The repository's own tooling: the commit checks, the mutation runner and the
+# tests that keep documents honest. The app itself is TypeScript, in package.json.
+# Nothing here is packaged or installed.
+[project]
+name = "claude-voice-ui-tooling"
+version = "0"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=9.2.0", "ruff>=0.17.3"]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+extend-exclude = ["node_modules", "prototype-from-claude-voice.py"]
+
+[tool.ruff.lint]
+# D203/D213 contradict D211/D212, which are kept; COM812 and ISC001 fight the
+# formatter; CPY001 wants a header in every file, and the licence is one file.
+select = ["ALL"]
+ignore = ["D203", "D213", "COM812", "ISC001", "CPY001", "D401"]
+
+[tool.ruff.lint.per-file-ignores]
+# A test's name is its docstring, its fixtures need no annotations, and a bare
+# assert is the point of pytest.
+"tests/*" = ["S101", "ANN", "D1", "PLR2004", "INP001", "S603", "S607"]
+"scripts/*" = ["INP001"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

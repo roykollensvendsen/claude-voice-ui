@@ -1,0 +1,26 @@
+{
+  "name": "claude-voice-ui",
+  "private": true,
+  "version": "0.0.0",
+  "description": "A phone app for talking to Claude Code sessions by voice.",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "lint": "biome check .",
+    "types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.4",
+    "@vitest/coverage-v8": "5.0.5",
+    "jsdom": "30.1.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}
