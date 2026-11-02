@@ -139,6 +139,9 @@ export function signInScreen(error: string | null, onSubmit: (secret: string) =>
 
 /** A speech bubble, marking the session the voice has just written to. */
 const mic = () => el("span", "mic", "💬");
+/** The session's short number, when the bridge gives one. */
+const number = (s: Session) => (s.number ? [el("span", "number", String(s.number))] : []);
+const numbered = (s: Session) => `${s.number ? `${s.number} ` : ""}${s.name || s.id}`;
 /** A fainter mark for a session the voice only looked at, without writing to it. */
 const peekMark = (s: Session, home: Home) =>
   !matches(s, home.focus) && home.peeks.some((key) => matches(s, key)) ? [el("span", "peek", "👁")] : [];
@@ -148,7 +151,7 @@ function micJump(home: Home): HTMLElement[] {
   const s = home.focus ? home.sessions.find((x) => matches(x, home.focus)) : undefined;
   if (!s) return [];
   const jump = button(
-    "💬",
+    s.number ? `💬 ${s.number}` : "💬",
     () => {
       document.querySelector(`[data-session="${CSS.escape(s.id)}"]`)?.scrollIntoView({ block: "center" });
     },
@@ -228,6 +231,7 @@ function card(s: Session, home: Home, act: Actions): HTMLElement {
     el(
       "div",
       "card-top",
+      ...number(s),
       el("span", "name", s.name || s.id),
       ...(focused ? [mic()] : []),
       ...peekMark(s, home),
@@ -299,7 +303,7 @@ function tile(s: Session, home: Home, act: Actions): HTMLElement {
   box.tabIndex = 0;
   box.dataset.session = s.id;
   box.dataset.state = state;
-  box.title = t("session.tileTitle", { name: s.name || s.id, state: look.label });
+  box.title = t("session.tileTitle", { name: numbered(s), state: look.label });
   let held = false;
   let press: ReturnType<typeof setTimeout> | undefined;
   box.addEventListener("pointerdown", (e) => {
@@ -343,6 +347,7 @@ function tile(s: Session, home: Home, act: Actions): HTMLElement {
     ...(matches(s, home.focus) ? [mic()] : []),
     ...peekMark(s, home),
     el("span", "name", s.name || s.id),
+    ...number(s),
     ...(home.active?.id === s.id ? [el("span", "pin")] : []),
     ...claudeLink(s, "↗").map((a) => {
       a.setAttribute("aria-label", t("session.openNamedInClaude", { name: s.name || s.id }));
