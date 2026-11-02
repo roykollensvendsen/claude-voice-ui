@@ -53,9 +53,9 @@ describe("the phone's language", () => {
 
 describe("the words", () => {
   test("a text fills in its blanks", () => {
-    expect(t("focus.chosenBy", { who: "voice" })).toBe("chosen by voice");
+    expect(t("session.continuesIn", { name: "docs-cd" })).toBe("Continues in docs-cd");
     setLanguage("nb");
-    expect(t("focus.chosenBy", { who: "voice" })).toBe("valgt av voice");
+    expect(t("session.continuesIn", { name: "docs-cd" })).toBe("Fortsetter i docs-cd");
   });
 
   test("a count picks the right form for the language", () => {

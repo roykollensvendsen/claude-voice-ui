@@ -132,33 +132,23 @@ export function signInScreen(error: string | null, onSubmit: (secret: string) =>
   );
 }
 
-function focusBar(home: Home): HTMLElement {
-  const focused = home.focus ? (home.sessions.find((s) => matches(s, home.focus))?.name ?? home.focus) : null;
-  if (focused)
-    return el(
-      "div",
-      "focus-bar talking",
-      "🎙 ",
-      el("b", undefined, focused),
-      el("span", "who", t("focus.talkingNow")),
-    );
-  if (home.active) {
-    const who =
-      home.active.set_by === "page"
-        ? t("focus.chosenHere")
-        : t("focus.chosenBy", { who: home.active.set_by });
-    // The name gets the room: a microphone stands for the words, which a screen reader still hears.
-    const bar = el(
-      "div",
-      "focus-bar",
-      "🎙 ",
-      el("b", undefined, home.active.name),
-      el("span", "who", ` · ${who}`),
-    );
-    bar.setAttribute("aria-label", t("focus.voiceTalksToFull", { name: home.active.name, who }));
-    return bar;
-  }
-  return el("div", "focus-bar", t("focus.tapToChoose"));
+/** The voice's microphone, marking the session it is talking to right now. */
+const mic = () => el("span", "mic", "🎙");
+
+/** A microphone at the top that leads to the session the voice is talking to, when there is one. */
+function micJump(home: Home): HTMLElement[] {
+  const s = home.focus ? home.sessions.find((x) => matches(x, home.focus)) : undefined;
+  if (!s) return [];
+  const jump = button(
+    "🎙",
+    () => {
+      document.querySelector(`[data-session="${CSS.escape(s.id)}"]`)?.scrollIntoView({ block: "center" });
+    },
+    "mic-jump",
+  );
+  jump.dataset.target = s.id;
+  jump.setAttribute("aria-label", t("focus.jump", { name: s.name || s.id }));
+  return [jump];
 }
 
 /** A link into the Claude app for a session connected to Remote Control; Android hands it to the app. */
@@ -227,13 +217,7 @@ function card(s: Session, home: Home, act: Actions): HTMLElement {
   arrow.setAttribute("aria-expanded", String(open));
   arrow.setAttribute("aria-label", open ? t("session.showLess") : t("session.showMoreCard"));
   box.append(
-    el(
-      "div",
-      "card-top",
-      el("span", "name", s.name || s.id),
-      ...(focused ? [el("span", "chip", t("session.talkingNow"))] : []),
-      arrow,
-    ),
+    el("div", "card-top", el("span", "name", s.name || s.id), ...(focused ? [mic()] : []), arrow),
     stateLine(s),
   );
   // The bridge's one line repeats the question while it waits, so the question is the line then.
@@ -341,6 +325,7 @@ function tile(s: Session, home: Home, act: Actions): HTMLElement {
   details.setAttribute("aria-label", t("session.openNamed", { name: s.name || s.id }));
   box.append(
     el("span", "icon", look.icon),
+    ...(matches(s, home.focus) ? [mic()] : []),
     el("span", "name", s.name || s.id),
     ...(home.active?.id === s.id ? [el("span", "pin")] : []),
     ...claudeLink(s, "↗").map((a) => {
@@ -657,7 +642,8 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
     el(
       "header",
       "top",
-      el("div", "titles", el("h1", undefined, t("app.title")), focusBar(home)),
+      el("h1", undefined, t("app.title")),
+      ...micJump(home),
       connection,
       ...usageButton(home, act),
       menuToggle,
