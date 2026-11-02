@@ -17,6 +17,46 @@
   --red: #ef5b5b;
   color-scheme: dark;
 }
+/* Light: the same roles, darker state colours so they hold their contrast on white. Chosen in the
+   menu, or followed from the phone when nothing is chosen. */
+:root[data-theme="light"] {
+  --bg: #f6f5f2;
+  --card: #ffffff;
+  --line: #d9d7d0;
+  --text: #1d1d1f;
+  --muted: #66656c;
+  --accent: #c0563a;
+  --focus: #2f6fd6;
+  --green: #1e8a4c;
+  --grey: #77767d;
+  --amber: #b77900;
+  --orange: #c4621b;
+  --gold: #9a8400;
+  --slate: #4f6f8f;
+  --faded: #a5a4aa;
+  --red: #c9302c;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f6f5f2;
+    --card: #ffffff;
+    --line: #d9d7d0;
+    --text: #1d1d1f;
+    --muted: #66656c;
+    --accent: #c0563a;
+    --focus: #2f6fd6;
+    --green: #1e8a4c;
+    --grey: #77767d;
+    --amber: #b77900;
+    --orange: #c4621b;
+    --gold: #9a8400;
+    --slate: #4f6f8f;
+    --faded: #a5a4aa;
+    --red: #c9302c;
+    color-scheme: light;
+  }
+}
 * {
   box-sizing: border-box;
 }
@@ -744,4 +784,46 @@ button {
   font-size: 0.85rem;
   text-align: left;
   cursor: pointer;
+}
+
+.menu-toggle {
+  min-width: 40px;
+  min-height: 36px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.menu {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+.menu .theme {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.menu button {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.menu button[aria-pressed="true"] {
+  color: var(--text);
+  border-color: var(--muted);
+  background: var(--bg);
+}
+.menu .signout {
+  justify-self: start;
 }

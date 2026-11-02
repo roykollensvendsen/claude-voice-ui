@@ -41,6 +41,8 @@ export interface Home {
   usageOpen: boolean;
   /** A newer build of the page has been deployed. */
   newVersion: boolean;
+  theme: Theme;
+  menuOpen: boolean;
   /** The session whose page is open, or null for the cards. */
   open: Detail | null;
   /** Whether the owner has opened the list of what is missing. */
@@ -57,6 +59,8 @@ export interface Detail {
 }
 
 export type View = "grid" | "cards";
+/** "system" follows the phone's own setting. */
+export type Theme = "system" | "light" | "dark";
 
 export interface Actions {
   pick(id: string): void;
@@ -73,6 +77,8 @@ export interface Actions {
   toggleLegend(): void;
   toggleUsage(): void;
   reload(): void;
+  toggleMenu(): void;
+  setTheme(theme: Theme): void;
   update: UpdateActions;
 }
 
@@ -302,6 +308,30 @@ function tile(s: Session, home: Home, act: Actions): HTMLElement {
     details,
   );
   return t;
+}
+
+/** The top bar's menu: the theme, and signing out. */
+function menu(home: Home, act: Actions): HTMLElement[] {
+  if (!home.menuOpen) return [];
+  const choice = (label: string, theme: Theme) => {
+    const b = button(label, () => act.setTheme(theme));
+    b.setAttribute("aria-pressed", String(home.theme === theme));
+    return b;
+  };
+  return [
+    el(
+      "div",
+      "menu",
+      el(
+        "div",
+        "theme",
+        choice("Like the phone", "system"),
+        choice("Light", "light"),
+        choice("Dark", "dark"),
+      ),
+      button("Sign out", act.signOut, "signout"),
+    ),
+  ];
 }
 
 function viewSwitch(home: Home, act: Actions): HTMLElement {
@@ -560,7 +590,9 @@ function detailScreen(home: Home, d: Detail, act: Actions): HTMLElement {
 }
 
 export function homeScreen(home: Home, act: Actions): HTMLElement {
-  const signOut = button("Sign out", act.signOut, "signout");
+  const menuToggle = button("⋯", act.toggleMenu, "menu-toggle");
+  menuToggle.setAttribute("aria-label", "Menu");
+  menuToggle.setAttribute("aria-expanded", String(home.menuOpen));
   const connection = el("span", `connection ${home.connection}`, CONNECTION[home.connection]);
   const sorted = sortForCards(home.sessions);
   const sessions = sorted.filter((s) => !(s.id in home.hidden));
@@ -580,8 +612,9 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
       el("div", "titles", el("h1", undefined, "Claude voice"), focusBar(home)),
       connection,
       ...usageButton(home, act),
-      signOut,
+      menuToggle,
     ),
+    ...menu(home, act),
     ...usagePanel(home),
     ...(home.newVersion ? [button("New version – tap to update", act.reload, "new-version")] : []),
   ];
