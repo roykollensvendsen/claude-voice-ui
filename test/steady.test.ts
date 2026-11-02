@@ -46,7 +46,7 @@ describe("tiles that hold still under a finger", () => {
     twoStartsWaiting();
     expect(order()).toEqual(["a1", "b2"]);
     lift("a1");
-    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(600);
     expect(order()).toEqual(["b2", "a1"]);
   });
 
@@ -77,5 +77,16 @@ describe("tiles that hold still under a finger", () => {
     tile("a1")?.click();
     await vi.advanceTimersByTimeAsync(0);
     expect(b.choose).toHaveBeenCalledWith("a1");
+  });
+
+  test("the order also holds still for a moment after the finger lifts", async () => {
+    await open(fakeBridge([{ sessions: [{ ...ONE }, { ...TWO }], active: null }]));
+    press("a1");
+    twoStartsWaiting();
+    lift("a1");
+    await vi.advanceTimersByTimeAsync(300);
+    expect(order()).toEqual(["a1", "b2"]);
+    await vi.advanceTimersByTimeAsync(300);
+    expect(order()).toEqual(["b2", "a1"]);
   });
 });

@@ -47,7 +47,7 @@ describe("the grid of sessions", () => {
     expect(tile("a1")?.querySelector(".name")?.textContent).toBe("billing-ab");
     expect(tile("a1")?.querySelector(".icon")?.textContent).toBe("●");
     expect(tile("a1")?.classList.contains("tone-green")).toBe(true);
-    expect(tile("a1")?.getAttribute("title")).toBe("billing-ab: Working – just now");
+    expect(tile("a1")?.getAttribute("title")).toBe("billing-ab: Working");
   });
 
   test("a waiting tile is marked as waiting and comes first", async () => {
@@ -65,13 +65,63 @@ describe("the grid of sessions", () => {
     expect(tile("a1")?.classList.contains("focus")).toBe(false);
   });
 
-  test("tapping a tile chooses the session and opens its page", async () => {
+  test("one tap on a tile makes it the session the voice talks to, and stays on the tiles", async () => {
     const b = fakeBridge([{ sessions: [ONE, TWO], active: null }]);
     await open(b);
     tile("b2")?.click();
     await vi.advanceTimersByTimeAsync(0);
     expect(b.choose).toHaveBeenCalledWith("b2");
+    expect(root.querySelector(".detail")).toBeNull();
+    expect(tile("b2")?.classList.contains("active")).toBe(true);
+  });
+
+  test("a tap is confirmed with a short flash and a buzz", async () => {
+    const buzz = vi.fn(() => true);
+    Object.defineProperty(navigator, "vibrate", { value: buzz, configurable: true });
+    await open(fakeBridge([{ sessions: [ONE, TWO], active: null }]));
+    tile("b2")?.click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(tile("b2")?.classList.contains("picked")).toBe(true);
+    expect(buzz).toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(tile("b2")?.classList.contains("picked")).toBe(false);
+  });
+
+  test("a long press opens the session's page without choosing it", async () => {
+    const b = fakeBridge([{ sessions: [WAITING], active: null }]);
+    await open(b);
+    tile("w")?.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(500);
+    document.dispatchEvent(new Event("pointerup", { bubbles: true }));
+    root.querySelector<HTMLElement>('[data-session="w"]')?.click();
+    await vi.advanceTimersByTimeAsync(500);
+    expect(root.querySelector(".detail h2")?.textContent).toBe("A session whose name is too long to fit");
+    expect(b.choose).not.toHaveBeenCalled();
+  });
+
+  test("the arrow in a tile's corner opens its page without choosing it", async () => {
+    const b = fakeBridge([{ sessions: [ONE, TWO], active: null }]);
+    await open(b);
+    tile("b2")?.querySelector<HTMLButtonElement>(".open-detail")?.click();
+    await vi.advanceTimersByTimeAsync(0);
     expect(root.querySelector(".detail h2")?.textContent).toBe("docs-cd");
+    expect(b.choose).not.toHaveBeenCalled();
+  });
+
+  test("a session both chosen and talking now shows both marks", async () => {
+    await open(
+      fakeBridge([
+        {
+          sessions: [ONE, TWO],
+          active: { id: "b2", name: "docs-cd", kind: "terminal", set_by: "page", set_at: "" },
+        },
+      ]),
+    );
+    FakeSource.last?.emit("focus", { session: "b2", tool: "ask_active_session", at: "" });
+    expect(tile("b2")?.classList.contains("focus")).toBe(true);
+    expect(tile("b2")?.classList.contains("active")).toBe(true);
+    expect(tile("b2")?.querySelector(".pin")).not.toBeNull();
+    expect(tile("a1")?.querySelector(".pin")).toBeNull();
   });
 
   test("the switch at the top changes between the grid and the cards", async () => {
@@ -120,39 +170,9 @@ describe("the grid of sessions", () => {
     expect(rows).toHaveLength(10);
     expect(text).toContain("?Waiting for an answer: it has asked you a question");
     expect(rows.find((r) => r.textContent?.startsWith("!"))?.classList.contains("tone-amber")).toBe(true);
-    expect(text).toContain("Blue ring: the voice is talking to it right now");
-    expect(text).toContain("White ring: the session the voice talks to, chosen by a tap or by voice");
-  });
-
-  test("holding a finger on a tile says its state in plain words, without opening it", async () => {
-    const b = fakeBridge([{ sessions: [WAITING], active: null }]);
-    await open(b);
-    tile("w")?.dispatchEvent(new Event("pointerdown", { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(500);
-    expect(tile("w")?.querySelector(".tip")?.textContent).toBe("Waiting for an answer – 57 minutes");
-    tile("w")?.dispatchEvent(new Event("pointerup", { bubbles: true }));
-    tile("w")?.click();
-    await vi.advanceTimersByTimeAsync(0);
-    expect(b.choose).not.toHaveBeenCalled();
-    expect(root.querySelector(".detail")).toBeNull();
-  });
-
-  test("a short tap still opens the session", async () => {
-    const b = fakeBridge([{ sessions: [WAITING], active: null }]);
-    await open(b);
-    tile("w")?.dispatchEvent(new Event("pointerdown", { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(100);
-    tile("w")?.dispatchEvent(new Event("pointerup", { bubbles: true }));
-    tile("w")?.click();
-    await vi.advanceTimersByTimeAsync(0);
-    expect(b.choose).toHaveBeenCalledWith("w");
-  });
-
-  test("the words go away by themselves", async () => {
-    await open(fakeBridge([{ sessions: [WAITING], active: null }]));
-    tile("w")?.dispatchEvent(new Event("pointerdown", { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(500);
-    await vi.advanceTimersByTimeAsync(4000);
-    expect(tile("w")?.querySelector(".tip")).toBeNull();
+    expect(text).toContain("White dot and ring: the session the voice talks to, chosen by a tap or by voice");
+    expect(text).toContain(
+      "Blue ring: the voice is talking to it right now; with a white dot, it is also the chosen one",
+    );
   });
 });

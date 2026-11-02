@@ -27,7 +27,7 @@ const OUTPUT: Output = {
 async function openDetail(b = fakeBridge([{ sessions: [ONE, TWO], active: null }])) {
   b.output.mockResolvedValue(OUTPUT);
   await open(b);
-  root.querySelector<HTMLButtonElement>('[data-session="a1"]')?.click();
+  root.querySelector<HTMLButtonElement>('[data-session="a1"] .open-detail')?.click();
   await settle();
   return b;
 }
@@ -46,11 +46,16 @@ afterEach(() => {
 });
 
 describe("one session's page", () => {
-  test("tapping a card opens that session's page and makes it the one the voice talks to", async () => {
+  test("opening a session's page leaves the session the voice talks to as it was", async () => {
     const b = await openDetail();
-    expect(b.choose).toHaveBeenCalledWith("a1");
+    expect(b.choose).not.toHaveBeenCalled();
     expect(text(".detail h2")).toBe("billing-ab");
-    expect(root.querySelector(".cards")).toBeNull();
+    expect(root.querySelector(".grid")).toBeNull();
+  });
+
+  test("the page says the session's state in plain words, with how long", async () => {
+    await openDetail();
+    expect(text(".detail .words")).toBe("Working – just now");
   });
 
   test("the page shows the session's latest turns, who said each", async () => {
@@ -67,7 +72,7 @@ describe("one session's page", () => {
       ...OUTPUT,
       turns: [{ index: 1, role: "assistant", text: "Long…", cut: true, length: 4200 }],
     });
-    root.querySelector<HTMLButtonElement>('[data-session="a1"]')?.click();
+    root.querySelector<HTMLButtonElement>('[data-session="a1"] .open-detail')?.click();
     await settle();
     expect(text(".turn .cut")).toBe("cut short; 4200 characters in all");
   });
@@ -125,7 +130,7 @@ describe("one session's page", () => {
       approvals: [],
     });
     await open(b);
-    root.querySelector<HTMLButtonElement>('[data-session="a1"]')?.click();
+    root.querySelector<HTMLButtonElement>('[data-session="a1"] .open-detail')?.click();
     await settle();
     expect(text(".pending")).toContain("Which file?");
     expect(text(".pending")).toContain("b.py");
@@ -139,7 +144,7 @@ describe("one session's page", () => {
       approvals: [{ id: "ap1", number: 2, tool: "Bash", summary: "npm test" }],
     });
     await open(b);
-    root.querySelector<HTMLButtonElement>('[data-session="a1"]')?.click();
+    root.querySelector<HTMLButtonElement>('[data-session="a1"] .open-detail')?.click();
     await settle();
     expect(text(".pending")).toContain("Approval 2: Bash npm test");
     expect(text(".pending")).toContain("Answer by voice or at the screen.");
@@ -152,7 +157,7 @@ describe("one session's page", () => {
       prs: [{ number: 52, title: "Git status", url: "https://github.com/x/y/pull/52", draft: true }],
     });
     await open(b);
-    root.querySelector<HTMLButtonElement>('[data-session="a1"]')?.click();
+    root.querySelector<HTMLButtonElement>('[data-session="a1"] .open-detail')?.click();
     await settle();
     const link = root.querySelector<HTMLAnchorElement>(".prs a");
     expect(link?.textContent).toBe("#52 Git status (draft)");
