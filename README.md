@@ -17,6 +17,23 @@ bridge. This app is the screen beside the voice:
 It is a progressive web app, so it can be added to an Android home screen and
 opened at any time, with or without a voice call running.
 
+## What a card shows
+
+Every session is in exactly one of seven states, each with its own icon and
+colour, and the card says how long ago it last changed. Sessions waiting for
+the owner come first. This is the list the code itself holds:
+
+```console
+$ node scripts/states.ts
+●  working  green  Working
+○  idle     grey   Idle
+?  answer   amber  Waiting for an answer
+!  approval orange Waiting for approval
+›  shell    slate  At the shell
+→  moved    faded  Moved
+■  stopped  red    Stopped
+```
+
 ## How it talks to the bridge
 
 Only through the bridge's event API, described in [API.md](API.md): a few JSON

@@ -32,7 +32,8 @@ describe("the state a card shows", () => {
   });
 
   test("a session with a question waits for an answer", () => {
-    const s = session({ status: "waiting", question: { text: "Which file?", options: ["a.py"] } });
+    const question = { text: "Which file?", options: ["a.py"] };
+    const s = session({ status: "waiting", waiting_for: "approval", question });
     expect(cardState(s)).toBe("answer");
   });
 
@@ -48,9 +49,12 @@ describe("the state a card shows", () => {
     expect(cardState(session({ status: "moved", moved_to: { id: "x", name: "billing-cd" } }))).toBe("moved");
   });
 
-  test.each(["error", "cancelled", "interrupted", "stopped"])("a bridge session that is %s has stopped", (status) => {
-    expect(cardState(session({ kind: "bridge-session", status }))).toBe("stopped");
-  });
+  test.each(["error", "cancelled", "interrupted", "stopped"])(
+    "a bridge session that is %s has stopped",
+    (status) => {
+      expect(cardState(session({ kind: "bridge-session", status }))).toBe("stopped");
+    },
+  );
 
   test("a status the app does not know is shown as idle", () => {
     expect(cardState(session({ status: "something-new" }))).toBe("idle");
@@ -86,7 +90,10 @@ describe("the order of the cards", () => {
   });
 
   test("sorting leaves the list it was given as it was", () => {
-    const given = [session({ id: "a", minutes_since_update: 9 }), session({ id: "b", minutes_since_update: 2 })];
+    const given = [
+      session({ id: "a", minutes_since_update: 9 }),
+      session({ id: "b", minutes_since_update: 2 }),
+    ];
     sortForCards(given);
     expect(given.map((s) => s.id)).toEqual(["a", "b"]);
   });

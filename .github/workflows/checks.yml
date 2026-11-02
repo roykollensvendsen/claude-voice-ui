@@ -106,6 +106,10 @@ jobs:
           enable-cache: true     # setup-python's own cache covers pip, not uv
           version: "0.12.13"     # pin uv itself
           python-version: "3.12"
+      # The documentation runs a TypeScript example, which Node 22.18 and later run as it is.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
       - run: uv sync --locked
       - name: Lint and format
         run: uv run ruff check . && uv run ruff format --check .

@@ -14,3 +14,15 @@
 # file = "src/claude_voice_ui/somewhere.py"
 # find = 'if limit_exceeded:'
 # replace = 'if False:'
+
+[[rule]]
+name = "a session with a question waits for an answer"
+file = "src/states.ts"
+find = 'if \(s\.question\) return "answer";'
+replace = 'if (false) return "answer";'
+
+[[rule]]
+name = "sessions waiting for the owner come first"
+file = "src/states.ts"
+find = 'Number\(waitsForOwner\(b\)\) - Number\(waitsForOwner\(a\)\) \|\|'
+replace = '0 || a.minutes_since_update - b.minutes_since_update,'

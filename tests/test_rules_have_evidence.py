@@ -59,6 +59,9 @@ def defined_test_names() -> set[str]:
     found = set()
     for module in sorted((ROOT / "tests").rglob("test_*.py")):
         found.update(re.findall(r"^(?:async )?def (test_\w+)", module.read_text(), re.MULTILINE))
+    name_for = _mutate().test_name_for
+    for module in sorted((ROOT / "test").rglob("*.test.ts")):
+        found.update(name_for(m.group(2)) for m in TITLE.finditer(module.read_text()))
     return found
 
 
