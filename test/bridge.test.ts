@@ -131,3 +131,25 @@ describe("updating the bridge", () => {
     expect(fetch).toHaveBeenCalledWith("/api/v1/bridge", { cache: "no-store" });
   });
 });
+
+describe("one session's output, what it waits for, and its pull requests", () => {
+  test("the latest turns are asked for six at a time", async () => {
+    const fetch = vi.fn(async () => answer(200, { status: "idle", turns: [], next_after: 0, turns_left: 0 }));
+    await bridge(fetch).output("a 1");
+    expect(fetch).toHaveBeenCalledWith("/api/v1/sessions/a%201/output?limit=6", { cache: "no-store" });
+  });
+
+  test("turns after a given one are asked for with after", async () => {
+    const fetch = vi.fn(async () => answer(200, { status: "idle", turns: [], next_after: 0, turns_left: 0 }));
+    await bridge(fetch).output("a1", 8);
+    expect(fetch).toHaveBeenCalledWith("/api/v1/sessions/a1/output?limit=6&after=8", { cache: "no-store" });
+  });
+
+  test("what it waits for and its pull requests are read as sent", async () => {
+    const pending = { waiting: false, question: null, approvals: [] };
+    expect(await bridge(async () => answer(200, pending)).pending("a1")).toEqual(pending);
+    const fetch = vi.fn(async () => answer(200, { prs: [] }));
+    expect(await bridge(fetch).prs("a1")).toEqual({ prs: [] });
+    expect(fetch).toHaveBeenCalledWith("/api/v1/sessions/a1/prs", { cache: "no-store" });
+  });
+});

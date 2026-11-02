@@ -1,120 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { type Deps, start } from "../src/app";
-import {
-  type Active,
-  type Bridge,
-  type BridgeInfo,
-  type Doctor,
-  SignedOut,
-  type SignIn,
-  type Snapshot,
-  type UpdateRun,
-  type UpdateStart,
-} from "../src/bridge";
-import type { EventSourceLike } from "../src/live";
-import type { Session } from "../src/states";
+import type { Active, Bridge, BridgeInfo, Doctor } from "../src/bridge";
 import type { Usage } from "../src/usage";
-
-class FakeSource implements EventSourceLike {
-  static last: FakeSource | undefined;
-  onopen: ((event: Event) => void) | null = null;
-  onerror: ((event: Event) => void) | null = null;
-  readyState = 0;
-  closed = false;
-  private listeners = new Map<string, ((e: MessageEvent) => void)[]>();
-  constructor(readonly url: string) {
-    FakeSource.last = this;
-  }
-  addEventListener(type: string, fn: (e: MessageEvent) => void): void {
-    this.listeners.set(type, [...(this.listeners.get(type) ?? []), fn]);
-  }
-  close(): void {
-    this.closed = true;
-    this.readyState = 2;
-  }
-  emit(type: string, data: unknown): void {
-    for (const fn of this.listeners.get(type) ?? [])
-      fn(new MessageEvent(type, { data: JSON.stringify(data) }));
-  }
-}
-
-function session(over: Partial<Session>): Session {
-  return {
-    id: "id",
-    name: "name",
-    kind: "terminal",
-    project: "proj",
-    status: "idle",
-    doing: "",
-    minutes_since_update: 0,
-    ...over,
-  };
-}
-
-const ONE = session({
-  id: "a1",
-  name: "billing-ab",
-  project: "billing",
-  status: "busy",
-  doing: "Fixing totals.",
-});
-const TWO = session({ id: "b2", name: "docs-cd", project: "docs", status: "idle", minutes_since_update: 12 });
-const ACTIVE_ONE: Active = { id: "a1", name: "billing-ab", kind: "terminal", set_by: "voice", set_at: "" };
-
-const ALL_OK: Doctor = { ready: true, checked_at: "", checks: [] };
-const NO_USAGE: Usage = {
-  plan: null,
-  warning: null,
-  voice: {
-    label: "estimate, voice activity via the bridge",
-    today: { connections: 0, minutes: 0, tool_calls: 0, chars_out: 0, est_tokens: 0 },
-    last_7_days: [],
-  },
-};
-
-function check(over: Partial<Doctor["checks"][number]>): Doctor["checks"][number] {
-  return {
-    id: "x",
-    title: "X",
-    ok: true,
-    required: false,
-    affects: "",
-    detail: "",
-    fix: "",
-    fix_url: null,
-    ...over,
-  };
-}
-
-function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignIn = "ok") {
-  let calls = 0;
-  return {
-    snapshotCalls: () => calls,
-    signIn: vi.fn(async (_secret: string) => signIn),
-    signOut: vi.fn(async () => {}),
-    snapshot: vi.fn(async () => {
-      const next = snapshots[Math.min(calls, snapshots.length - 1)];
-      calls += 1;
-      if (next === "signed-out" || next === undefined) throw new SignedOut();
-      return next;
-    }),
-    choose: vi.fn(
-      async (id: string): Promise<Active> => ({ id, name: id, kind: "terminal", set_by: "page", set_at: "" }),
-    ),
-    doctor: vi.fn(async (): Promise<Doctor> => ALL_OK),
-    usage: vi.fn(async (): Promise<Usage> => NO_USAGE),
-    bridgeInfo: vi.fn(async (): Promise<BridgeInfo> => ({ version: "bfe9eae", git: null })),
-    startUpdate: vi.fn(
-      async (): Promise<UpdateStart> => ({
-        outcome: "started",
-        note: "The voice connection drops for a few seconds while the bridge restarts.",
-      }),
-    ),
-    lastUpdate: vi.fn(
-      async (): Promise<UpdateRun> => ({ running: false, steps: [], result: null, detail: "" }),
-    ),
-  } satisfies Bridge & { snapshotCalls: () => number };
-}
+import { ACTIVE_ONE, ALL_OK, check, FakeSource, fakeBridge, NO_USAGE, ONE, session, TWO } from "./fakes";
 
 let root: HTMLElement;
 let stop: () => void;
@@ -266,6 +154,7 @@ describe("the session cards", () => {
     card("b2")?.click();
     await settle();
     expect(b.choose).toHaveBeenCalledWith("b2");
+    root.querySelector<HTMLButtonElement>(".detail .back")?.click();
     expect(card("b2")?.classList.contains("active")).toBe(true);
     expect(card("a1")?.classList.contains("active")).toBe(false);
   });
