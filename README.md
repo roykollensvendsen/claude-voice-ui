@@ -31,7 +31,6 @@ $ node scripts/states.ts
 ?  answer   amber  Waiting for an answer
 !  approval amber  Waiting for approval
 …  input    amber  Waiting for input
-›  shell    slate  At the shell
 →  moved    faded  Moved
 ■  stopped  red    Stopped
 ```
