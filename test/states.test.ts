@@ -22,6 +22,10 @@ function session(over: Partial<Session> = {}): Session {
   };
 }
 
+test("there is no state of its own for a command running", () => {
+  expect(Object.keys(LOOK)).not.toContain("shell");
+});
+
 describe("the state a card shows", () => {
   test("a busy session is working", () => {
     expect(cardState(session({ status: "busy" }))).toBe("working");
@@ -35,8 +39,8 @@ describe("the state a card shows", () => {
     expect(cardState(session({ status: "idle" }))).toBe("idle");
   });
 
-  test("a session running a command is at the shell", () => {
-    expect(cardState(session({ status: "shell" }))).toBe("shell");
+  test("a session running a command is working", () => {
+    expect(cardState(session({ status: "shell" }))).toBe("working");
   });
 
   test("a session with a question waits for an answer", () => {
@@ -85,10 +89,10 @@ describe("the state a card shows", () => {
 describe("how each state looks", () => {
   test("every state has its own icon, label and meaning", () => {
     const looks = Object.values(LOOK);
-    expect(looks).toHaveLength(8);
-    expect(new Set(looks.map((l) => l.icon)).size).toBe(8);
-    expect(new Set(looks.map((l) => l.label)).size).toBe(8);
-    expect(new Set(looks.map((l) => l.meaning)).size).toBe(8);
+    expect(looks).toHaveLength(7);
+    expect(new Set(looks.map((l) => l.icon)).size).toBe(7);
+    expect(new Set(looks.map((l) => l.label)).size).toBe(7);
+    expect(new Set(looks.map((l) => l.meaning)).size).toBe(7);
   });
 
   test("every kind of waiting is amber, as in the design draft", () => {
@@ -96,8 +100,8 @@ describe("how each state looks", () => {
   });
 
   test("the states that are not waiting each have a colour of their own", () => {
-    const rest = [LOOK.working, LOOK.idle, LOOK.shell, LOOK.moved, LOOK.stopped].map((l) => l.tone);
-    expect(rest).toEqual(["green", "grey", "slate", "faded", "red"]);
+    const rest = [LOOK.working, LOOK.idle, LOOK.moved, LOOK.stopped].map((l) => l.tone);
+    expect(rest).toEqual(["green", "grey", "faded", "red"]);
     expect(rest).not.toContain("amber");
   });
 });

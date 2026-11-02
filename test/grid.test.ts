@@ -237,7 +237,7 @@ describe("the grid of sessions", () => {
     root.querySelector<HTMLButtonElement>(".legend-toggle")?.click();
     const rows = [...root.querySelectorAll<HTMLElement>(".legend li")];
     const text = rows.map((r) => r.textContent);
-    expect(rows).toHaveLength(12);
+    expect(rows).toHaveLength(11);
     expect(text).toContain(">_: a session in a terminal window; one without it runs in the background");
     expect(text).toContain("?Waiting for an answer: it has asked you a question");
     expect(rows.find((r) => r.textContent?.startsWith("!"))?.classList.contains("tone-amber")).toBe(true);
