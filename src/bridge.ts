@@ -1,4 +1,5 @@
 // The bridge's event API, as this app uses it. The specification is API.md.
+import type { Git } from "./git";
 import type { Session } from "./states";
 import type { Usage } from "./usage";
 
@@ -36,6 +37,37 @@ export interface Doctor {
   checks: Check[];
 }
 
+/** The bridge's own version, and where its folder stands against its branch. */
+export interface BridgeInfo {
+  version: string;
+  git: Git | null;
+}
+
+export interface UpdateStep {
+  step: string;
+  ok: boolean;
+  detail: string;
+  at: string;
+  /** Sent with the last step. */
+  result?: UpdateResult;
+}
+
+export type UpdateResult = "updated" | "up_to_date" | "stopped" | "rolled_back";
+
+/** The latest update, as GET /api/v1/update gives it. */
+export interface UpdateRun {
+  running: boolean;
+  steps: UpdateStep[];
+  result: UpdateResult | null;
+  detail: string;
+  to?: string;
+}
+
+export interface UpdateStart {
+  outcome: "started" | "running" | "unavailable";
+  note: string;
+}
+
 export type SignIn = "ok" | "wrong" | "too-many" | "unreachable";
 
 /** The bridge answered 401: the sign-in cookie is missing or has run out. */
@@ -52,6 +84,9 @@ export interface Bridge {
   choose(session: string): Promise<Active>;
   doctor(): Promise<Doctor>;
   usage(): Promise<Usage>;
+  bridgeInfo(): Promise<BridgeInfo>;
+  startUpdate(): Promise<UpdateStart>;
+  lastUpdate(): Promise<UpdateRun>;
 }
 
 /** The API is always at /api/v1 on the page's own origin, wherever the page itself is served. */
@@ -96,6 +131,19 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
     },
     async usage() {
       return read<Usage>(await fetch(`${BASE}/usage`, { cache: "no-store" }));
+    },
+    async bridgeInfo() {
+      return read<BridgeInfo>(await fetch(`${BASE}/bridge`, { cache: "no-store" }));
+    },
+    async startUpdate() {
+      const response = await fetch(`${BASE}/update`, { method: "POST" });
+      if (response.status === 409) return { outcome: "running", note: "" };
+      if (response.status === 404) return { outcome: "unavailable", note: "" };
+      const body = await read<{ note?: string }>(response);
+      return { outcome: "started", note: body.note ?? "" };
+    },
+    async lastUpdate() {
+      return read<UpdateRun>(await fetch(`${BASE}/update`, { cache: "no-store" }));
     },
     async choose(session) {
       return read<Active>(

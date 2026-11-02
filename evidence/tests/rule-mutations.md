@@ -10,7 +10,7 @@ Where a rule already exists, this is the substitute. Each rule is disabled in
 turn, by replacing its one line with something that can never hold, and the
 suite is run. A rule whose removal breaks no test is a rule nothing protects.
 
-**Result: 12 of 12 rules turned off the test that names them.** None survived.
+**Result: 13 of 13 rules turned off the test that names them.** None survived.
 
 | Rule turned off | Tests that went red | The test that names it | Did that one go red? |
 |---|---|---|---|
@@ -26,6 +26,7 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | being behind is marked as behind even when also ahead | 3 | `test_being_behind_is_marked_as_behind_even_when_also_ahead` | yes |
 | a reached limit says so | 1 | `test_a_reached_limit_says_so` | yes |
 | usage is asked again every minute | 1 | `test_usage_is_asked_again_every_minute` | yes |
+| the update starts only after the owner confirms | 1 | `test_the_update_starts_only_after_the_owner_confirms` | yes |
 
 ## What this does not prove
 

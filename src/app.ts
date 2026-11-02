@@ -1,7 +1,8 @@
 // The app: signs in, shows the cards, and keeps them current.
-import { type Bridge, SignedOut, type SignIn } from "./bridge";
+import { type Bridge, SignedOut, type SignIn, type UpdateStep } from "./bridge";
 import { type EventSourceLike, follow } from "./live";
-import { type Home, homeScreen, signInScreen } from "./view";
+import { IDLE } from "./update";
+import { type Home, homeScreen, signInScreen, type UpdateActions } from "./view";
 
 export interface Deps {
   bridge: Bridge;
@@ -37,6 +38,8 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     problem: null,
     doctor: null,
     usage: null,
+    bridge: null,
+    update: { ...IDLE },
     doctorOpen: false,
   };
   let watching = false;
@@ -46,7 +49,77 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   let doctorTimer: ReturnType<typeof setInterval> | undefined;
   let usageTimer: ReturnType<typeof setInterval> | undefined;
 
-  const draw = () => root.replaceChildren(homeScreen(home, pick, signOut, toggleDoctor));
+  const draw = () => root.replaceChildren(homeScreen(home, pick, signOut, toggleDoctor, updating));
+
+  const updating: UpdateActions = {
+    ask() {
+      // RULE: the update starts only after the owner confirms
+      home.update = { ...IDLE, phase: "confirm" };
+      draw();
+    },
+    cancel() {
+      home.update = { ...IDLE };
+      draw();
+    },
+    async confirm() {
+      home.update = { ...IDLE, phase: "running" };
+      draw();
+      try {
+        const started = await deps.bridge.startUpdate();
+        if (started.outcome === "started") home.update.note = started.note;
+        else {
+          home.update.phase = "done";
+          home.update.message =
+            started.outcome === "running"
+              ? "An update is already running."
+              : "This bridge does not run from a git clone, so it cannot update itself.";
+        }
+      } catch (error) {
+        home.update = { ...IDLE };
+        failed(error);
+      }
+      draw();
+    },
+  };
+
+  function updateStep(step: UpdateStep) {
+    if (home.update.phase !== "running") home.update = { ...IDLE, phase: "running" };
+    home.update.steps.push(step);
+    if (step.step === "done" || step.result) {
+      home.update.phase = "done";
+      home.update.result = step.result ?? null;
+      void readUpdate();
+    }
+    draw();
+  }
+
+  /** After the restart nothing is replayed, so the rest of the run is read in one go. */
+  async function readUpdate() {
+    try {
+      const run = await deps.bridge.lastUpdate();
+      home.update.steps = run.steps;
+      home.update.restarting = false;
+      if (!run.running) {
+        home.update.phase = "done";
+        home.update.result = run.result ?? home.update.result;
+        home.update.detail = run.detail;
+        home.update.to = run.to ?? "";
+        void checkBridge();
+      }
+      draw();
+    } catch {
+      // The bridge may still be starting; the next reconnect asks again.
+    }
+  }
+
+  async function checkBridge() {
+    try {
+      home.bridge = await deps.bridge.bridgeInfo();
+      if (watching) draw();
+    } catch (error) {
+      if (error instanceof SignedOut) failed(error);
+    }
+  }
 
   function toggleDoctor() {
     home.doctorOpen = !home.doctorOpen;
@@ -146,12 +219,21 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       },
       connection(state) {
         home.connection = state;
+        if (home.update.phase === "running") {
+          if (state === "reconnecting") home.update.restarting = true;
+          else void readUpdate();
+        }
         draw();
       },
+      update: updateStep,
     });
     poll = setInterval(() => void refresh(), POLL_MS);
-    doctorTimer = setInterval(() => void checkDoctor(), DOCTOR_MS);
+    doctorTimer = setInterval(() => {
+      void checkDoctor();
+      void checkBridge();
+    }, DOCTOR_MS);
     void checkDoctor();
+    void checkBridge();
     usageTimer = setInterval(() => void checkUsage(), USAGE_MS);
     void checkUsage();
   }

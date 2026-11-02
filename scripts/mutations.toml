@@ -86,3 +86,9 @@ name = "usage is asked again every minute"
 file = "src/app.ts"
 find = '^const USAGE_MS = 60_000;'
 replace = 'const USAGE_MS = 120_000;'
+
+[[rule]]
+name = "the update starts only after the owner confirms"
+file = "src/app.ts"
+find = 'home\.update = \{ \.\.\.IDLE, phase: "confirm" \};'
+replace = 'void updating.confirm();'

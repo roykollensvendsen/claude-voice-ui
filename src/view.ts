@@ -1,7 +1,8 @@
 // Drawing the screens. Each function builds fresh elements from the state it is given.
-import type { Active, Doctor } from "./bridge";
+import type { Active, BridgeInfo, Doctor } from "./bridge";
 import { gitLine } from "./git";
 import { cardState, LOOK, minutesInState, type Session, sortForCards, timeInState } from "./states";
+import { resultText, stepText, type UpdateState } from "./update";
 import { contextTone, planBars, type Usage, voiceLine, warningText } from "./usage";
 
 export type Connection = "connecting" | "live" | "reconnecting";
@@ -15,6 +16,8 @@ export interface Home {
   problem: string | null;
   doctor: Doctor | null;
   usage: Usage | null;
+  bridge: BridgeInfo | null;
+  update: UpdateState;
   /** Whether the owner has opened the list of what is missing. */
   doctorOpen: boolean;
 }
@@ -169,6 +172,56 @@ function usagePanel(home: Home): HTMLElement[] {
   ];
 }
 
+export interface UpdateActions {
+  ask(): void;
+  cancel(): void;
+  confirm(): void;
+}
+
+function button(label: string, onClick: () => void, className?: string): HTMLButtonElement {
+  const b = el("button", className, label);
+  b.type = "button";
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+function updatePanel(home: Home, act: UpdateActions): HTMLElement[] {
+  const u = home.update;
+  const behind = home.bridge?.git?.tracking?.behind ?? 0;
+  if (u.phase === "idle" && behind <= 0) return [];
+  const parts: (Node | string)[] = [];
+  if (u.phase === "idle") {
+    parts.push(
+      el(
+        "span",
+        undefined,
+        `claude-voice: ${behind === 1 ? "1 new commit" : `${behind} new commits`} to update to`,
+      ),
+      button("Update", act.ask),
+    );
+  } else if (u.phase === "confirm") {
+    parts.push(
+      el(
+        "p",
+        undefined,
+        "Update claude-voice now? The voice drops for a few seconds while the bridge restarts.",
+      ),
+      button("Update now", act.confirm, "primary"),
+      button("Cancel", act.cancel),
+    );
+  } else {
+    if (u.message) parts.push(el("p", undefined, u.message));
+    if (u.note) parts.push(el("p", "muted", u.note));
+    parts.push(
+      el("ol", "steps", ...u.steps.map((st) => el("li", `step${st.ok ? "" : " failed"}`, stepText(st)))),
+    );
+    if (u.phase === "running" && u.restarting)
+      parts.push(el("p", "muted", "Restarting… the page reconnects by itself."));
+    if (u.phase === "done") parts.push(el("p", `result ${u.result ?? ""}`, resultText(u)));
+  }
+  return [el("section", "bridge-update", ...parts)];
+}
+
 function missing(home: Home, onToggle: () => void): HTMLElement[] {
   const failing = home.doctor?.checks.filter((c) => !c.ok) ?? [];
   if (!failing.length) return [];
@@ -210,6 +263,7 @@ export function homeScreen(
   onPick: (id: string) => void,
   onSignOut: () => void,
   onToggleDoctor: () => void = () => {},
+  update: UpdateActions = { ask() {}, cancel() {}, confirm() {} },
 ): HTMLElement {
   const signOut = el("button", "signout", "Sign out");
   signOut.type = "button";
@@ -229,6 +283,7 @@ export function homeScreen(
     el("header", "top", el("h1", undefined, "Claude voice"), connection, signOut),
     focusBar(home),
     ...missing(home, onToggleDoctor),
+    ...updatePanel(home, update),
     ...usagePanel(home),
     ...(home.problem ? [el("p", "notice", home.problem)] : []),
     cards,

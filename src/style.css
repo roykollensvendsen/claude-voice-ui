@@ -393,3 +393,50 @@ button {
   color: var(--red);
   border-color: var(--red);
 }
+
+.bridge-update {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--orange);
+}
+.bridge-update p,
+.bridge-update ol {
+  flex-basis: 100%;
+  margin: 0;
+}
+.bridge-update button {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  cursor: pointer;
+}
+.bridge-update button.primary,
+.bridge-update > span + button {
+  background: var(--orange);
+  border: 0;
+  color: #111;
+  font-weight: 600;
+}
+.bridge-update .steps {
+  padding-left: 20px;
+  font-size: 0.9rem;
+}
+.step.failed {
+  color: var(--red);
+}
+.result.updated,
+.result.up_to_date {
+  color: var(--green);
+}
+.result.stopped,
+.result.rolled_back {
+  color: var(--amber);
+}
