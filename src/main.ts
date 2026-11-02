@@ -7,7 +7,7 @@ declare const __BUILD_ID__: string;
 
 async function latest(): Promise<string> {
   const response = await fetch("./version.json", { cache: "no-store" });
-  if (!response.ok) throw new Error(`version.json answered ${response.status}`);
+  if (!response.ok) throw new Error(`version.json answered ${response.status}`); // not shown
   return ((await response.json()) as { build: string }).build;
 }
 

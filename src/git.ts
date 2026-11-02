@@ -1,4 +1,5 @@
 // A session folder's git status, as the bridge reports it, turned into the short line on a card.
+import { t } from "./i18n";
 
 /** How far a branch is from another, counted in commits. */
 export interface Distance {
@@ -43,10 +44,15 @@ function distance(d: Distance | null, name: string): Mark[] {
 
 export function gitLine(git: Git): GitLine {
   const dirty: Mark[] = git.dirty
-    ? [{ text: git.changed_files ? `${git.changed_files} changed` : "changed", kind: "dirty" }]
+    ? [
+        {
+          text: git.changed_files ? t("git.changedCount", { count: git.changed_files }) : t("git.changed"),
+          kind: "dirty",
+        },
+      ]
     : [];
   return {
-    branch: git.branch ?? "detached",
+    branch: git.branch ?? t("git.detached"),
     commit: `${git.commit.hash} ${git.commit.subject}`,
     marks: [
       ...dirty,

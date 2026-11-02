@@ -106,7 +106,7 @@ export type SignIn = "ok" | "wrong" | "too-many" | "unreachable";
 /** The bridge answered 401: the sign-in cookie is missing or has run out. */
 export class SignedOut extends Error {
   constructor() {
-    super("signed out");
+    super("signed out"); // not shown
   }
 }
 
@@ -136,7 +136,7 @@ type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
 
 async function read<T>(response: Response): Promise<T> {
   if (response.status === 401) throw new SignedOut();
-  if (!response.ok) throw new Error(`the bridge answered ${response.status}`);
+  if (!response.ok) throw new Error(`the bridge answered ${response.status}`); // not shown
   return (await response.json()) as T;
 }
 
