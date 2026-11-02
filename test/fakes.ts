@@ -11,6 +11,7 @@ import {
   type Prompt,
   type Prs,
   type Reply,
+  type Settings,
   SignedOut,
   type SignIn,
   type Snapshot,
@@ -145,6 +146,17 @@ export function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignI
     prs: vi.fn(async (_id: string): Promise<Prs> => ({ prs: [] })),
     prompts: vi.fn(async (): Promise<Prompt[]> => []),
     answer: vi.fn(async (_id: string, _reply: Reply): Promise<Answered> => "ok"),
+    settings: vi.fn(
+      async (): Promise<Settings> => ({ remote_control: true, start_in: "terminal", updated_at: null }),
+    ),
+    changeSettings: vi.fn(
+      async (change: Partial<Settings>): Promise<Settings> => ({
+        remote_control: true,
+        start_in: "terminal",
+        updated_at: "now",
+        ...change,
+      }),
+    ),
   } satisfies Bridge & { snapshotCalls: () => number };
 }
 
