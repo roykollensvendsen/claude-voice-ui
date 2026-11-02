@@ -1,0 +1,87 @@
+import { describe, expect, test, vi } from "vitest";
+import { bridge, SignedOut } from "../src/bridge";
+
+function answer(status: number, body?: unknown): Response {
+  return new Response(body === undefined ? null : JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+describe("signing in", () => {
+  test("the secret is sent as JSON to the sign-in address", async () => {
+    const fetch = vi.fn(async () => answer(204));
+    await bridge(fetch).signIn("s3cret");
+    expect(fetch).toHaveBeenCalledWith("/api/v1/signin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ secret: "s3cret" }),
+    });
+  });
+
+  test.each([
+    [204, "ok"],
+    [401, "wrong"],
+    [429, "too-many"],
+    [500, "unreachable"],
+  ])("an answer of %i means %s", async (status, outcome) => {
+    expect(await bridge(async () => answer(status)).signIn("x")).toBe(outcome);
+  });
+
+  test("a bridge that cannot be reached is said so", async () => {
+    const fetch = async () => {
+      throw new TypeError("Failed to fetch");
+    };
+    expect(await bridge(fetch).signIn("x")).toBe("unreachable");
+  });
+});
+
+describe("reading the sessions", () => {
+  test("the list and the active session come back as the bridge sent them", async () => {
+    const body = { sessions: [{ id: "a", name: "one" }], active: null };
+    const fetch = vi.fn(async () => answer(200, body));
+    expect(await bridge(fetch).snapshot()).toEqual(body);
+    expect(fetch).toHaveBeenCalledWith("/api/v1/sessions", { cache: "no-store" });
+  });
+
+  test("an answer of 401 means the page is signed out", async () => {
+    await expect(
+      bridge(async () => answer(401, { error: "sign in first" })).snapshot(),
+    ).rejects.toBeInstanceOf(SignedOut);
+  });
+
+  test("any other failure is an error that says what came back", async () => {
+    await expect(bridge(async () => answer(502)).snapshot()).rejects.toThrow("502");
+  });
+});
+
+describe("choosing the session the voice talks to", () => {
+  test("the choice is sent with PUT and the new active session comes back", async () => {
+    const active = {
+      id: "a",
+      name: "one",
+      kind: "terminal",
+      set_by: "page",
+      set_at: "2026-11-02T13:05:00+00:00",
+    };
+    const fetch = vi.fn(async () => answer(200, active));
+    expect(await bridge(fetch).choose("a")).toEqual(active);
+    expect(fetch).toHaveBeenCalledWith("/api/v1/active", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session: "a" }),
+    });
+  });
+
+  test("choosing while signed out says so", async () => {
+    await expect(bridge(async () => answer(401)).choose("a")).rejects.toBeInstanceOf(SignedOut);
+  });
+});
+
+describe("signing out", () => {
+  test("signing out is a POST to the sign-out address", async () => {
+    const fetch = vi.fn(async () => answer(204));
+    await bridge(fetch).signOut();
+    expect(fetch).toHaveBeenCalledWith("/api/v1/signout", { method: "POST" });
+  });
+});
