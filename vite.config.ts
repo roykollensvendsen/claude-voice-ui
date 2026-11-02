@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { defineConfig } from "vitest/config";
+import { parseLog } from "./src/changes.ts";
 
 // The bridge to talk to while developing. The page itself always calls its own
 // origin, so in development Vite passes /api on to the bridge.
@@ -19,6 +20,14 @@ function commit(): string {
 }
 const build = `${commit()}-${Date.now()}`;
 
+function log(): string {
+  try {
+    return execFileSync("git", ["log", "-n", "300", "--format=%h%x09%s"], { encoding: "utf8" });
+  } catch {
+    return "";
+  }
+}
+
 export default defineConfig({
   define: { __BUILD_ID__: JSON.stringify(build) },
   plugins: [
@@ -27,6 +36,12 @@ export default defineConfig({
       apply: "build",
       generateBundle() {
         this.emitFile({ type: "asset", fileName: "version.json", source: `${JSON.stringify({ build })}\n` });
+        // What's new: the features and fixes among the latest commits, for a phone on an older build.
+        this.emitFile({
+          type: "asset",
+          fileName: "changelog.json",
+          source: `${JSON.stringify(parseLog(log()))}\n`,
+        });
       },
     },
   ],

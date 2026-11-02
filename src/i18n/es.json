@@ -127,6 +127,10 @@
   "detail.gone": "Esta sesión ya no está en marcha.",
   "detail.prs": "Pull requests abiertos",
   "page.newVersion": "Nueva versión – toca para actualizar",
+  "page.whatsNew": "Novedades",
+  "page.new": "Nuevo",
+  "page.fixed": "Corregido",
+  "page.noChanges": "No hay cambios en la lista.",
   "git.changedCount": "{count} cambiados",
   "git.changed": "cambios",
   "git.detached": "desacoplado"
