@@ -107,3 +107,27 @@ describe("asking how much is used", () => {
     expect(fetch).toHaveBeenCalledWith("/api/v1/usage", { cache: "no-store" });
   });
 });
+
+describe("updating the bridge", () => {
+  test("starting an update is a POST that comes back with the bridge's note", async () => {
+    const fetch = vi.fn(async () => answer(202, { started: true, note: "The voice drops." }));
+    expect(await bridge(fetch).startUpdate()).toEqual({ outcome: "started", note: "The voice drops." });
+    expect(fetch).toHaveBeenCalledWith("/api/v1/update", { method: "POST" });
+  });
+
+  test.each([
+    [409, "running"],
+    [404, "unavailable"],
+  ])("an answer of %i to starting an update means %s", async (status, outcome) => {
+    expect((await bridge(async () => answer(status, {})).startUpdate()).outcome).toBe(outcome);
+  });
+
+  test("the latest update and the bridge's own version are read as sent", async () => {
+    const run = { running: false, steps: [], result: "up_to_date", detail: "" };
+    expect(await bridge(async () => answer(200, run)).lastUpdate()).toEqual(run);
+    const info = { version: "bfe9eae", git: null };
+    const fetch = vi.fn(async () => answer(200, info));
+    expect(await bridge(fetch).bridgeInfo()).toEqual(info);
+    expect(fetch).toHaveBeenCalledWith("/api/v1/bridge", { cache: "no-store" });
+  });
+});

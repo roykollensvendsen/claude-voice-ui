@@ -1,6 +1,16 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { type Deps, start } from "../src/app";
-import { type Active, type Bridge, type Doctor, SignedOut, type SignIn, type Snapshot } from "../src/bridge";
+import {
+  type Active,
+  type Bridge,
+  type BridgeInfo,
+  type Doctor,
+  SignedOut,
+  type SignIn,
+  type Snapshot,
+  type UpdateRun,
+  type UpdateStart,
+} from "../src/bridge";
 import type { EventSourceLike } from "../src/live";
 import type { Session } from "../src/states";
 import type { Usage } from "../src/usage";
@@ -93,6 +103,16 @@ function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignIn = "ok
     ),
     doctor: vi.fn(async (): Promise<Doctor> => ALL_OK),
     usage: vi.fn(async (): Promise<Usage> => NO_USAGE),
+    bridgeInfo: vi.fn(async (): Promise<BridgeInfo> => ({ version: "bfe9eae", git: null })),
+    startUpdate: vi.fn(
+      async (): Promise<UpdateStart> => ({
+        outcome: "started",
+        note: "The voice connection drops for a few seconds while the bridge restarts.",
+      }),
+    ),
+    lastUpdate: vi.fn(
+      async (): Promise<UpdateRun> => ({ running: false, steps: [], result: null, detail: "" }),
+    ),
   } satisfies Bridge & { snapshotCalls: () => number };
 }
 
@@ -556,5 +576,120 @@ describe("usage", () => {
     await open(b);
     expect(card("a1")).not.toBeNull();
     expect(root.querySelector(".usage")).toBeNull();
+  });
+});
+
+describe("updating the bridge", () => {
+  const BEHIND: BridgeInfo = {
+    version: "bfe9eae",
+    git: {
+      branch: "main",
+      commit: { hash: "bfe9eae", subject: "" },
+      dirty: false,
+      changed_files: 0,
+      tracking: { name: "origin/main", ahead: 0, behind: 3 },
+      main: null,
+      parent: null,
+      checked_at: "",
+    },
+  };
+
+  async function openBehind() {
+    const b = fakeBridge([{ sessions: [ONE], active: null }]);
+    b.bridgeInfo.mockResolvedValue(BEHIND);
+    await open(b);
+    return b;
+  }
+
+  const button = (label: string) =>
+    [...root.querySelectorAll<HTMLButtonElement>(".bridge-update button")].find(
+      (x) => x.textContent === label,
+    );
+
+  test("a bridge that is up to date offers no update", async () => {
+    await open(fakeBridge([{ sessions: [ONE], active: null }]));
+    expect(root.querySelector(".bridge-update")).toBeNull();
+  });
+
+  test("a bridge behind its branch offers an update and says how far behind", async () => {
+    await openBehind();
+    expect(text(".bridge-update")).toContain("3 new commits");
+    expect(button("Update")).toBeDefined();
+  });
+
+  test("the update starts only after the owner confirms", async () => {
+    const b = await openBehind();
+    button("Update")?.click();
+    await settle();
+    expect(b.startUpdate).not.toHaveBeenCalled();
+    expect(text(".bridge-update")).toContain("The voice drops for a few seconds");
+    button("Cancel")?.click();
+    expect(button("Update now")).toBeUndefined();
+    expect(button("Update")).toBeDefined();
+  });
+
+  test("confirming starts the update and shows the bridge's note", async () => {
+    const b = await openBehind();
+    button("Update")?.click();
+    button("Update now")?.click();
+    await settle();
+    expect(b.startUpdate).toHaveBeenCalledTimes(1);
+    expect(text(".bridge-update")).toContain("The voice connection drops for a few seconds");
+  });
+
+  test("each step of the update shows as it arrives", async () => {
+    await openBehind();
+    button("Update")?.click();
+    button("Update now")?.click();
+    await settle();
+    FakeSource.last?.emit("update", { step: "fetch", ok: true, detail: "3 new commits", at: "" });
+    FakeSource.last?.emit("update", { step: "test", ok: true, detail: "212 passed", at: "" });
+    const steps = [...root.querySelectorAll(".bridge-update .step")].map((x) => x.textContent);
+    expect(steps).toEqual(["✓ Fetching: 3 new commits", "✓ Running the tests: 212 passed"]);
+  });
+
+  test("when the stream comes back after the restart the result is read", async () => {
+    const b = await openBehind();
+    button("Update")?.click();
+    button("Update now")?.click();
+    await settle();
+    FakeSource.last?.emit("update", { step: "restart", ok: true, detail: "", at: "" });
+    FakeSource.last?.onerror?.(new Event("error"));
+    expect(text(".bridge-update")).toContain("Restarting");
+    b.lastUpdate.mockResolvedValue({
+      running: false,
+      steps: [
+        { step: "restart", ok: true, detail: "", at: "" },
+        { step: "verify", ok: true, detail: "answers", at: "" },
+        { step: "done", ok: true, detail: "", at: "" },
+      ],
+      result: "updated",
+      detail: "",
+      to: "c0ffee1234",
+    });
+    FakeSource.last?.onopen?.(new Event("open"));
+    await settle();
+    expect(b.lastUpdate).toHaveBeenCalled();
+    expect(text(".bridge-update")).toContain("Updated to c0ffee1");
+  });
+
+  test("a rolled-back update says the old version still runs", async () => {
+    await openBehind();
+    button("Update")?.click();
+    button("Update now")?.click();
+    await settle();
+    FakeSource.last?.emit("update", { step: "rollback", ok: true, detail: "", at: "" });
+    FakeSource.last?.emit("update", { step: "done", ok: false, detail: "", at: "", result: "rolled_back" });
+    expect(text(".bridge-update")).toContain("Rolled back");
+    expect(text(".bridge-update")).toContain("the old version still runs");
+  });
+
+  test("an update already running is said so", async () => {
+    const b = await openBehind();
+    b.startUpdate.mockResolvedValue({ outcome: "running", note: "" });
+    button("Update")?.click();
+    button("Update now")?.click();
+    await settle();
+    expect(text(".bridge-update")).toContain("An update is already running");
   });
 });
