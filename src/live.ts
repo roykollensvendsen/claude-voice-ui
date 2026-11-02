@@ -1,5 +1,5 @@
-// The bridge's stream of live events: focus, peek, active, news, status, git, update and output.
-import type { Active, UpdateStep } from "./bridge";
+// The bridge's stream of live events: focus, peek, active, news, status, git, update, output and prompts.
+import type { Active, Prompt, UpdateStep } from "./bridge";
 import type { Git } from "./git";
 
 /** The part of the browser's EventSource this app uses, so a test can stand in for it. */
@@ -57,6 +57,9 @@ export interface Handlers {
   git(change: GitChange): void;
   update(step: UpdateStep): void;
   output(turn: NewTurn): void;
+  /** A session holds a question or an approval for the phone. */
+  prompt(prompt: Prompt): void;
+  promptClosed(closed: { id: string; how: string }): void;
   connection(state: "live" | "reconnecting"): void;
 }
 
@@ -76,5 +79,7 @@ export function follow(open: (url: string) => EventSourceLike, on: Handlers): ()
   source.addEventListener("git", (e) => on.git(parse(e)));
   source.addEventListener("update", (e) => on.update(parse(e)));
   source.addEventListener("output", (e) => on.output(parse(e)));
+  source.addEventListener("prompt", (e) => on.prompt(parse(e)));
+  source.addEventListener("prompt_closed", (e) => on.promptClosed(parse(e)));
   return () => source.close();
 }

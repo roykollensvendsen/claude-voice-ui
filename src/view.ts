@@ -1,5 +1,5 @@
 // Drawing the screens. Each function builds fresh elements from the state it is given.
-import type { Active, BridgeInfo, Doctor, Pending, Pr, Turn } from "./bridge";
+import type { Active, BridgeInfo, Doctor, Pending, Pr, Prompt, Reply, Turn } from "./bridge";
 import { gitLine } from "./git";
 import { type Key, type Language, NAMES, plural, t } from "./i18n";
 import {
@@ -55,6 +55,10 @@ export interface Home {
   open: Detail | null;
   /** Session ids in the order shown since the page opened; an ended one keeps its place as a gap. */
   placed: string[];
+  /** Questions and approvals the sessions hold for the phone. */
+  prompts: Prompt[];
+  /** What came of an answer: a refusal by prompt id, or a note by session id once it is gone. */
+  replies: Record<string, { error?: string; note?: string }>;
   /** Whether the owner has opened the list of what is missing. */
   doctorOpen: boolean;
 }
@@ -88,6 +92,8 @@ export interface Actions {
   toggleUsage(): void;
   reload(): void;
   nextWaiting(): void;
+  /** `said` is the answer in words, for the note shown once it is sent. */
+  answer(prompt: Prompt, reply: Reply, said: string): void;
   toggleWhatsNew(): void;
   toggleMenu(): void;
   setTheme(theme: Theme): void;
@@ -431,7 +437,9 @@ function newVersion(home: Home, act: Actions): HTMLElement[] {
 
 /** How many sessions wait for the owner; a tap opens the next one's page, question first. */
 function waitingCount(home: Home, act: Actions): HTMLElement[] {
-  const count = home.sessions.filter((s) => waitsForOwner(s) && !(s.id in home.hidden)).length;
+  const count = home.sessions.filter(
+    (s) => (waitsForOwner(s) || hasPrompt(home, s)) && !(s.id in home.hidden),
+  ).length;
   if (!count) return [];
   const b = button(`❓${count}`, act.nextWaiting, "waiting-count");
   b.setAttribute("aria-label", plural(count, "waiting.count"));
@@ -618,6 +626,63 @@ function missing(home: Home, onToggle: () => void): HTMLElement[] {
   return [banner, el("ul", "doctor-panel", ...items)];
 }
 
+export function hasPrompt(home: Home, s: Session): boolean {
+  return home.prompts.some((p) => matches(s, p.session));
+}
+
+/** A question to answer with a tap, ticks or words of one's own, or an approval to allow or deny. */
+function promptBlock(p: Prompt, home: Home, act: Actions): HTMLElement {
+  const error = home.replies[p.id]?.error;
+  const parts: (HTMLElement | string)[] = [];
+  if (p.kind === "approval") {
+    parts.push(
+      el("b", "tool", p.tool ?? ""),
+      el("pre", undefined, p.input ?? ""),
+      ...(p.cut ? [el("p", "muted", t("prompt.cut"))] : []),
+      el(
+        "div",
+        "decide",
+        button(t("prompt.allow"), () => act.answer(p, { decision: "allow" }, t("prompt.allow")), "allow"),
+        button(t("prompt.deny"), () => act.answer(p, { decision: "deny" }, t("prompt.deny")), "deny"),
+      ),
+    );
+  } else if (p.question) {
+    const q = p.question;
+    const option = (o: { label: string; description: string }) =>
+      el("span", undefined, el("b", undefined, o.label), el("span", "muted", o.description));
+    const ticks: HTMLInputElement[] = [];
+    const choices = q.options.map((o) => {
+      if (!q.multi) return button("", () => act.answer(p, { answer: o.label }, o.label), "option");
+      const tick = el("input");
+      tick.type = "checkbox";
+      tick.value = o.label;
+      ticks.push(tick);
+      return el("label", "option", tick);
+    });
+    choices.forEach((c, i) => {
+      const o = q.options[i];
+      if (o) c.append(...option(o).childNodes);
+    });
+    const own = el("input", "own");
+    own.placeholder = t("prompt.own");
+    const send = button(t("prompt.send"), () => {
+      const text = own.value.trim();
+      if (text) act.answer(p, { answer: { text } }, text);
+      else if (q.multi) {
+        const picked = ticks.filter((x) => x.checked).map((x) => x.value);
+        if (picked.length) act.answer(p, { answer: picked }, picked.join(", "));
+      }
+    });
+    parts.push(
+      ...(q.header ? [el("div", "muted", q.header)] : []),
+      el("div", "question-text", q.text),
+      el("div", "options", ...choices),
+      el("div", "own-row", own, send),
+    );
+  }
+  return el("section", "prompt", ...parts, ...(error ? [el("p", "error", error)] : []));
+}
+
 function pendingBlock(p: Pending | null): HTMLElement[] {
   if (!p || (!p.question && !p.approvals.length)) return [];
   const parts: HTMLElement[] = [];
@@ -660,6 +725,8 @@ function turn(said: Turn): HTMLElement {
 function detailScreen(home: Home, d: Detail, act: Actions): HTMLElement {
   const s = home.sessions.find((x) => x.id === d.id);
   const back = button(t("detail.back"), act.back, "back");
+  const prompts = home.prompts.filter((p) => (s ? matches(s, p.session) : p.session === d.id));
+  const note = prompts.length ? undefined : home.replies[d.id]?.note;
   const prs = d.prs.map((pr) => {
     const link = el("a", undefined, `#${pr.number} ${pr.title}${pr.draft ? t("detail.draft") : ""}`);
     link.href = pr.url;
@@ -672,6 +739,9 @@ function detailScreen(home: Home, d: Detail, act: Actions): HTMLElement {
     "detail",
     back,
     el("h2", undefined, s?.name ?? d.id),
+    // What waits for an answer comes first, so the count at the top lands right on it.
+    ...prompts.map((p) => promptBlock(p, home, act)),
+    ...(note ? [el("p", "answered", note)] : []),
     ...(s
       ? [
           el("div", "meta", [s.project, s.kind].filter(Boolean).join(" · ")),
@@ -688,7 +758,7 @@ function detailScreen(home: Home, d: Detail, act: Actions): HTMLElement {
           ...claudeLink(s, t("session.openInClaude")),
         ]
       : [el("p", "notice", t("detail.gone"))]),
-    ...pendingBlock(d.pending),
+    ...(prompts.length ? [] : pendingBlock(d.pending)),
     el("div", "turns", ...d.turns.map(turn)),
     ...(prs.length ? [el("h3", undefined, t("detail.prs")), el("ul", "prs", ...prs)] : []),
   );

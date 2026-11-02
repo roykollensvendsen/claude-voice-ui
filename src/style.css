@@ -962,3 +962,85 @@ a.open-claude {
   font-weight: 700;
   cursor: pointer;
 }
+
+/* A question or an approval held for the phone, at the top of the session's page. */
+.prompt {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--amber);
+  background: color-mix(in srgb, var(--amber) 10%, var(--card));
+}
+.prompt .options {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+.prompt .option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.prompt label.option {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.prompt .own-row {
+  display: flex;
+  gap: 6px;
+}
+.prompt .own {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+}
+.prompt pre {
+  margin: 0;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--bg);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.prompt .decide {
+  display: flex;
+  gap: 8px;
+}
+.prompt .decide button {
+  flex: 1;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  font-weight: 700;
+}
+.prompt .decide .allow {
+  border-color: var(--green);
+  color: var(--green);
+}
+.prompt .decide .deny {
+  border-color: var(--red);
+  color: var(--red);
+}
+.answered {
+  color: var(--muted);
+}
