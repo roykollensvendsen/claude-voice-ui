@@ -1,4 +1,4 @@
-// What a session card shows: the bridge's words for a session, turned into one of seven states.
+// What a session card shows: one of eight states, as the bridge reports it or as read from its rawer words.
 
 /** One session as GET /api/v1/sessions gives it. */
 export interface Session {
@@ -12,9 +12,14 @@ export interface Session {
   question?: { text: string; options?: string[] };
   waiting_for?: string | null;
   moved_to?: { id?: string; name?: string };
+  /** The bridge's own state; older bridges send only `status`. */
+  state?: string;
+  /** When `state` last changed. */
+  state_since?: string;
+  waiting_kind?: "question" | "approval" | "input" | null;
 }
 
-export type CardState = "working" | "idle" | "answer" | "approval" | "shell" | "moved" | "stopped";
+export type CardState = "working" | "idle" | "answer" | "approval" | "input" | "shell" | "moved" | "stopped";
 
 export interface Look {
   label: string;
@@ -28,6 +33,7 @@ export const LOOK: Record<CardState, Look> = {
   idle: { label: "Idle", icon: "○", tone: "grey" },
   answer: { label: "Waiting for an answer", icon: "?", tone: "amber" },
   approval: { label: "Waiting for approval", icon: "!", tone: "orange" },
+  input: { label: "Waiting for input", icon: "…", tone: "gold" },
   shell: { label: "At the shell", icon: "›", tone: "slate" },
   moved: { label: "Moved", icon: "→", tone: "faded" },
   stopped: { label: "Stopped", icon: "■", tone: "red" },
@@ -37,6 +43,8 @@ export const LOOK: Record<CardState, Look> = {
 const STOPPED = new Set(["error", "cancelled", "interrupted", "stopped"]);
 
 export function cardState(s: Session): CardState {
+  // RULE: the state the bridge reports wins over the app's own reading
+  if (s.state && Object.hasOwn(LOOK, s.state)) return s.state as CardState;
   switch (s.status) {
     case "busy":
     case "running":
@@ -56,7 +64,7 @@ export function cardState(s: Session): CardState {
 
 function waitsForOwner(s: Session): boolean {
   const state = cardState(s);
-  return state === "answer" || state === "approval";
+  return state === "answer" || state === "approval" || state === "input";
 }
 
 export function sortForCards(sessions: readonly Session[]): Session[] {
@@ -65,6 +73,13 @@ export function sortForCards(sessions: readonly Session[]): Session[] {
       // RULE: sessions waiting for the owner come first
       Number(waitsForOwner(b)) - Number(waitsForOwner(a)) || a.minutes_since_update - b.minutes_since_update,
   );
+}
+
+/** Minutes since the state changed, when the bridge says when; otherwise since the last update. */
+export function minutesInState(s: Session, now: number): number {
+  const since = s.state_since ? Date.parse(s.state_since) : Number.NaN;
+  if (Number.isNaN(since)) return s.minutes_since_update;
+  return Math.max(0, Math.floor((now - since) / 60_000));
 }
 
 export function timeInState(minutes: number): string {

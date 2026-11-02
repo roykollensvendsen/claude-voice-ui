@@ -19,8 +19,9 @@ opened at any time, with or without a voice call running.
 
 ## What a card shows
 
-Every session is in exactly one of seven states, each with its own icon and
-colour, and the card says how long ago it last changed. Sessions waiting for
+Every session is in exactly one of eight states, each with its own icon and
+colour, and the card says how long it has been in that state. The bridge
+decides the state; the app reads it from rawer words only for an older bridge. Sessions waiting for
 the owner come first. This is the list the code itself holds:
 
 ```console
@@ -29,6 +30,7 @@ $ node scripts/states.ts
 ○  idle     grey   Idle
 ?  answer   amber  Waiting for an answer
 !  approval orange Waiting for approval
+…  input    gold   Waiting for input
 ›  shell    slate  At the shell
 →  moved    faded  Moved
 ■  stopped  red    Stopped
@@ -45,13 +47,16 @@ keeps no data of its own beyond being signed in.
 The first version works against the bridge on the owner's computer:
 
 - signing in with the bridge's login secret, with a reason when it is refused;
-- a card for every session, in one of the states above, waiting sessions first;
+- a card for every session, in one of the states above, waiting sessions first,
+  changing within seconds of the session itself;
+- a banner naming anything the bridge is missing on the computer, and how to
+  fix it;
 - tapping a card makes it the session the voice talks to;
 - a bar naming the session the voice is talking to right now, from the bridge's
   live `focus` events, falling back to the chosen session after two quiet
   minutes;
-- live updates from the bridge's event stream, and a fresh list every fifteen
-  seconds, because the bridge does not yet announce every change of state.
+- live updates from the bridge's event stream, and a fresh list every minute in
+  case the stream dropped something.
 
 Still to come, each agreed with the bridge first: a detail view with live
 output, answering questions and approvals, git status per session, an update

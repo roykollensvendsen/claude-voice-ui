@@ -1,6 +1,6 @@
 // Drawing the screens. Each function builds fresh elements from the state it is given.
 import type { Active, Doctor } from "./bridge";
-import { cardState, LOOK, type Session, sortForCards, timeInState } from "./states";
+import { cardState, LOOK, minutesInState, type Session, sortForCards, timeInState } from "./states";
 
 export type Connection = "connecting" | "live" | "reconnecting";
 
@@ -95,7 +95,7 @@ function card(s: Session, home: Home, onPick: (id: string) => void): HTMLElement
       "state",
       el("span", "icon", look.icon),
       ` ${look.label}`,
-      el("span", "since", ` · ${timeInState(s.minutes_since_update)}`),
+      el("span", "since", ` · ${timeInState(minutesInState(s, Date.now()))}`),
     ),
   );
   // The bridge's one line repeats the question while it waits, and the question is shown in full below.

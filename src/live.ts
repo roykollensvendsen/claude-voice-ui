@@ -1,4 +1,4 @@
-// The bridge's stream of live events: focus, active and news.
+// The bridge's stream of live events: focus, active, news and status.
 import type { Active } from "./bridge";
 
 /** The part of the browser's EventSource this app uses, so a test can stand in for it. */
@@ -22,10 +22,22 @@ export interface News {
   text: string;
 }
 
+/** A session's state changed. `session` is its id. */
+export interface Status {
+  session: string;
+  name: string;
+  state: string;
+  previous?: string;
+  since: string;
+  doing: string;
+  at: string;
+}
+
 export interface Handlers {
   focus(focus: Focus): void;
   active(active: Active | null): void;
   news(news: News): void;
+  status(status: Status): void;
   connection(state: "live" | "reconnecting"): void;
 }
 
@@ -40,5 +52,6 @@ export function follow(open: (url: string) => EventSourceLike, on: Handlers): ()
   source.addEventListener("focus", (e) => on.focus(parse(e)));
   source.addEventListener("active", (e) => on.active(parse(e)));
   source.addEventListener("news", (e) => on.news(parse(e)));
+  source.addEventListener("status", (e) => on.status(parse(e)));
   return () => source.close();
 }

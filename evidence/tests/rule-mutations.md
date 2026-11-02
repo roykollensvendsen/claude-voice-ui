@@ -10,18 +10,19 @@ Where a rule already exists, this is the substitute. Each rule is disabled in
 turn, by replacing its one line with something that can never hold, and the
 suite is run. A rule whose removal breaks no test is a rule nothing protects.
 
-**Result: 8 of 8 rules turned off the test that names them.** None survived.
+**Result: 9 of 9 rules turned off the test that names them.** None survived.
 
 | Rule turned off | Tests that went red | The test that names it | Did that one go red? |
 |---|---|---|---|
 | a session with a question waits for an answer | 1 | `test_a_session_with_a_question_waits_for_an_answer` | yes |
-| sessions waiting for the owner come first | 1 | `test_sessions_waiting_for_the_owner_come_first` | yes |
+| sessions waiting for the owner come first | 2 | `test_sessions_waiting_for_the_owner_come_first` | yes |
 | a focus event matches a session by id as well as by name | 1 | `test_a_focus_event_matches_a_session_by_id_as_well_as_by_name` | yes |
-| the sessions are fetched again every fifteen seconds | 2 | `test_the_sessions_are_fetched_again_every_fifteen_seconds` | yes |
+| the sessions are fetched again every minute | 2 | `test_the_sessions_are_fetched_again_every_minute` | yes |
 | after two quiet minutes the bar goes back to the active session | 1 | `test_after_two_quiet_minutes_the_bar_goes_back_to_the_active_session` | yes |
 | being signed out while watching returns to the sign-in page | 6 | `test_being_signed_out_while_watching_returns_to_the_sign_in_page` | yes |
 | a missing required thing shows a red banner | 1 | `test_a_missing_required_thing_shows_a_red_banner` | yes |
 | the check is asked again every five minutes, not on every refresh | 1 | `test_the_check_is_asked_again_every_five_minutes_not_on_every_refresh` | yes |
+| the state the bridge reports wins over the app's own reading | 4 | `test_the_state_the_bridge_reports_wins_over_the_app_s_own_reading` | yes |
 
 ## What this does not prove
 

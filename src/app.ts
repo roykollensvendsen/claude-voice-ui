@@ -8,9 +8,9 @@ export interface Deps {
   openEvents: (url: string) => EventSourceLike;
 }
 
-/** The bridge announces news but not every change of state, so the list is also fetched on a timer. */
-// RULE: the sessions are fetched again every fifteen seconds
-const POLL_MS = 15_000;
+/** Changes of state arrive on the stream; the timer catches what a dropped stream missed. */
+// RULE: the sessions are fetched again every minute
+const POLL_MS = 60_000;
 /** How long the bar keeps showing the session the voice last reached, once nothing more happens. */
 // RULE: after two quiet minutes the bar goes back to the active session
 const FOCUS_MS = 2 * 60_000;
@@ -113,6 +113,15 @@ export function start(root: HTMLElement, deps: Deps): () => void {
         draw();
       },
       news: () => void refresh(),
+      status(st) {
+        const s = home.sessions.find((x) => x.id === st.session);
+        // A session the page has not seen yet comes with the rest of the list.
+        if (!s) return void refresh();
+        s.state = st.state;
+        s.state_since = st.since;
+        s.doing = st.doing;
+        draw();
+      },
       connection(state) {
         home.connection = state;
         draw();

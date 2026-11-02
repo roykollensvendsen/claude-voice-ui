@@ -34,10 +34,10 @@ find = 'return key != null && \(key === s\.id \|\| key === s\.name\);'
 replace = 'return key != null && key === s.name;'
 
 [[rule]]
-name = "the sessions are fetched again every fifteen seconds"
+name = "the sessions are fetched again every minute"
 file = "src/app.ts"
-find = '^const POLL_MS = 15_000;'
-replace = 'const POLL_MS = 60_000;'
+find = '^const POLL_MS = 60_000;'
+replace = 'const POLL_MS = 120_000;'
 
 [[rule]]
 name = "after two quiet minutes the bar goes back to the active session"
@@ -62,3 +62,9 @@ name = "the check is asked again every five minutes, not on every refresh"
 file = "src/app.ts"
 find = '^const DOCTOR_MS = 5 \* 60_000;'
 replace = 'const DOCTOR_MS = 60_000;'
+
+[[rule]]
+name = "the state the bridge reports wins over the app's own reading"
+file = "src/states.ts"
+find = 'if \(s\.state && Object\.hasOwn\(LOOK, s\.state\)\) return s\.state as CardState;'
+replace = 'if (false) return s.state as CardState;'
