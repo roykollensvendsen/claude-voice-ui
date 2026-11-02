@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { start } from "../src/app";
 import type { Bridge } from "../src/bridge";
-import { FakeSource, fakeBridge, ONE, TWO } from "./fakes";
+import { FakeSource, fakeBridge, longPress, ONE, TWO } from "./fakes";
 
 let root: HTMLElement;
 let stop: (() => void) | undefined;
@@ -55,7 +55,7 @@ describe("opening a session in the Claude app", () => {
 
   test("the session's page has an Open in Claude button", async () => {
     await open(fakeBridge([{ sessions: [LINKED], active: null }]));
-    tile("a1")?.querySelector<HTMLButtonElement>(".open-detail")?.click();
+    await longPress(root, "a1");
     await vi.advanceTimersByTimeAsync(0);
     const link = root.querySelector<HTMLAnchorElement>(".detail a.open-claude");
     expect(link?.textContent).toBe("Open in Claude");

@@ -118,13 +118,26 @@ describe("the grid of sessions", () => {
     expect(b.choose).not.toHaveBeenCalled();
   });
 
-  test("the arrow in a tile's corner opens its page without choosing it", async () => {
-    const b = fakeBridge([{ sessions: [ONE, TWO], active: null }]);
-    await open(b);
-    tile("b2")?.querySelector<HTMLButtonElement>(".open-detail")?.click();
-    await vi.advanceTimersByTimeAsync(0);
-    expect(root.querySelector(".detail h2")?.textContent).toBe("docs-cd");
-    expect(b.choose).not.toHaveBeenCalled();
+  test("a tile has no arrow: a long press is the way into a session's page", async () => {
+    await open(fakeBridge([{ sessions: [ONE, TWO], active: null }]));
+    expect(root.querySelector(".grid .open-detail")).toBeNull();
+    expect(tile("b2")?.textContent).not.toContain("›");
+  });
+
+  test("a terminal session carries a small >_ and a background one carries nothing", async () => {
+    await open(
+      fakeBridge([
+        {
+          sessions: [
+            { ...ONE, kind: "terminal" },
+            { ...TWO, kind: "background" },
+          ],
+          active: null,
+        },
+      ]),
+    );
+    expect(tile("a1")?.querySelector(".kind")?.textContent).toBe(">_");
+    expect(tile("b2")?.querySelector(".kind")).toBeNull();
   });
 
   test("when the voice only looks at a session, its tile shows a faint eye and no speech bubble", async () => {
@@ -214,7 +227,8 @@ describe("the grid of sessions", () => {
     root.querySelector<HTMLButtonElement>(".legend-toggle")?.click();
     const rows = [...root.querySelectorAll<HTMLElement>(".legend li")];
     const text = rows.map((r) => r.textContent);
-    expect(rows).toHaveLength(11);
+    expect(rows).toHaveLength(12);
+    expect(text).toContain(">_: a session in a terminal window; one without it runs in the background");
     expect(text).toContain("?Waiting for an answer: it has asked you a question");
     expect(rows.find((r) => r.textContent?.startsWith("!"))?.classList.contains("tone-amber")).toBe(true);
     expect(text).toContain("White dot and ring: the session the voice talks to, chosen by a tap or by voice");
