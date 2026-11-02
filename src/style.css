@@ -81,7 +81,7 @@ button {
   padding: 4px 0 10px;
 }
 .top h1 {
-  flex: 1;
+  margin: 0;
 }
 .connection {
   font-size: 0.8rem;
@@ -102,20 +102,46 @@ button {
   text-decoration: underline;
 }
 
-.focus-bar {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  padding: 10px 12px;
-  margin-bottom: 12px;
-  border-radius: 12px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  overflow-wrap: anywhere;
+/* The session the voice talks to, as one small line under the title: each tile already shows it. */
+.titles {
+  flex: 1;
+  min-width: 0;
 }
-.focus-bar.talking {
-  border-color: var(--focus);
-  box-shadow: 0 0 0 1px var(--focus) inset;
+.focus-bar {
+  font-size: 0.8rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.focus-bar b {
+  color: var(--text);
+  font-weight: 600;
+}
+.focus-bar.talking b {
+  color: var(--focus);
+}
+.usage-button {
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.usage-button.level-ok {
+  color: var(--muted);
+}
+.usage-button.level-warn {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+.usage-button.level-full {
+  color: var(--red);
+  border-color: var(--red);
 }
 .notice {
   color: var(--amber);

@@ -12,7 +12,7 @@ import {
   timeInWords,
 } from "./states";
 import { resultText, stepText, type UpdateState } from "./update";
-import { contextTone, planBars, type Usage, voiceLine, warningText } from "./usage";
+import { contextTone, planBars, tightest, type Usage, usageLevel, voiceLine, warningText } from "./usage";
 
 export type Connection = "connecting" | "live" | "reconnecting";
 
@@ -38,6 +38,7 @@ export interface Home {
   picked: string | null;
   view: View;
   legendOpen: boolean;
+  usageOpen: boolean;
   /** The session whose page is open, or null for the cards. */
   open: Detail | null;
   /** Whether the owner has opened the list of what is missing. */
@@ -68,6 +69,7 @@ export interface Actions {
   toggleHidden(): void;
   setView(view: View): void;
   toggleLegend(): void;
+  toggleUsage(): void;
   update: UpdateActions;
 }
 
@@ -358,9 +360,21 @@ function hiddenBlock(hidden: Session[], home: Home, act: Actions): HTMLElement[]
   return [el("section", "hidden-sessions", toggle, ...list)];
 }
 
-function usagePanel(home: Home): HTMLElement[] {
+/** The plan's tightest limit as one percentage in the top bar; a tap opens the bars below it. */
+function usageButton(home: Home, act: Actions): HTMLElement[] {
   const u = home.usage;
   if (!u) return [];
+  const percent = tightest(u);
+  const level = usageLevel(percent ?? 0, u.warning?.status);
+  const b = button(percent === null ? "–%" : `${percent}%`, act.toggleUsage, `usage-button level-${level}`);
+  b.setAttribute("aria-expanded", String(home.usageOpen));
+  b.setAttribute("aria-label", "The plan's use");
+  return [b];
+}
+
+function usagePanel(home: Home): HTMLElement[] {
+  const u = home.usage;
+  if (!u || !home.usageOpen) return [];
   const bars = planBars(u, Date.now()).map((b) => {
     const fill = el("div", "fill");
     fill.style.width = `${b.percent}%`;
@@ -556,7 +570,17 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
   const items =
     home.view === "grid" ? sessions.map((s) => tile(s, home, act)) : sessions.map((s) => card(s, home, act));
   const list = el("div", home.view, ...(items.length ? items : [none]));
-  const top = [el("header", "top", el("h1", undefined, "Claude voice"), connection, signOut), focusBar(home)];
+  const top = [
+    el(
+      "header",
+      "top",
+      el("div", "titles", el("h1", undefined, "Claude voice"), focusBar(home)),
+      connection,
+      ...usageButton(home, act),
+      signOut,
+    ),
+    ...usagePanel(home),
+  ];
   const problem = home.problem ? [el("p", "notice", home.problem)] : [];
   if (home.open) return el("section", "home", ...top, ...problem, detailScreen(home, home.open, act));
   return el(
@@ -565,7 +589,6 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
     ...top,
     ...missing(home, act.toggleDoctor),
     ...updatePanel(home, act.update),
-    ...usagePanel(home),
     ...problem,
     viewSwitch(home, act),
     ...(home.legendOpen ? [legend()] : []),
