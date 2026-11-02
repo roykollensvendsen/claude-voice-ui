@@ -4,7 +4,7 @@ import { type Change, whatsNew } from "./changes";
 import { type Key, LANGUAGES, type Language, pickLanguage, setLanguage, t } from "./i18n";
 import { type EventSourceLike, follow } from "./live";
 import { browserKeep, type Keep, recall, remember } from "./remember";
-import { cardState, type Session } from "./states";
+import { byNumber, cardState, type Session, waitsForOwner } from "./states";
 import { IDLE } from "./update";
 import {
   type Actions,
@@ -86,6 +86,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     active: null,
     focus: null,
     peeks: [],
+    placed: [],
     connection: "connecting",
     problem: null,
     doctor: null,
@@ -142,7 +143,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   let pressedId: string | undefined;
   let pressedAt = 0;
   let movedAt = 0;
-  let shownOrder = "";
+  let shownOrder: string[] = [];
 
   let inView: IntersectionObserver | undefined;
   /** The speech bubble at the top is needed only while the session it leads to is off the screen. */
@@ -157,6 +158,14 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     inView.observe(target);
   }
 
+  /** Each session keeps the place it was first shown in; new ones join at the end, in number order. */
+  function place() {
+    const first = home.placed.length === 0;
+    const known = new Set(home.placed);
+    const fresh = byNumber(home.sessions.filter((s) => !known.has(s.id))).map((s) => s.id);
+    home.placed = first ? fresh : [...home.placed, ...fresh];
+  }
+
   const draw = () => {
     // RULE: the order holds still while a finger is on the screen
     if (pressing) {
@@ -165,12 +174,14 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     }
     waitingDraw = false;
     bringBackWaiting();
+    place();
     root.replaceChildren(homeScreen(home, actions));
     hideJumpWhileInView();
-    const order = [...root.querySelectorAll<HTMLElement>("[data-session]")]
-      .map((x) => x.dataset.session)
-      .join(" ");
-    if (shownOrder && order !== shownOrder) movedAt = Date.now();
+    const order = [...root.querySelectorAll<HTMLElement>("[data-session]")].map(
+      (x) => x.dataset.session ?? "",
+    );
+    // Only a tile that changed place counts as a move; one joining at the end moves nothing under a finger.
+    if (order.some((id, i) => shownOrder.includes(id) && shownOrder.indexOf(id) !== i)) movedAt = Date.now();
     shownOrder = order;
   };
 
@@ -318,6 +329,17 @@ export function start(root: HTMLElement, deps: Deps): () => void {
         home.whatsNew = { feat: [], fix: [] };
       }
       draw();
+    },
+    nextWaiting() {
+      // In the order shown, the first waiting session after the one whose page is open, round to the start.
+      const byId = new Map(home.sessions.map((s) => [s.id, s]));
+      const queue = home.placed.filter((id) => {
+        const s = byId.get(id);
+        return s && waitsForOwner(s) && !(id in home.hidden);
+      });
+      if (!queue.length) return;
+      const at = home.open ? queue.indexOf(home.open.id) : -1;
+      openPage(queue[(at + 1) % queue.length] as string);
     },
     reload() {
       (deps.reload ?? (() => location.reload()))();

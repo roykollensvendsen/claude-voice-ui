@@ -93,16 +93,18 @@ export function cardState(s: Session): CardState {
   return "idle";
 }
 
-function waitsForOwner(s: Session): boolean {
+export function waitsForOwner(s: Session): boolean {
   const state = cardState(s);
   return state === "answer" || state === "approval" || state === "input";
 }
 
-export function sortForCards(sessions: readonly Session[]): Session[] {
+/** By the short number the bridge gives, so each session keeps its place; any without one after, by name. */
+export function byNumber(sessions: readonly Session[]): Session[] {
   return [...sessions].sort(
     (a, b) =>
-      // RULE: sessions waiting for the owner come first
-      Number(waitsForOwner(b)) - Number(waitsForOwner(a)) || a.minutes_since_update - b.minutes_since_update,
+      // RULE: sessions keep the order of their numbers, whatever their state
+      (a.number ?? Number.POSITIVE_INFINITY) - (b.number ?? Number.POSITIVE_INFINITY) ||
+      a.name.localeCompare(b.name),
   );
 }
 

@@ -22,7 +22,7 @@ opened at any time, with or without a voice call running.
 Every session is in exactly one of eight states, each with its own icon and
 colour, and the card says how long it has been in that state. The bridge
 decides the state; the app reads it from rawer words only for an older bridge. Sessions waiting for
-the owner come first. This is the list the code itself holds:
+the owner are counted at the top, and each session keeps its place, in the order of its number. This is the list the code itself holds:
 
 ```console
 $ node scripts/states.ts

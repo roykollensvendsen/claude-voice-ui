@@ -3,14 +3,15 @@ import type { Active, BridgeInfo, Doctor, Pending, Pr, Turn } from "./bridge";
 import { gitLine } from "./git";
 import { type Key, type Language, NAMES, plural, t } from "./i18n";
 import {
+  byNumber,
   cardState,
   LOOK,
   type Look,
   minutesInState,
   type Session,
-  sortForCards,
   timeInState,
   timeInWords,
+  waitsForOwner,
 } from "./states";
 import { resultText, stepText, type UpdateState } from "./update";
 import { contextTone, planBars, tightest, type Usage, usageLevel, voiceLine, warningText } from "./usage";
@@ -52,6 +53,8 @@ export interface Home {
   language: Language | "system";
   /** The session whose page is open, or null for the cards. */
   open: Detail | null;
+  /** Session ids in the order shown since the page opened; an ended one keeps its place as a gap. */
+  placed: string[];
   /** Whether the owner has opened the list of what is missing. */
   doctorOpen: boolean;
 }
@@ -84,6 +87,7 @@ export interface Actions {
   toggleLegend(): void;
   toggleUsage(): void;
   reload(): void;
+  nextWaiting(): void;
   toggleWhatsNew(): void;
   toggleMenu(): void;
   setTheme(theme: Theme): void;
@@ -425,6 +429,15 @@ function newVersion(home: Home, act: Actions): HTMLElement[] {
   ];
 }
 
+/** How many sessions wait for the owner; a tap opens the next one's page, question first. */
+function waitingCount(home: Home, act: Actions): HTMLElement[] {
+  const count = home.sessions.filter((s) => waitsForOwner(s) && !(s.id in home.hidden)).length;
+  if (!count) return [];
+  const b = button(`❓${count}`, act.nextWaiting, "waiting-count");
+  b.setAttribute("aria-label", plural(count, "waiting.count"));
+  return [b];
+}
+
 function viewSwitch(home: Home, act: Actions): HTMLElement {
   const choice = (label: string, view: View) => {
     const b = button(label, () => act.setView(view));
@@ -686,18 +699,25 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
   menuToggle.setAttribute("aria-label", t("menu.label"));
   menuToggle.setAttribute("aria-expanded", String(home.menuOpen));
   const connection = el("span", `connection ${home.connection}`, t(CONNECTION[home.connection]));
-  const sorted = sortForCards(home.sessions);
-  const sessions = sorted.filter((s) => !(s.id in home.hidden));
-  const hidden = sorted.filter((s) => s.id in home.hidden);
+  const byId = new Map(home.sessions.map((s) => [s.id, s]));
+  const placed = home.placed.map((id) => byId.get(id));
+  const sessions = placed.filter((s): s is Session => Boolean(s) && !((s as Session).id in home.hidden));
+  const hidden = home.sessions.filter((s) => s.id in home.hidden);
   const none = el("p", "muted", hidden.length ? t("sessions.allHidden") : t("sessions.none"));
+  // An ended session leaves a gap in the grid, so the others stay put until the page is opened again.
   const items =
-    home.view === "grid" ? sessions.map((s) => tile(s, home, act)) : sessions.map((s) => card(s, home, act));
-  const list = el("div", home.view, ...(items.length ? items : [none]));
+    home.view === "grid"
+      ? placed.flatMap((s) =>
+          !s ? [el("div", "tile gap")] : s.id in home.hidden ? [] : [tile(s, home, act)],
+        )
+      : sessions.map((s) => card(s, home, act));
+  const list = el("div", home.view, ...(sessions.length ? items : [none]));
   const top = [
     el(
       "header",
       "top",
       el("h1", undefined, t("app.title")),
+      ...waitingCount(home, act),
       ...micJump(home),
       connection,
       ...usageButton(home, act),
