@@ -1,5 +1,6 @@
 // What a session card shows: one of eight states, as the bridge reports it or as read from its rawer words.
 import type { Git } from "./git";
+import { plural, t } from "./i18n.ts";
 
 /** One session as GET /api/v1/sessions gives it. */
 export interface Session {
@@ -40,31 +41,32 @@ export interface Look {
 // RULE: every kind of waiting is amber, as in the design draft
 const WAITING_TONE = "amber";
 
-export const LOOK: Record<CardState, Look> = {
-  working: { label: "Working", icon: "●", tone: "green", meaning: "running a turn or its tools" },
-  idle: { label: "Idle", icon: "○", tone: "grey", meaning: "done, ready for a new task" },
-  answer: {
-    label: "Waiting for an answer",
-    icon: "?",
-    tone: WAITING_TONE,
-    meaning: "it has asked you a question",
-  },
-  approval: {
-    label: "Waiting for approval",
-    icon: "!",
-    tone: WAITING_TONE,
-    meaning: "a tool needs your permission",
-  },
-  input: { label: "Waiting for input", icon: "…", tone: WAITING_TONE, meaning: "it waits for you to write" },
-  shell: {
-    label: "At the shell",
-    icon: "›",
-    tone: "slate",
-    meaning: "a terminal at its prompt, no Claude turn",
-  },
-  moved: { label: "Moved", icon: "→", tone: "faded", meaning: "continued in another session" },
-  stopped: { label: "Stopped", icon: "■", tone: "red", meaning: "ended, or stopped by an error" },
+const LOOKS: Record<CardState, { icon: string; tone: string }> = {
+  working: { icon: "●", tone: "green" },
+  idle: { icon: "○", tone: "grey" },
+  answer: { icon: "?", tone: WAITING_TONE },
+  approval: { icon: "!", tone: WAITING_TONE },
+  input: { icon: "…", tone: WAITING_TONE },
+  shell: { icon: "›", tone: "slate" },
+  moved: { icon: "→", tone: "faded" },
+  stopped: { icon: "■", tone: "red" },
 };
+
+/** Each state's look; its words are read in the language shown at the moment they are asked for. */
+export const LOOK = Object.fromEntries(
+  (Object.keys(LOOKS) as CardState[]).map((state) => [
+    state,
+    {
+      ...LOOKS[state],
+      get label() {
+        return t(`state.${state}`);
+      },
+      get meaning() {
+        return t(`state.${state}.meaning`);
+      },
+    },
+  ]),
+) as Record<CardState, Look>;
 
 /** A bridge session reports the store's own words for an ended turn. */
 const STOPPED = new Set(["error", "cancelled", "interrupted", "stopped"]);
@@ -111,16 +113,15 @@ export function minutesInState(s: Session, now: number): number {
 
 /** The same span spelled out, for words read on their own: "3 days" rather than "3 d". */
 export function timeInWords(minutes: number): string {
-  const say = (n: number, unit: string) => `${n} ${unit}${n === 1 ? "" : "s"}`;
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return say(minutes, "minute");
-  if (minutes < 24 * 60) return say(Math.floor(minutes / 60), "hour");
-  return say(Math.floor(minutes / (24 * 60)), "day");
+  if (minutes < 1) return t("time.justNow");
+  if (minutes < 60) return plural(minutes, "time.minutes");
+  if (minutes < 24 * 60) return plural(Math.floor(minutes / 60), "time.hours");
+  return plural(Math.floor(minutes / (24 * 60)), "time.days");
 }
 
 export function timeInState(minutes: number): string {
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes} min`;
-  if (minutes < 24 * 60) return `${Math.floor(minutes / 60)} h`;
-  return `${Math.floor(minutes / (24 * 60))} d`;
+  if (minutes < 1) return t("time.justNow");
+  if (minutes < 60) return t("time.min", { count: minutes });
+  if (minutes < 24 * 60) return t("time.h", { count: Math.floor(minutes / 60) });
+  return t("time.d", { count: Math.floor(minutes / (24 * 60)) });
 }

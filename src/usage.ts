@@ -1,5 +1,6 @@
 // How much of the plan is used, how full a session's context is, and an estimate of voice activity.
 // The figures are the bridge's (GET /api/v1/usage); this only words them. Never a money figure.
+import { type Key, plural, t } from "./i18n";
 
 export interface Window {
   used_percentage: number;
@@ -31,27 +32,28 @@ export interface Bar {
 
 export function resetsIn(at: string, now: number): string {
   const minutes = Math.floor((Date.parse(at) - now) / 60_000);
-  if (!(minutes > 0)) return "now";
-  if (minutes < 60) return `in ${minutes} min`;
+  if (!(minutes > 0)) return t("usage.resetsNow");
+  if (minutes < 60) return t("usage.inMin", { min: minutes });
   if (minutes < 24 * 60) {
     const rest = minutes % 60;
-    return `in ${Math.floor(minutes / 60)} h${rest ? ` ${rest} min` : ""}`;
+    const h = Math.floor(minutes / 60);
+    return rest ? t("usage.inHMin", { h, min: rest }) : t("usage.inH", { h });
   }
-  return `in ${Math.floor(minutes / (24 * 60))} d ${Math.floor((minutes % (24 * 60)) / 60)} h`;
+  return t("usage.inDH", { d: Math.floor(minutes / (24 * 60)), h: Math.floor((minutes % (24 * 60)) / 60) });
 }
 
 export function planBars(usage: Usage, now: number): Bar[] {
-  const windows: [string, Window | null | undefined][] = [
-    ["5 hours", usage.plan?.five_hour],
-    ["Weekly", usage.plan?.seven_day],
+  const windows: [Key, Window | null | undefined][] = [
+    ["usage.fiveHours", usage.plan?.five_hour],
+    ["usage.weekly", usage.plan?.seven_day],
   ];
   return windows.flatMap(([title, w]) =>
     w
       ? [
           {
-            title,
+            title: t(title),
             percent: Math.min(100, Math.max(0, w.used_percentage)),
-            note: w.stale ? "old figure" : `resets ${resetsIn(w.resets_at, now)}`,
+            note: w.stale ? t("usage.oldFigure") : t("usage.resets", { when: resetsIn(w.resets_at, now) }),
             stale: w.stale,
           },
         ]
@@ -63,8 +65,8 @@ export function warningText(usage: Usage): { text: string; severity: "warn" | "s
   const w = usage.warning;
   if (!w) return null;
   // RULE: a reached limit says so
-  if (w.status === "rejected") return { text: "The plan's limit is reached", severity: "stop" };
-  return { text: `Close to the plan's limit: ${w.used_percentage}% used`, severity: "warn" };
+  if (w.status === "rejected") return { text: t("usage.reached"), severity: "stop" };
+  return { text: t("usage.close", { percent: w.used_percentage }), severity: "warn" };
 }
 
 /** The highest share used of any current window: the limit that will be met first. */
@@ -85,20 +87,18 @@ export function usageLevel(
   return "ok";
 }
 
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
-
 function tokens(n: number): string {
   return n < 1000 ? `~${n}` : `~${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
 }
 
 export function voiceLine(usage: Usage): string {
-  const t = usage.voice.today;
-  if (!t.connections && !t.tool_calls) return "none yet";
+  const today = usage.voice.today;
+  if (!today.connections && !today.tool_calls) return t("usage.voiceNone");
   return [
-    plural(t.connections, "conversation"),
-    `${t.minutes} min`,
-    plural(t.tool_calls, "tool call"),
-    `${tokens(t.est_tokens)} tokens`,
+    plural(today.connections, "usage.conversations"),
+    t("usage.minutes", { count: today.minutes }),
+    plural(today.tool_calls, "usage.toolCalls"),
+    t("usage.tokens", { count: tokens(today.est_tokens) }),
   ].join(" · ");
 }
 

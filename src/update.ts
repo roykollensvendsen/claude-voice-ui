@@ -1,5 +1,7 @@
 // Updating the bridge from the phone: what the panel knows, and how each step and result read.
+
 import type { UpdateResult, UpdateStep } from "./bridge";
+import { type Key, t } from "./i18n";
 
 export interface UpdateState {
   /** idle: offer the button; confirm: ask first; running; done: show the result. */
@@ -26,34 +28,24 @@ export const IDLE: UpdateState = {
   message: "",
 };
 
-const STEP: Record<string, string> = {
-  check: "Checking for local changes",
-  fetch: "Fetching",
-  pull: "Pulling",
-  install: "Installing",
-  test: "Running the tests",
-  restart: "Restarting the bridge",
-  verify: "Checking it answers",
-  rollback: "Rolling back",
-  done: "Done",
-};
+const STEPS = new Set(["check", "fetch", "pull", "install", "test", "restart", "verify", "rollback", "done"]);
 
 export function stepText(s: UpdateStep): string {
-  const label = STEP[s.step] ?? s.step;
+  const label = STEPS.has(s.step) ? t(`update.step.${s.step}` as Key) : s.step;
   return `${s.ok ? "✓" : "✗"} ${label}${s.detail ? `: ${s.detail}` : ""}`;
 }
 
 export function resultText(u: UpdateState): string {
   switch (u.result) {
     case "updated":
-      return `Updated to ${u.to.slice(0, 7) || "the new version"}.`;
+      return t("update.updatedTo", { commit: u.to.slice(0, 7) || t("update.theNewVersion") });
     case "up_to_date":
-      return "Already the latest version.";
+      return t("update.upToDate");
     case "stopped":
-      return `Stopped before changing anything.${u.detail ? ` ${u.detail}` : ""}`;
+      return `${t("update.stopped")}${u.detail ? ` ${u.detail}` : ""}`;
     case "rolled_back":
-      return `Rolled back: the old version still runs.${u.detail ? ` ${u.detail}` : ""}`;
+      return `${t("update.rolledBack")}${u.detail ? ` ${u.detail}` : ""}`;
     default:
-      return "Finished.";
+      return t("update.finished");
   }
 }

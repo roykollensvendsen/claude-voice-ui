@@ -1,5 +1,6 @@
 // The app: signs in, shows the cards, and keeps them current.
 import { type Bridge, SignedOut, type SignIn, type UpdateStep } from "./bridge";
+import { type Key, LANGUAGES, type Language, pickLanguage, setLanguage, t } from "./i18n";
 import { type EventSourceLike, follow } from "./live";
 import { browserKeep, type Keep, recall, remember } from "./remember";
 import { cardState, type Session } from "./states";
@@ -39,6 +40,17 @@ const EXPANDED = "cvu.expanded";
 const HIDDEN = "cvu.hidden";
 const VIEW = "cvu.view";
 const THEME = "cvu.theme";
+const LANG = "cvu.lang";
+
+function recalledLanguage(keep: Keep | undefined): Language | "system" {
+  const saved = recall<string>(keep, LANG, "system");
+  return Object.hasOwn(LANGUAGES, saved) ? (saved as Language) : "system";
+}
+
+/** Show the page in the chosen language, or the first of the phone's that the page has. */
+function applyLanguage(choice: Language | "system") {
+  setLanguage(choice === "system" ? pickLanguage(navigator.languages ?? [navigator.language]) : choice);
+}
 
 /** Mark the page with the chosen theme; without a mark the stylesheet follows the phone. */
 function applyTheme(theme: Theme) {
@@ -59,10 +71,10 @@ const DOCTOR_MS = 5 * 60_000;
 // RULE: usage is asked again every minute
 const USAGE_MS = 60_000;
 
-const REFUSED: Record<Exclude<SignIn, "ok">, string> = {
-  wrong: "Wrong secret.",
-  "too-many": "Too many wrong tries. Wait ten minutes.",
-  unreachable: "Can't reach the bridge.",
+const REFUSED: Record<Exclude<SignIn, "ok">, Key> = {
+  wrong: "signin.wrong",
+  "too-many": "signin.tooMany",
+  unreachable: "signin.unreachable",
 };
 
 /** Start the app in `root`. The returned function stops it: no more timers, no more stream. */
@@ -91,6 +103,8 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     // RULE: the theme chosen is remembered
     theme: (["light", "dark"] as const).find((t) => t === recall<string>(keep, THEME, "system")) ?? "system",
     menuOpen: false,
+    // RULE: the language chosen is remembered
+    language: recalledLanguage(keep),
     picked: null,
     doctorOpen: false,
   };
@@ -206,9 +220,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
         else {
           home.update.phase = "done";
           home.update.message =
-            started.outcome === "running"
-              ? "An update is already running."
-              : "This bridge does not run from a git clone, so it cannot update itself.";
+            started.outcome === "running" ? t("update.alreadyRunning") : t("update.notAClone");
         }
       } catch (error) {
         home.update = { ...IDLE };
@@ -219,6 +231,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   };
 
   applyTheme(home.theme);
+  applyLanguage(home.language);
 
   const actions: Actions = {
     pick: (id) => {
@@ -260,6 +273,12 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     },
     toggleMenu() {
       home.menuOpen = !home.menuOpen;
+      draw();
+    },
+    setLanguage(choice) {
+      home.language = choice;
+      applyLanguage(choice);
+      remember(keep, LANG, choice);
       draw();
     },
     setTheme(theme) {
@@ -414,7 +433,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     // RULE: being signed out while watching returns to the sign-in page
     if (error instanceof SignedOut) showSignIn();
     else {
-      home.problem = "Can't reach the bridge. Trying again.";
+      home.problem = t("problem.unreachable");
       if (watching) draw();
     }
   }
@@ -438,7 +457,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       if (!watching) watch();
       draw();
     } catch (error) {
-      if (!watching && !(error instanceof SignedOut)) showSignIn(REFUSED.unreachable);
+      if (!watching && !(error instanceof SignedOut)) showSignIn(t(REFUSED.unreachable));
       else failed(error);
     }
   }
@@ -505,7 +524,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   async function signIn(secret: string) {
     const outcome = await deps.bridge.signIn(secret);
     if (outcome === "ok") await refresh();
-    else showSignIn(REFUSED[outcome]);
+    else showSignIn(t(REFUSED[outcome]));
   }
 
   async function pick(id: string) {
