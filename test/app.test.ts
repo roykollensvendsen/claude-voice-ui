@@ -190,11 +190,11 @@ describe("the top line and the session the voice talks to", () => {
     expect(css.slice(start, css.indexOf("}", start))).toContain("white-space: nowrap");
   });
 
-  test("the card the voice is talking to now carries a microphone", async () => {
+  test("the card the voice is talking to now carries a speech bubble", async () => {
     await open(fakeBridge([{ sessions: [ONE, TWO], active: ACTIVE_ONE }]));
     FakeSource.last?.emit("focus", { session: "docs-cd", tool: "ask_active_session", at: "" });
     expect(card("b2")?.classList.contains("focus")).toBe(true);
-    expect(card("b2")?.querySelector(".mic")?.textContent).toBe("🎙");
+    expect(card("b2")?.querySelector(".mic")?.textContent).toBe("💬");
     expect(card("a1")?.querySelector(".mic")).toBeNull();
   });
 
@@ -204,7 +204,7 @@ describe("the top line and the session the voice talks to", () => {
     expect(card("b2")?.classList.contains("focus")).toBe(true);
   });
 
-  test("after two quiet minutes the microphone goes away", async () => {
+  test("after two quiet minutes the speech bubble goes away", async () => {
     await open(fakeBridge([{ sessions: [ONE, TWO], active: ACTIVE_ONE }]));
     FakeSource.last?.emit("focus", { session: "docs-cd", tool: "ask_active_session", at: "" });
     await vi.advanceTimersByTimeAsync(2 * 60_000 + 1);
@@ -225,7 +225,7 @@ describe("the top line and the session the voice talks to", () => {
     expect(card("a1")?.classList.contains("active")).toBe(false);
   });
 
-  test("a microphone at the top leads to the session the voice is talking to", async () => {
+  test("a speech bubble at the top leads to the session the voice is talking to", async () => {
     await open(fakeBridge([{ sessions: [ONE, TWO], active: ACTIVE_ONE }]));
     expect(root.querySelector("header .mic-jump")).toBeNull();
     FakeSource.last?.emit("focus", { session: "docs-cd", tool: "ask_active_session", at: "" });
@@ -233,6 +233,7 @@ describe("the top line and the session the voice talks to", () => {
     const target = card("b2");
     if (target) target.scrollIntoView = scrolled;
     const jump = root.querySelector<HTMLButtonElement>("header .mic-jump");
+    expect(jump?.textContent).toBe("💬");
     expect(jump?.getAttribute("aria-label")).toBe("Show docs-cd, which the voice is talking to");
     jump?.click();
     expect(scrolled).toHaveBeenCalled();
