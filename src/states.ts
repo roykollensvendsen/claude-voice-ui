@@ -78,8 +78,6 @@ export function cardState(s: Session): CardState {
   switch (s.status) {
     case "busy":
     case "running":
-    // Claude Code's word for Claude running a command.
-    case "shell":
       return "working";
     case "moved":
       return "moved";
@@ -89,6 +87,7 @@ export function cardState(s: Session): CardState {
       return /permission|approv/i.test(s.waiting_for ?? "") ? "approval" : "answer";
   }
   if (STOPPED.has(s.status)) return "stopped";
+  // `shell` too: Claude finished, and a command it started runs on in the background.
   return "idle";
 }
 
