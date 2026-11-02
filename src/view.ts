@@ -137,18 +137,18 @@ export function signInScreen(error: string | null, onSubmit: (secret: string) =>
   );
 }
 
-/** The voice's microphone, marking the session it is talking to right now. */
-const mic = () => el("span", "mic", "🎙");
+/** A speech bubble, marking the session the voice has just written to. */
+const mic = () => el("span", "mic", "💬");
 /** A fainter mark for a session the voice only looked at, without writing to it. */
 const peekMark = (s: Session, home: Home) =>
   !matches(s, home.focus) && home.peeks.some((key) => matches(s, key)) ? [el("span", "peek", "👁")] : [];
 
-/** A microphone at the top that leads to the session the voice is talking to, when there is one. */
+/** A speech bubble at the top that leads to the session the voice is talking to, when there is one. */
 function micJump(home: Home): HTMLElement[] {
   const s = home.focus ? home.sessions.find((x) => matches(x, home.focus)) : undefined;
   if (!s) return [];
   const jump = button(
-    "🎙",
+    "💬",
     () => {
       document.querySelector(`[data-session="${CSS.escape(s.id)}"]`)?.scrollIntoView({ block: "center" });
     },

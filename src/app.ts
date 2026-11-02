@@ -62,8 +62,8 @@ function applyTheme(theme: Theme) {
 /** Changes of state arrive on the stream; the timer catches what a dropped stream missed. */
 // RULE: the sessions are fetched again every minute
 const POLL_MS = 60_000;
-/** How long the microphone stays on the session the voice last reached, once nothing more happens. */
-// RULE: after two quiet minutes the microphone goes away
+/** How long the speech bubble stays on the session the voice last reached, once nothing more happens. */
+// RULE: after two quiet minutes the speech bubble goes away
 const FOCUS_MS = 2 * 60_000;
 /** The bridge's dependency check runs other programs and takes seconds, so it is asked seldom. */
 // RULE: the check is asked again every five minutes, not on every refresh
@@ -145,7 +145,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   let shownOrder = "";
 
   let inView: IntersectionObserver | undefined;
-  /** The microphone at the top is needed only while the session it leads to is off the screen. */
+  /** The speech bubble at the top is needed only while the session it leads to is off the screen. */
   function hideJumpWhileInView() {
     inView?.disconnect();
     const jump = root.querySelector<HTMLElement>(".mic-jump");
