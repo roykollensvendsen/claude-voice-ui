@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { start } from "../src/app";
 import type { Bridge, Output } from "../src/bridge";
-import { FakeSource, fakeBridge, ONE, session, TWO } from "./fakes";
+import { FakeSource, fakeBridge, longPress, ONE, session, TWO } from "./fakes";
 
 let root: HTMLElement;
 let stop: () => void;
@@ -27,7 +27,7 @@ const OUTPUT: Output = {
 async function openDetail(b = fakeBridge([{ sessions: [ONE, TWO], active: null }])) {
   b.output.mockResolvedValue(OUTPUT);
   await open(b);
-  root.querySelector<HTMLButtonElement>('[data-session="a1"] .open-detail')?.click();
+  await longPress(root, "a1");
   await settle();
   return b;
 }
@@ -72,7 +72,7 @@ describe("one session's page", () => {
       ...OUTPUT,
       turns: [{ index: 1, role: "assistant", text: "Long…", cut: true, length: 4200 }],
     });
-    root.querySelector<HTMLButtonElement>('[data-session="a1"] .open-detail')?.click();
+    await longPress(root, "a1");
     await settle();
     expect(text(".turn .cut")).toBe("cut short; 4200 characters in all");
   });
@@ -130,7 +130,7 @@ describe("one session's page", () => {
       approvals: [],
     });
     await open(b);
-    root.querySelector<HTMLButtonElement>('[data-session="a1"] .open-detail')?.click();
+    await longPress(root, "a1");
     await settle();
     expect(text(".pending")).toContain("Which file?");
     expect(text(".pending")).toContain("b.py");
@@ -144,7 +144,7 @@ describe("one session's page", () => {
       approvals: [{ id: "ap1", number: 2, tool: "Bash", summary: "npm test" }],
     });
     await open(b);
-    root.querySelector<HTMLButtonElement>('[data-session="a1"] .open-detail')?.click();
+    await longPress(root, "a1");
     await settle();
     expect(text(".pending")).toContain("Approval 2: Bash npm test");
     expect(text(".pending")).toContain("Answer by voice or at the screen.");
@@ -157,7 +157,7 @@ describe("one session's page", () => {
       prs: [{ number: 52, title: "Git status", url: "https://github.com/x/y/pull/52", draft: true }],
     });
     await open(b);
-    root.querySelector<HTMLButtonElement>('[data-session="a1"] .open-detail')?.click();
+    await longPress(root, "a1");
     await settle();
     const link = root.querySelector<HTMLAnchorElement>(".prs a");
     expect(link?.textContent).toBe("#52 Git status (draft)");

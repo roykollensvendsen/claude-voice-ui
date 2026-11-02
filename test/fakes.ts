@@ -142,3 +142,13 @@ export function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignI
     prs: vi.fn(async (_id: string): Promise<Prs> => ({ prs: [] })),
   } satisfies Bridge & { snapshotCalls: () => number };
 }
+
+/** Hold a finger on a session long enough to open its page, then lift it. */
+export async function longPress(root: HTMLElement, id: string) {
+  root.querySelector(`[data-session="${id}"]`)?.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+  await vi.advanceTimersByTimeAsync(500);
+  document.dispatchEvent(new Event("pointerup", { bubbles: true }));
+  root.querySelector<HTMLElement>(`[data-session="${id}"]`)?.click();
+  // The page waits a moment after the finger lifts before it redraws.
+  await vi.advanceTimersByTimeAsync(500);
+}
