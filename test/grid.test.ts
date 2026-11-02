@@ -60,6 +60,13 @@ describe("the grid of sessions", () => {
     expect(rule).toContain("overflow-wrap: anywhere");
   });
 
+  test("a tile shows the session's short number, to say to the voice", async () => {
+    await open(fakeBridge([{ sessions: [{ ...ONE, number: 3 }, TWO], active: null }]));
+    expect(tile("a1")?.querySelector(".number")?.textContent).toBe("3");
+    expect(tile("a1")?.getAttribute("title")).toBe("3 billing-ab: Working");
+    expect(tile("b2")?.querySelector(".number")).toBeNull();
+  });
+
   test("a waiting tile is marked as waiting and comes first", async () => {
     await open(fakeBridge([{ sessions: [ONE, WAITING], active: null }]));
     const tiles = [...root.querySelectorAll<HTMLElement>(".grid .tile")];
