@@ -22,6 +22,8 @@ beforeEach(() => {
   root = document.createElement("main");
   document.body.replaceChildren(root);
   localStorage.clear();
+  // These tests are about the card list; the grid has its own.
+  localStorage.setItem("cvu.view", JSON.stringify("cards"));
   FakeSource.last = undefined;
 });
 
