@@ -50,7 +50,8 @@ export function gitLine(git: Git): GitLine {
     commit: `${git.commit.hash} ${git.commit.subject}`,
     marks: [
       ...dirty,
-      ...distance(git.tracking, git.tracking?.name ?? ""),
+      // A branch that pushes to main itself would show the same arrows twice.
+      ...(git.tracking?.name === git.main?.name ? [] : distance(git.tracking, git.tracking?.name ?? "")),
       // "origin/main" reads as "main": which remote holds it rarely matters on a card.
       ...distance(git.main, git.main?.name.replace(/^[^/]+\//, "") ?? ""),
       ...distance(git.parent, git.parent?.name ?? ""),
