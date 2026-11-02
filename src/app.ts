@@ -11,7 +11,14 @@ export interface Deps {
   openEvents: (url: string) => EventSourceLike;
   /** Where this phone remembers open and hidden cards; the browser's storage when left out. */
   keep?: Keep;
+  /** The build this page came from, and how to ask which build is deployed now. */
+  version?: { built: string; latest(): Promise<string> };
+  /** Load the page again; the browser's own reload when left out. */
+  reload?: () => void;
 }
+
+/** How often the page asks whether a newer build of itself has been deployed. */
+const VERSION_MS = 60_000;
 
 /** How long after the sessions move a tap is taken as aimed at where they were. */
 const SETTLE_MS = 800;
@@ -65,6 +72,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     view: recall<View>(keep, VIEW, "grid") === "cards" ? "cards" : "grid",
     legendOpen: false,
     usageOpen: false,
+    newVersion: false,
     picked: null,
     doctorOpen: false,
   };
@@ -74,6 +82,21 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   let focusTimer: ReturnType<typeof setTimeout> | undefined;
   let doctorTimer: ReturnType<typeof setInterval> | undefined;
   let usageTimer: ReturnType<typeof setInterval> | undefined;
+  let versionTimer: ReturnType<typeof setInterval> | undefined;
+
+  /** Only says a newer build is out; reloading waits for the owner's tap. */
+  async function checkVersion() {
+    if (!deps.version || home.newVersion) return;
+    try {
+      // RULE: a new version is loaded only when the notice is tapped
+      if ((await deps.version.latest()) !== deps.version.built) {
+        home.newVersion = true;
+        if (watching) draw();
+      }
+    } catch {
+      // Offline or not deployed this way: the page carries on as it is.
+    }
+  }
 
   // Tiles re-sort live, so a finger could land on one that has just slid under it.
   let pressing = false;
@@ -215,6 +238,9 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       remember(keep, VIEW, view);
       draw();
     },
+    reload() {
+      (deps.reload ?? (() => location.reload()))();
+    },
     toggleUsage() {
       home.usageOpen = !home.usageOpen;
       draw();
@@ -346,6 +372,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     clearTimeout(focusTimer);
     clearInterval(doctorTimer);
     clearInterval(usageTimer);
+    clearInterval(versionTimer);
   }
 
   function showSignIn(error: string | null = null) {
@@ -441,6 +468,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     void checkDoctor();
     void checkBridge();
     usageTimer = setInterval(() => void checkUsage(), USAGE_MS);
+    versionTimer = setInterval(() => void checkVersion(), VERSION_MS);
     void checkUsage();
   }
 
@@ -481,7 +509,11 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   }
 
   const onVisible = () => {
-    if (watching && !document.hidden) void refresh();
+    if (watching && !document.hidden) {
+      void refresh();
+      // A phone that slept through a deploy hears of it as soon as the page is looked at again.
+      void checkVersion();
+    }
   };
   document.addEventListener("visibilitychange", onVisible);
   void refresh();

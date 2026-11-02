@@ -39,6 +39,8 @@ export interface Home {
   view: View;
   legendOpen: boolean;
   usageOpen: boolean;
+  /** A newer build of the page has been deployed. */
+  newVersion: boolean;
   /** The session whose page is open, or null for the cards. */
   open: Detail | null;
   /** Whether the owner has opened the list of what is missing. */
@@ -70,6 +72,7 @@ export interface Actions {
   setView(view: View): void;
   toggleLegend(): void;
   toggleUsage(): void;
+  reload(): void;
   update: UpdateActions;
 }
 
@@ -580,6 +583,7 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
       signOut,
     ),
     ...usagePanel(home),
+    ...(home.newVersion ? [button("New version – tap to update", act.reload, "new-version")] : []),
   ];
   const problem = home.problem ? [el("p", "notice", home.problem)] : [];
   if (home.open) return el("section", "home", ...top, ...problem, detailScreen(home, home.open, act));
