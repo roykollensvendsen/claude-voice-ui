@@ -86,6 +86,28 @@ describe("one session's page", () => {
     expect(text(".turn:last-child")).toContain("Pushed the branch.");
   });
 
+  test("when more turns wait than one read brings, the page reads on", async () => {
+    const b = await openDetail();
+    b.output
+      .mockResolvedValueOnce({
+        status: "busy",
+        turns: [{ index: 9, role: "assistant", text: "One.", cut: false, length: 4 }],
+        next_after: 9,
+        turns_left: 1,
+      })
+      .mockResolvedValueOnce({
+        status: "busy",
+        turns: [{ index: 10, role: "assistant", text: "Two.", cut: false, length: 4 }],
+        next_after: 10,
+        turns_left: 0,
+      });
+    FakeSource.last?.emit("output", { session: "a1", index: 10, role: "assistant" });
+    await settle();
+    await settle();
+    expect(b.output).toHaveBeenLastCalledWith("a1", 9);
+    expect(root.querySelectorAll(".turn")).toHaveLength(4);
+  });
+
   test("a new turn in another session leaves this page alone", async () => {
     const b = await openDetail();
     const calls = b.output.mock.calls.length;
