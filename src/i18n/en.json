@@ -23,6 +23,7 @@
   "legend.item": "{label}: {meaning}",
   "legend.chosen": "White dot and ring: the session the voice talks to, chosen by a tap or by voice",
   "legend.talking": "🎙 and a blue ring: the voice is talking to it right now; with a white dot, it is also the chosen one",
+  "legend.peek": "👁: the voice only looked at it or talked about it, without writing to it; fades after two minutes",
   "state.working": "Working",
   "state.working.meaning": "running a turn or its tools",
   "state.idle": "Idle",

@@ -1,4 +1,4 @@
-// The bridge's stream of live events: focus, active, news, status, git, update and output.
+// The bridge's stream of live events: focus, peek, active, news, status, git, update and output.
 import type { Active, UpdateStep } from "./bridge";
 import type { Git } from "./git";
 
@@ -49,6 +49,8 @@ export interface NewTurn {
 
 export interface Handlers {
   focus(focus: Focus): void;
+  /** Someone only looked at a session; the same fields as a focus. */
+  peek(peek: Focus): void;
   active(active: Active | null): void;
   news(news: News): void;
   status(status: Status): void;
@@ -67,6 +69,7 @@ export function follow(open: (url: string) => EventSourceLike, on: Handlers): ()
   source.onerror = () => on.connection("reconnecting");
   const parse = (event: MessageEvent) => JSON.parse(String(event.data));
   source.addEventListener("focus", (e) => on.focus(parse(e)));
+  source.addEventListener("peek", (e) => on.peek(parse(e)));
   source.addEventListener("active", (e) => on.active(parse(e)));
   source.addEventListener("news", (e) => on.news(parse(e)));
   source.addEventListener("status", (e) => on.status(parse(e)));
