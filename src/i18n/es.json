@@ -133,5 +133,7 @@
   "page.noChanges": "No hay cambios en la lista.",
   "git.changedCount": "{count} cambiados",
   "git.changed": "cambios",
-  "git.detached": "desacoplado"
+  "git.detached": "desacoplado",
+  "waiting.count.one": "{count} te espera",
+  "waiting.count.other": "{count} te esperan"
 }

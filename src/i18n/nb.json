@@ -133,5 +133,7 @@
   "page.noChanges": "Ingen endringer på lista.",
   "git.changedCount": "{count} endret",
   "git.changed": "endret",
-  "git.detached": "frakoblet"
+  "git.detached": "frakoblet",
+  "waiting.count.one": "{count} venter på deg",
+  "waiting.count.other": "{count} venter på deg"
 }
