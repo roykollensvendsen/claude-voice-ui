@@ -140,5 +140,13 @@
   "prompt.own": "Eller skriv ditt eget svar",
   "prompt.cut": "(forkortet)",
   "prompt.answered": "Svart: {answer}",
-  "prompt.gone": "Allerede besvart et annet sted."
+  "prompt.gone": "Allerede besvart et annet sted.",
+  "menu.theme": "Tema",
+  "menu.language": "Språk",
+  "settings.startIn": "Nye økter åpnes",
+  "settings.window": "I et vindu",
+  "settings.background": "I bakgrunnen",
+  "settings.remoteControl": "Fjernstyring",
+  "settings.on": "På",
+  "settings.off": "Av"
 }

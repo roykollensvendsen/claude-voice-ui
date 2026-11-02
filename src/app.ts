@@ -95,6 +95,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     peeks: [],
     placed: [],
     prompts: [],
+    settings: null,
     replies: {},
     connection: "connecting",
     problem: null,
@@ -344,6 +345,14 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       }
       draw();
     },
+    async changeSettings(change) {
+      try {
+        home.settings = await deps.bridge.changeSettings(change);
+        draw();
+      } catch (error) {
+        failed(error);
+      }
+    },
     async answer(prompt, reply, said) {
       const done = await deps.bridge.answer(prompt.id, reply).catch((error) => {
         failed(error);
@@ -537,6 +546,12 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     }
   }
 
+  async function readSettings() {
+    // A bridge from before settings answers 404; the menu then leaves them out.
+    home.settings = await deps.bridge.settings().catch(() => null);
+    draw();
+  }
+
   async function readPrompts() {
     try {
       home.prompts = await deps.bridge.prompts();
@@ -626,12 +641,17 @@ export function start(root: HTMLElement, deps: Deps): () => void {
         home.prompts = [...home.prompts.filter((x) => x.id !== p.id), p];
         draw();
       },
+      settings(settings) {
+        home.settings = settings;
+        draw();
+      },
       promptClosed(closed) {
         home.prompts = home.prompts.filter((x) => x.id !== closed.id);
         draw();
       },
     });
     void readPrompts();
+    void readSettings();
     poll = setInterval(() => void refresh(), POLL_MS);
     doctorTimer = setInterval(() => {
       void checkDoctor();

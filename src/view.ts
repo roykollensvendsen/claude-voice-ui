@@ -1,5 +1,5 @@
 // Drawing the screens. Each function builds fresh elements from the state it is given.
-import type { Active, BridgeInfo, Doctor, Pending, Pr, Prompt, Reply, Turn } from "./bridge";
+import type { Active, BridgeInfo, Doctor, Pending, Pr, Prompt, Reply, Settings, Turn } from "./bridge";
 import { gitLine } from "./git";
 import { type Key, type Language, NAMES, plural, t } from "./i18n";
 import {
@@ -57,6 +57,8 @@ export interface Home {
   placed: string[];
   /** Questions and approvals the sessions hold for the phone. */
   prompts: Prompt[];
+  /** How the bridge starts new sessions; null when it has no such settings. */
+  settings: Settings | null;
   /** What came of an answer: a refusal by prompt id, or a note by session id once it is gone. */
   replies: Record<string, { error?: string; note?: string }>;
   /** Whether the owner has opened the list of what is missing. */
@@ -92,6 +94,7 @@ export interface Actions {
   toggleUsage(): void;
   reload(): void;
   nextWaiting(): void;
+  changeSettings(change: Partial<Settings>): void;
   /** `said` is the answer in words, for the note shown once it is sent. */
   answer(prompt: Prompt, reply: Reply, said: string): void;
   toggleWhatsNew(): void;
@@ -386,23 +389,47 @@ function menu(home: Home, act: Actions): HTMLElement[] {
     b.setAttribute("aria-pressed", String(home.language === language));
     return b;
   };
+  const set = (label: string, on: boolean, change: Partial<Settings>) => {
+    const b = button(label, () => act.changeSettings(change));
+    b.setAttribute("aria-pressed", String(on));
+    return b;
+  };
+  const row = (name: string, label: string, ...choices: HTMLElement[]) =>
+    el("div", `row ${name}`, el("span", "label", label), el("div", "choices", ...choices));
+  const s = home.settings;
   return [
     el(
       "div",
       "menu",
-      el(
-        "div",
+      row(
         "theme",
+        t("menu.theme"),
         choice(t("menu.themeSystem"), "system"),
         choice(t("menu.light"), "light"),
         choice(t("menu.dark"), "dark"),
       ),
-      el(
-        "div",
+      row(
         "language",
+        t("menu.language"),
         speak(t("menu.languageSystem"), "system"),
         ...(Object.keys(NAMES) as Language[]).map((l) => speak(NAMES[l], l)),
       ),
+      ...(s
+        ? [
+            row(
+              "start-in",
+              t("settings.startIn"),
+              set(t("settings.window"), s.start_in === "terminal", { start_in: "terminal" }),
+              set(t("settings.background"), s.start_in === "background", { start_in: "background" }),
+            ),
+            row(
+              "remote-control",
+              t("settings.remoteControl"),
+              set(t("settings.on"), s.remote_control, { remote_control: true }),
+              set(t("settings.off"), !s.remote_control, { remote_control: false }),
+            ),
+          ]
+        : []),
       button(t("menu.signOut"), act.signOut, "signout"),
     ),
   ];

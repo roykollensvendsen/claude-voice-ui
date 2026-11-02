@@ -140,5 +140,13 @@
   "prompt.own": "O escribe tu propia respuesta",
   "prompt.cut": "(recortado)",
   "prompt.answered": "Respondido: {answer}",
-  "prompt.gone": "Ya respondido en otro sitio."
+  "prompt.gone": "Ya respondido en otro sitio.",
+  "menu.theme": "Tema",
+  "menu.language": "Idioma",
+  "settings.startIn": "Las sesiones nuevas se abren",
+  "settings.window": "En una ventana",
+  "settings.background": "En segundo plano",
+  "settings.remoteControl": "Control remoto",
+  "settings.on": "Sí",
+  "settings.off": "No"
 }
