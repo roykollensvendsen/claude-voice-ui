@@ -91,6 +91,37 @@ cannot be tidied at the end by squashing it, which is why `committed.toml`
 refuses a fixup and a work-in-progress commit rather than trusting you to clean
 up later.
 
+## Words on the page, and adding a language
+
+Every word the page shows lives in `src/i18n/`, one file per language, and
+the code asks for it by key: `t("session.hide")`, or `plural(n,
+"hidden.count")` for a text with a count. English, `en.json`, is the
+reference. Names, questions and output from the sessions are never
+translated; they are shown as they arrive.
+
+`uv run pytest -q` holds every language to English:
+
+- every key English has, and no key English no longer has;
+- the same blanks, such as `{count}` and `{name}`, in every text;
+- a warning for a text still identical to English, which is probably
+  untranslated, unless the key is listed for that language in
+  `src/i18n/same-as-english.json` (for example the app's name);
+- `scripts/ui_text.py` fails on a string in `src/*.ts` that reads as words,
+  so new text cannot skip the files. A string that only reaches a log ends
+  its line with `// not shown`.
+
+To add a language, say German:
+
+1. Copy `src/i18n/en.json` to `src/i18n/de.json` and translate every text.
+   Keep each `{blank}` as it is, and give every `.one`/`.other` pair the forms
+   the language needs.
+2. Import it in `src/i18n.ts`, add it to `LANGUAGES`, give it its own name in
+   `NAMES` ("Deutsch"), and teach `pickLanguage` its tag.
+3. List in `same-as-english.json` any key that is rightly the same as English.
+4. Add a case for its tag to the language test in `test/i18n.test.ts`, run the
+   gates, look at the page in it on a phone-sized screen for text that does
+   not fit, and open a pull request.
+
 ## Documents that restate a fact
 
 Point rather than copy. Where a document has to copy anyway, two test files

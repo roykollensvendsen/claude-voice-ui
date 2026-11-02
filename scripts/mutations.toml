@@ -78,8 +78,8 @@ replace = 'return [{ text: `${arrows} ${name}`, kind: d.ahead ? "ahead" : "behin
 [[rule]]
 name = "a reached limit says so"
 file = "src/usage.ts"
-find = 'if \(w\.status === "rejected"\) return \{ text: "The plan.s limit is reached", severity: "stop" \};'
-replace = 'if (false) return { text: "", severity: "stop" };'
+find = 'if \(w\.status === "rejected"\) return \{ text: t\("usage\.reached"\), severity: "stop" \};'
+replace = '  if (false) return { text: "", severity: "stop" };'
 
 [[rule]]
 name = "usage is asked again every minute"
@@ -96,7 +96,7 @@ replace = 'void updating.confirm();'
 [[rule]]
 name = "an approval it waits on is shown, to be answered by voice or at the screen"
 file = "src/view.ts"
-find = 'if \(p\.approvals\.length\) parts\.push\(el\("p", "muted", "Answer by voice or at the screen\."\)\);'
+find = 'if \(p\.approvals\.length\) parts\.push\(el\("p", "muted", t\("pending\.answerElsewhere"\)\)\);'
 replace = 'if (false) parts.push(el("p", "muted", ""));'
 
 [[rule]]
@@ -158,3 +158,9 @@ name = "the theme chosen is remembered"
 file = "src/app.ts"
 find = 'theme: \(\["light", "dark"\] as const\)\.find\(\(t\) => t === recall<string>\(keep, THEME, "system"\)\) \?\? "system",'
 replace = '    theme: "system" as Theme,'
+
+[[rule]]
+name = "the language chosen is remembered"
+file = "src/app.ts"
+find = 'language: recalledLanguage\(keep\),'
+replace = '    language: "system" as Language | "system",'

@@ -1,6 +1,7 @@
 // Drawing the screens. Each function builds fresh elements from the state it is given.
 import type { Active, BridgeInfo, Doctor, Pending, Pr, Turn } from "./bridge";
 import { gitLine } from "./git";
+import { type Key, type Language, NAMES, plural, t } from "./i18n";
 import {
   cardState,
   LOOK,
@@ -43,6 +44,8 @@ export interface Home {
   newVersion: boolean;
   theme: Theme;
   menuOpen: boolean;
+  /** "system" follows the phone's own language. */
+  language: Language | "system";
   /** The session whose page is open, or null for the cards. */
   open: Detail | null;
   /** Whether the owner has opened the list of what is missing. */
@@ -79,13 +82,14 @@ export interface Actions {
   reload(): void;
   toggleMenu(): void;
   setTheme(theme: Theme): void;
+  setLanguage(language: Language | "system"): void;
   update: UpdateActions;
 }
 
-const CONNECTION: Record<Connection, string> = {
-  connecting: "Connecting…",
-  live: "Live",
-  reconnecting: "Reconnecting…",
+const CONNECTION: Record<Connection, Key> = {
+  connecting: "connection.connecting",
+  live: "connection.live",
+  reconnecting: "connection.reconnecting",
 };
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -109,9 +113,9 @@ export function signInScreen(error: string | null, onSubmit: (secret: string) =>
   input.type = "password";
   input.name = "secret";
   input.autocomplete = "current-password";
-  input.placeholder = "Login secret";
+  input.placeholder = t("signin.placeholder");
   input.required = true;
-  const button = el("button", undefined, "Sign in");
+  const button = el("button", undefined, t("signin.button"));
   button.type = "submit";
   const form = el("form", "signin", input, button);
   form.addEventListener("submit", (event) => {
@@ -121,8 +125,8 @@ export function signInScreen(error: string | null, onSubmit: (secret: string) =>
   return el(
     "section",
     "signin-screen",
-    el("h1", undefined, "Claude voice"),
-    el("p", "muted", "Type the bridge's login secret once. This phone is then remembered for a month."),
+    el("h1", undefined, t("app.title")),
+    el("p", "muted", t("signin.intro")),
     ...(error ? [el("p", "error", error)] : []),
     form,
   );
@@ -130,12 +134,15 @@ export function signInScreen(error: string | null, onSubmit: (secret: string) =>
 
 function focusBar(home: Home): HTMLElement {
   const focused = home.focus ? (home.sessions.find((s) => matches(s, home.focus))?.name ?? home.focus) : null;
-  if (focused) return el("div", "focus-bar talking", el("b", undefined, focused), " · talking now");
+  if (focused) return el("div", "focus-bar talking", el("b", undefined, focused), t("focus.talkingNow"));
   if (home.active) {
-    const who = home.active.set_by === "page" ? "chosen here" : `chosen by ${home.active.set_by}`;
-    return el("div", "focus-bar", "Voice talks to ", el("b", undefined, home.active.name), ` · ${who}`);
+    const who =
+      home.active.set_by === "page"
+        ? t("focus.chosenHere")
+        : t("focus.chosenBy", { who: home.active.set_by });
+    return el("div", "focus-bar", t("focus.voiceTalksTo"), el("b", undefined, home.active.name), ` · ${who}`);
   }
-  return el("div", "focus-bar", "Tap a session to choose who the voice talks to.");
+  return el("div", "focus-bar", t("focus.tapToChoose"));
 }
 
 /** A link into the Claude app for a session connected to Remote Control; Android hands it to the app. */
@@ -162,7 +169,7 @@ function stateLine(s: Session): HTMLElement {
           el(
             "span",
             `context ${contextTone(s.context.used_percentage)}`,
-            `context ${Math.round(s.context.used_percentage)}%`,
+            t("session.context", { percent: Math.round(s.context.used_percentage) }),
           ),
         ]
       : []),
@@ -202,19 +209,22 @@ function card(s: Session, home: Home, act: Actions): HTMLElement {
   if (open) box.classList.add("open");
   const arrow = button(open ? "▾" : "▸", () => act.toggleCard(s.id), "expand");
   arrow.setAttribute("aria-expanded", String(open));
-  arrow.setAttribute("aria-label", open ? "Show less" : "Show more of this card");
+  arrow.setAttribute("aria-label", open ? t("session.showLess") : t("session.showMoreCard"));
   box.append(
     el(
       "div",
       "card-top",
       el("span", "name", s.name || s.id),
-      ...(focused ? [el("span", "chip", "Talking now")] : []),
+      ...(focused ? [el("span", "chip", t("session.talkingNow"))] : []),
       arrow,
     ),
     stateLine(s),
   );
   // The bridge's one line repeats the question while it waits, so the question is the line then.
-  const line = s.question?.text || s.doing || (s.moved_to?.name ? `Continues in ${s.moved_to.name}` : "");
+  const line =
+    s.question?.text ||
+    s.doing ||
+    (s.moved_to?.name ? t("session.continuesIn", { name: s.moved_to.name }) : "");
   if (!open) {
     if (line) box.append(el("div", "line", line));
   } else {
@@ -230,19 +240,19 @@ function card(s: Session, home: Home, act: Actions): HTMLElement {
           "div",
           "question",
           el("div", "question-text line", cut ? `${full.slice(0, QUESTION_CHARS).trimEnd()}…` : full),
-          ...(cut ? [button("Show more", () => act.showMore(s.id), "more")] : []),
+          ...(cut ? [button(t("session.showMore"), () => act.showMore(s.id), "more")] : []),
           options,
         ),
       );
     }
-    if (s.moved_to?.name) box.append(el("div", "doing", `Continues in ${s.moved_to.name}`));
+    if (s.moved_to?.name) box.append(el("div", "doing", t("session.continuesIn", { name: s.moved_to.name })));
     box.append(
       el(
         "div",
         "card-actions",
-        button("Hide", () => act.hide(s.id), "hide"),
-        button("Open ›", () => act.openPage(s.id), "open-detail"),
-        ...claudeLink(s, "Open in Claude"),
+        button(t("session.hide"), () => act.hide(s.id), "hide"),
+        button(t("session.openPage"), () => act.openPage(s.id), "open-detail"),
+        ...claudeLink(s, t("session.openInClaude")),
       ),
     );
   }
@@ -269,15 +279,15 @@ function tile(s: Session, home: Home, act: Actions): HTMLElement {
   const state = cardState(s);
   const look = LOOK[state];
   // A div, not a button, because the corner arrow inside it is a button.
-  const t = el("div", `tile tone-${look.tone}`);
-  t.setAttribute("role", "button");
-  t.tabIndex = 0;
-  t.dataset.session = s.id;
-  t.dataset.state = state;
-  t.title = `${s.name || s.id}: ${look.label}`;
+  const box = el("div", `tile tone-${look.tone}`);
+  box.setAttribute("role", "button");
+  box.tabIndex = 0;
+  box.dataset.session = s.id;
+  box.dataset.state = state;
+  box.title = t("session.tileTitle", { name: s.name || s.id, state: look.label });
   let held = false;
   let press: ReturnType<typeof setTimeout> | undefined;
-  t.addEventListener("pointerdown", (e) => {
+  box.addEventListener("pointerdown", (e) => {
     if ((e.target as Element).closest("button, a")) return;
     held = false;
     press = setTimeout(() => {
@@ -286,11 +296,11 @@ function tile(s: Session, home: Home, act: Actions): HTMLElement {
     }, HOLD_MS);
   });
   for (const end of ["pointerup", "pointerleave", "pointercancel"]) {
-    t.addEventListener(end, () => clearTimeout(press));
+    box.addEventListener(end, () => clearTimeout(press));
   }
   // The phone's own long-press menu would cover the page opening.
-  t.addEventListener("contextmenu", (e) => e.preventDefault());
-  t.addEventListener("click", (e) => {
+  box.addEventListener("contextmenu", (e) => e.preventDefault());
+  box.addEventListener("click", (e) => {
     if ((e.target as Element).closest("button, a")) return;
     // RULE: a long press opens the session's page without choosing it
     if (held) {
@@ -298,32 +308,32 @@ function tile(s: Session, home: Home, act: Actions): HTMLElement {
       return;
     }
     // Shown at once, before the page catches up with the choice.
-    t.classList.add("picked");
+    box.classList.add("picked");
     act.pick(s.id);
   });
-  t.addEventListener("keydown", (e) => {
-    if (e.target === t && (e.key === "Enter" || e.key === " ")) {
+  box.addEventListener("keydown", (e) => {
+    if (e.target === box && (e.key === "Enter" || e.key === " ")) {
       e.preventDefault();
       act.pick(s.id);
     }
   });
-  if (WAITING.has(state)) t.classList.add("waiting");
-  if (home.active?.id === s.id) t.classList.add("active");
-  if (home.picked === s.id) t.classList.add("picked");
-  if (matches(s, home.focus)) t.classList.add("focus");
+  if (WAITING.has(state)) box.classList.add("waiting");
+  if (home.active?.id === s.id) box.classList.add("active");
+  if (home.picked === s.id) box.classList.add("picked");
+  if (matches(s, home.focus)) box.classList.add("focus");
   const details = button("›", () => act.openPage(s.id), "open-detail");
-  details.setAttribute("aria-label", `Open ${s.name || s.id}`);
-  t.append(
+  details.setAttribute("aria-label", t("session.openNamed", { name: s.name || s.id }));
+  box.append(
     el("span", "icon", look.icon),
     el("span", "name", s.name || s.id),
     ...(home.active?.id === s.id ? [el("span", "pin")] : []),
     ...claudeLink(s, "↗").map((a) => {
-      a.setAttribute("aria-label", `Open ${s.name || s.id} in Claude`);
+      a.setAttribute("aria-label", t("session.openNamedInClaude", { name: s.name || s.id }));
       return a;
     }),
     details,
   );
-  return t;
+  return box;
 }
 
 /** The top bar's menu: the theme, and signing out. */
@@ -334,6 +344,11 @@ function menu(home: Home, act: Actions): HTMLElement[] {
     b.setAttribute("aria-pressed", String(home.theme === theme));
     return b;
   };
+  const speak = (label: string, language: Language | "system") => {
+    const b = button(label, () => act.setLanguage(language));
+    b.setAttribute("aria-pressed", String(home.language === language));
+    return b;
+  };
   return [
     el(
       "div",
@@ -341,11 +356,17 @@ function menu(home: Home, act: Actions): HTMLElement[] {
       el(
         "div",
         "theme",
-        choice("Like the phone", "system"),
-        choice("Light", "light"),
-        choice("Dark", "dark"),
+        choice(t("menu.themeSystem"), "system"),
+        choice(t("menu.light"), "light"),
+        choice(t("menu.dark"), "dark"),
       ),
-      button("Sign out", act.signOut, "signout"),
+      el(
+        "div",
+        "language",
+        speak(t("menu.languageSystem"), "system"),
+        ...(Object.keys(NAMES) as Language[]).map((l) => speak(NAMES[l], l)),
+      ),
+      button(t("menu.signOut"), act.signOut, "signout"),
     ),
   ];
 }
@@ -357,37 +378,34 @@ function viewSwitch(home: Home, act: Actions): HTMLElement {
     return b;
   };
   const help = button("?", act.toggleLegend, "legend-toggle");
-  help.setAttribute("aria-label", "What the colours mean");
+  help.setAttribute("aria-label", t("legend.label"));
   help.setAttribute("aria-expanded", String(home.legendOpen));
-  return el("div", "view-switch", help, choice("Grid", "grid"), choice("Cards", "cards"));
+  return el("div", "view-switch", help, choice(t("view.grid"), "grid"), choice(t("view.cards"), "cards"));
 }
 
 /** What each colour, icon and ring means, from the same table the tiles are drawn from. */
 function legend(): HTMLElement {
   const states = (Object.values(LOOK) as Look[]).map((look) =>
-    el("li", `tone-${look.tone}`, el("span", "icon", look.icon), `${look.label}: ${look.meaning}`),
+    el(
+      "li",
+      `tone-${look.tone}`,
+      el("span", "icon", look.icon),
+      t("legend.item", { label: look.label, meaning: look.meaning }),
+    ),
   );
   return el(
     "ul",
     "legend",
     ...states,
-    el(
-      "li",
-      "ring active",
-      "White dot and ring: the session the voice talks to, chosen by a tap or by voice",
-    ),
-    el(
-      "li",
-      "ring focus",
-      "Blue ring: the voice is talking to it right now; with a white dot, it is also the chosen one",
-    ),
+    el("li", "ring active", t("legend.chosen")),
+    el("li", "ring focus", t("legend.talking")),
   );
 }
 
 /** Hidden sessions that are running, as a count that opens into a list with a way back for each. */
 function hiddenBlock(hidden: Session[], home: Home, act: Actions): HTMLElement[] {
   if (!hidden.length) return [];
-  const count = hidden.length === 1 ? "1 hidden session" : `${hidden.length} hidden sessions`;
+  const count = plural(hidden.length, "hidden.count");
   const toggle = button(count, act.toggleHidden, "hidden-toggle");
   toggle.setAttribute("aria-expanded", String(home.hiddenOpen));
   const list = home.hiddenOpen
@@ -400,7 +418,7 @@ function hiddenBlock(hidden: Session[], home: Home, act: Actions): HTMLElement[]
               "li",
               undefined,
               el("span", undefined, s.name || s.id),
-              button("Show again", () => act.unhide(s.id)),
+              button(t("hidden.showAgain"), () => act.unhide(s.id)),
             ),
           ),
         ),
@@ -417,7 +435,7 @@ function usageButton(home: Home, act: Actions): HTMLElement[] {
   const level = usageLevel(percent ?? 0, u.warning?.status);
   const b = button(percent === null ? "–%" : `${percent}%`, act.toggleUsage, `usage-button level-${level}`);
   b.setAttribute("aria-expanded", String(home.usageOpen));
-  b.setAttribute("aria-label", "The plan's use");
+  b.setAttribute("aria-label", t("usage.label"));
   return [b];
 }
 
@@ -445,12 +463,12 @@ function usagePanel(home: Home): HTMLElement[] {
       "section",
       "usage",
       ...(warning ? [el("div", `usage-warning ${warning.severity}`, warning.text)] : []),
-      ...(bars.length ? bars : [el("p", "muted", "No plan figures yet.")]),
+      ...(bars.length ? bars : [el("p", "muted", t("usage.noFigures"))]),
       ...(u.plan?.label ? [el("p", "label", u.plan.label)] : []),
       el(
         "p",
         "voice",
-        el("span", undefined, `Voice today: ${voiceLine(u)}`),
+        el("span", undefined, t("usage.voiceToday", { line: voiceLine(u) })),
         el("span", "label", ` (${u.voice.label})`),
       ),
     ),
@@ -476,23 +494,12 @@ function updatePanel(home: Home, act: UpdateActions): HTMLElement[] {
   if (u.phase === "idle" && behind <= 0) return [];
   const parts: (Node | string)[] = [];
   if (u.phase === "idle") {
-    parts.push(
-      el(
-        "span",
-        undefined,
-        `claude-voice: ${behind === 1 ? "1 new commit" : `${behind} new commits`} to update to`,
-      ),
-      button("Update", act.ask),
-    );
+    parts.push(el("span", undefined, plural(behind, "update.behind")), button(t("update.button"), act.ask));
   } else if (u.phase === "confirm") {
     parts.push(
-      el(
-        "p",
-        undefined,
-        "Update claude-voice now? The voice drops for a few seconds while the bridge restarts.",
-      ),
-      button("Update now", act.confirm, "primary"),
-      button("Cancel", act.cancel),
+      el("p", undefined, t("update.confirm")),
+      button(t("update.now"), act.confirm, "primary"),
+      button(t("update.cancel"), act.cancel),
     );
   } else {
     if (u.message) parts.push(el("p", undefined, u.message));
@@ -500,8 +507,7 @@ function updatePanel(home: Home, act: UpdateActions): HTMLElement[] {
     parts.push(
       el("ol", "steps", ...u.steps.map((st) => el("li", `step${st.ok ? "" : " failed"}`, stepText(st)))),
     );
-    if (u.phase === "running" && u.restarting)
-      parts.push(el("p", "muted", "Restarting… the page reconnects by itself."));
+    if (u.phase === "running" && u.restarting) parts.push(el("p", "muted", t("update.restarting")));
     if (u.phase === "done") parts.push(el("p", `result ${u.result ?? ""}`, resultText(u)));
   }
   return [el("section", "bridge-update", ...parts)];
@@ -512,7 +518,7 @@ function missing(home: Home, onToggle: () => void): HTMLElement[] {
   if (!failing.length) return [];
   // RULE: a missing required thing shows a red banner
   const severity = failing.some((c) => c.required) ? "required" : "optional";
-  const count = failing.length === 1 ? "1 thing missing" : `${failing.length} things missing`;
+  const count = plural(failing.length, "doctor.missing");
   const banner = el(
     "button",
     `doctor-banner ${severity}`,
@@ -527,12 +533,12 @@ function missing(home: Home, onToggle: () => void): HTMLElement[] {
       "li",
       c.required ? "required" : "optional",
       el("b", undefined, c.title),
-      ...(c.affects ? [el("div", "affects", `Without it: ${c.affects}`)] : []),
+      ...(c.affects ? [el("div", "affects", t("doctor.without", { affects: c.affects }))] : []),
       ...(c.detail ? [el("div", "detail", c.detail)] : []),
     );
     if (c.fix) item.append(el("pre", "fix", el("code", undefined, c.fix)));
     if (c.fix_url) {
-      const link = el("a", undefined, "How to fix it");
+      const link = el("a", undefined, t("doctor.howToFix"));
       link.href = c.fix_url;
       link.target = "_blank";
       link.rel = "noopener";
@@ -552,35 +558,41 @@ function pendingBlock(p: Pending | null): HTMLElement[] {
       el(
         "div",
         "question",
-        el("b", undefined, "Waiting for your choice"),
+        el("b", undefined, t("pending.yourChoice")),
         el("div", undefined, p.question.text),
         options,
       ),
     );
   }
   for (const a of p.approvals) {
-    parts.push(el("div", "question", `Approval ${a.number}: ${a.tool} ${a.summary}`.trim()));
+    parts.push(
+      el(
+        "div",
+        "question",
+        t("pending.approval", { number: a.number, tool: a.tool, summary: a.summary }).trim(),
+      ),
+    );
   }
   // RULE: an approval it waits on is shown, to be answered by voice or at the screen
-  if (p.approvals.length) parts.push(el("p", "muted", "Answer by voice or at the screen."));
+  if (p.approvals.length) parts.push(el("p", "muted", t("pending.answerElsewhere")));
   return [el("section", "pending", ...parts)];
 }
 
-function turn(t: Turn): HTMLElement {
+function turn(said: Turn): HTMLElement {
   return el(
     "div",
-    `turn ${t.role}`,
-    el("div", "who", t.role === "user" ? "You" : "Claude"),
-    el("div", "text", t.text),
-    ...(t.cut ? [el("div", "cut", `cut short; ${t.length} characters in all`)] : []),
+    `turn ${said.role}`,
+    el("div", "who", said.role === "user" ? t("turn.you") : t("turn.claude")),
+    el("div", "text", said.text),
+    ...(said.cut ? [el("div", "cut", t("turn.cut", { count: said.length }))] : []),
   );
 }
 
 function detailScreen(home: Home, d: Detail, act: Actions): HTMLElement {
   const s = home.sessions.find((x) => x.id === d.id);
-  const back = button("‹ Sessions", act.back, "back");
+  const back = button(t("detail.back"), act.back, "back");
   const prs = d.prs.map((pr) => {
-    const link = el("a", undefined, `#${pr.number} ${pr.title}${pr.draft ? " (draft)" : ""}`);
+    const link = el("a", undefined, `#${pr.number} ${pr.title}${pr.draft ? t("detail.draft") : ""}`);
     link.href = pr.url;
     link.target = "_blank";
     link.rel = "noopener";
@@ -594,31 +606,34 @@ function detailScreen(home: Home, d: Detail, act: Actions): HTMLElement {
     ...(s
       ? [
           el("div", "meta", [s.project, s.kind].filter(Boolean).join(" · ")),
-          el("p", "words", `${LOOK[cardState(s)].label} – ${timeInWords(minutesInState(s, Date.now()))}`),
+          el(
+            "p",
+            "words",
+            t("session.stateFor", {
+              state: LOOK[cardState(s)].label,
+              time: timeInWords(minutesInState(s, Date.now())),
+            }),
+          ),
           stateLine(s),
           ...gitRow(s),
-          ...claudeLink(s, "Open in Claude"),
+          ...claudeLink(s, t("session.openInClaude")),
         ]
-      : [el("p", "notice", "This session is no longer running.")]),
+      : [el("p", "notice", t("detail.gone"))]),
     ...pendingBlock(d.pending),
     el("div", "turns", ...d.turns.map(turn)),
-    ...(prs.length ? [el("h3", undefined, "Open pull requests"), el("ul", "prs", ...prs)] : []),
+    ...(prs.length ? [el("h3", undefined, t("detail.prs")), el("ul", "prs", ...prs)] : []),
   );
 }
 
 export function homeScreen(home: Home, act: Actions): HTMLElement {
   const menuToggle = button("⋯", act.toggleMenu, "menu-toggle");
-  menuToggle.setAttribute("aria-label", "Menu");
+  menuToggle.setAttribute("aria-label", t("menu.label"));
   menuToggle.setAttribute("aria-expanded", String(home.menuOpen));
-  const connection = el("span", `connection ${home.connection}`, CONNECTION[home.connection]);
+  const connection = el("span", `connection ${home.connection}`, t(CONNECTION[home.connection]));
   const sorted = sortForCards(home.sessions);
   const sessions = sorted.filter((s) => !(s.id in home.hidden));
   const hidden = sorted.filter((s) => s.id in home.hidden);
-  const none = el(
-    "p",
-    "muted",
-    hidden.length ? "Every running session is hidden." : "No sessions are running right now.",
-  );
+  const none = el("p", "muted", hidden.length ? t("sessions.allHidden") : t("sessions.none"));
   const items =
     home.view === "grid" ? sessions.map((s) => tile(s, home, act)) : sessions.map((s) => card(s, home, act));
   const list = el("div", home.view, ...(items.length ? items : [none]));
@@ -626,14 +641,14 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
     el(
       "header",
       "top",
-      el("div", "titles", el("h1", undefined, "Claude voice"), focusBar(home)),
+      el("div", "titles", el("h1", undefined, t("app.title")), focusBar(home)),
       connection,
       ...usageButton(home, act),
       menuToggle,
     ),
     ...menu(home, act),
     ...usagePanel(home),
-    ...(home.newVersion ? [button("New version – tap to update", act.reload, "new-version")] : []),
+    ...(home.newVersion ? [button(t("page.newVersion"), act.reload, "new-version")] : []),
   ];
   const problem = home.problem ? [el("p", "notice", home.problem)] : [];
   if (home.open) return el("section", "home", ...top, ...problem, detailScreen(home, home.open, act));

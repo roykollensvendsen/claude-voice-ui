@@ -1,0 +1,27 @@
+{
+  "nb": [
+    "app.title",
+    "time.min",
+    "time.d",
+    "legend.item",
+    "session.tileTitle",
+    "session.stateFor",
+    "usage.minutes",
+    "usage.tokens",
+    "pending.approval",
+    "turn.claude"
+  ],
+  "es": [
+    "app.title",
+    "time.min",
+    "time.h",
+    "time.d",
+    "legend.item",
+    "session.tileTitle",
+    "session.stateFor",
+    "usage.minutes",
+    "usage.tokens",
+    "usage.inH",
+    "turn.claude"
+  ]
+}
