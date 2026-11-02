@@ -11,7 +11,7 @@
   "connection.live": "En directo",
   "connection.reconnecting": "Reconectando…",
   "focus.talkingNow": " · hablando ahora",
-  "focus.voiceTalksTo": "La voz habla con ",
+  "focus.voiceTalksToFull": "La voz habla con {name}, {who}",
   "focus.chosenHere": "elegida aquí",
   "focus.chosenBy": "elegida por {who}",
   "focus.tapToChoose": "Toca una sesión para elegir con quién habla la voz.",

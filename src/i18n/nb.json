@@ -11,7 +11,7 @@
   "connection.live": "Tilkoblet",
   "connection.reconnecting": "Kobler til igjen…",
   "focus.talkingNow": " · snakker nå",
-  "focus.voiceTalksTo": "Stemmen snakker med ",
+  "focus.voiceTalksToFull": "Stemmen snakker med {name}, {who}",
   "focus.chosenHere": "valgt her",
   "focus.chosenBy": "valgt av {who}",
   "focus.tapToChoose": "Trykk på en økt for å velge hvem stemmen snakker med.",

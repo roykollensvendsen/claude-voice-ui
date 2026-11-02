@@ -147,12 +147,11 @@ button {
   flex: 1;
   min-width: 0;
 }
+/* Never cut off: a long name breaks onto the next line wherever it has to. */
 .focus-bar {
   font-size: 0.8rem;
   color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 .focus-bar b {
   color: var(--text);
@@ -668,10 +667,6 @@ button {
   line-height: 1;
 }
 .tile .name {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
   font-size: 0.8rem;
   line-height: 1.2;
   overflow-wrap: anywhere;
