@@ -75,12 +75,22 @@ describe("the state a card shows", () => {
 });
 
 describe("how each state looks", () => {
-  test("every state has its own colour, icon and label", () => {
+  test("every state has its own icon, label and meaning", () => {
     const looks = Object.values(LOOK);
     expect(looks).toHaveLength(8);
-    expect(new Set(looks.map((l) => l.tone)).size).toBe(8);
     expect(new Set(looks.map((l) => l.icon)).size).toBe(8);
     expect(new Set(looks.map((l) => l.label)).size).toBe(8);
+    expect(new Set(looks.map((l) => l.meaning)).size).toBe(8);
+  });
+
+  test("every kind of waiting is amber, as in the design draft", () => {
+    expect([LOOK.answer.tone, LOOK.approval.tone, LOOK.input.tone]).toEqual(["amber", "amber", "amber"]);
+  });
+
+  test("the states that are not waiting each have a colour of their own", () => {
+    const rest = [LOOK.working, LOOK.idle, LOOK.shell, LOOK.moved, LOOK.stopped].map((l) => l.tone);
+    expect(rest).toEqual(["green", "grey", "slate", "faded", "red"]);
+    expect(rest).not.toContain("amber");
   });
 });
 

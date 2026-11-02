@@ -100,4 +100,27 @@ describe("the grid of sessions", () => {
     expect(tile("b2")).toBeNull();
     expect(root.querySelector(".hidden-toggle")?.textContent).toBe("1 hidden session");
   });
+
+  test("the legend is closed until its button is tapped", async () => {
+    await open(fakeBridge([{ sessions: [ONE], active: null }]));
+    expect(root.querySelector(".legend")).toBeNull();
+    const button = root.querySelector<HTMLButtonElement>(".legend-toggle");
+    expect(button?.getAttribute("aria-label")).toBe("What the colours mean");
+    button?.click();
+    expect(root.querySelector(".legend")).not.toBeNull();
+    root.querySelector<HTMLButtonElement>(".legend-toggle")?.click();
+    expect(root.querySelector(".legend")).toBeNull();
+  });
+
+  test("the legend explains each state's icon and colour, and the two rings", async () => {
+    await open(fakeBridge([{ sessions: [ONE], active: null }]));
+    root.querySelector<HTMLButtonElement>(".legend-toggle")?.click();
+    const rows = [...root.querySelectorAll<HTMLElement>(".legend li")];
+    const text = rows.map((r) => r.textContent);
+    expect(rows).toHaveLength(10);
+    expect(text).toContain("?Waiting for an answer: it has asked you a question");
+    expect(rows.find((r) => r.textContent?.startsWith("!"))?.classList.contains("tone-amber")).toBe(true);
+    expect(text).toContain("Blue ring: the voice is talking to it right now");
+    expect(text).toContain("White ring: the session the voice talks to, chosen by a tap or by voice");
+  });
 });
