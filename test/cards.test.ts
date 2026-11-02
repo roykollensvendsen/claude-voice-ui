@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { start } from "../src/app";
 import type { Bridge } from "../src/bridge";
-import { FakeSource, fakeBridge, ONE, session, TWO } from "./fakes";
+import { FakeSource, fakeBridge, longPress, ONE, session, TWO } from "./fakes";
 
 let root: HTMLElement;
 let stop: (() => void) | undefined;
@@ -110,6 +110,15 @@ describe("short cards", () => {
 });
 
 describe("opening a session from its card", () => {
+  test("a long press on a card opens the session's page without choosing it", async () => {
+    const b = fakeBridge([{ sessions: [ONE], active: null }]);
+    await open(b);
+    await longPress(root, "a1");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(root.querySelector(".detail h2")?.textContent).toBe("billing-ab");
+    expect(b.choose).not.toHaveBeenCalled();
+  });
+
   test("an opened card has an Open button that opens the page without choosing the session", async () => {
     const b = fakeBridge([{ sessions: [ONE], active: null }]);
     await open(b);
