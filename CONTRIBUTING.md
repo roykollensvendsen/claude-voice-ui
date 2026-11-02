@@ -84,7 +84,9 @@ a public repository or a paid plan.
 
 A pull request lands by rebase, and by nothing else. Every commit on a branch
 therefore arrives on `main` individually, so write each one to stand alone:
-green, lintable, and readable from `git blame` without the others. A branch
+lintable, readable from `git blame` without the others, and green, except a
+test-first commit, which is red on purpose and only in the tests it adds.
+Work on a topic branch named for what it does, never on `main` itself. A branch
 cannot be tidied at the end by squashing it, which is why `committed.toml`
 refuses a fixup and a work-in-progress commit rather than trusting you to clean
 up later.

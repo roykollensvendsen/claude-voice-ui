@@ -21,8 +21,6 @@ jobs:
   commits:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    # Dependabot writes a body line carrying two full commit hashes, which no
-    # length rule survives, and its messages are not a person's to fix.
     # A direct push to main was linted by nothing: the range below only exists
     # on a pull request, so the job skipped itself and the local hook, which
     # --no-verify bypasses, was the only check. The range is now worked out for
