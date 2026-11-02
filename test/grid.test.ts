@@ -72,7 +72,9 @@ describe("the grid of sessions", () => {
     await open(fakeBridge([{ sessions: [ONE, TWO], active: null }]));
     FakeSource.last?.emit("focus", { session: "b2", tool: "read_session_output", at: "" });
     expect(tile("b2")?.classList.contains("focus")).toBe(true);
+    expect(tile("b2")?.querySelector(".mic")?.textContent).toBe("🎙");
     expect(tile("a1")?.classList.contains("focus")).toBe(false);
+    expect(tile("a1")?.querySelector(".mic")).toBeNull();
   });
 
   test("one tap on a tile makes it the session the voice talks to, and stays on the tiles", async () => {
@@ -182,7 +184,7 @@ describe("the grid of sessions", () => {
     expect(rows.find((r) => r.textContent?.startsWith("!"))?.classList.contains("tone-amber")).toBe(true);
     expect(text).toContain("White dot and ring: the session the voice talks to, chosen by a tap or by voice");
     expect(text).toContain(
-      "Blue ring: the voice is talking to it right now; with a white dot, it is also the chosen one",
+      "🎙 and a blue ring: the voice is talking to it right now; with a white dot, it is also the chosen one",
     );
   });
 });

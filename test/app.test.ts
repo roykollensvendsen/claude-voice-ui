@@ -176,61 +176,26 @@ describe("the session cards", () => {
   });
 });
 
-describe("the focus bar", () => {
-  test("the line naming the voice's session sits in the top bar, not in a box of its own", async () => {
+describe("the top line and the session the voice talks to", () => {
+  test("the top line holds only the title and its buttons, not a session's name", async () => {
     await open(fakeBridge([{ sessions: [ONE], active: ACTIVE_ONE }]));
-    expect(root.querySelector("header .focus-bar")).not.toBeNull();
-    expect(root.querySelectorAll(".focus-bar")).toHaveLength(1);
+    expect(root.querySelector(".focus-bar")).toBeNull();
+    expect(text("header.top h1")).toBe("Claude voice");
+    expect(text("header.top")).not.toContain("billing-ab");
   });
 
-  test("the bar names the active session and who chose it", async () => {
-    await open(fakeBridge([{ sessions: [ONE], active: ACTIVE_ONE }]));
-    expect(text(".focus-bar")).toContain("billing-ab");
-    expect(text(".focus-bar")).toContain("chosen by voice");
-  });
-
-  test("the bar spends its room on the session's name, with a microphone for a label", async () => {
-    await open(fakeBridge([{ sessions: [ONE], active: ACTIVE_ONE }]));
-    const bar = root.querySelector<HTMLElement>(".focus-bar");
-    expect(bar?.textContent?.startsWith("🎙 billing-ab")).toBe(true);
-    expect(bar?.getAttribute("aria-label")).toBe("Voice talks to billing-ab, chosen by voice");
-  });
-
-  test("a long name wraps onto a second line instead of being cut off", () => {
-    const css = readFileSync("src/style.css", "utf8");
-    const rule = css.slice(css.indexOf(".focus-bar {"), css.indexOf("}", css.indexOf(".focus-bar {")));
-    expect(rule).not.toContain("text-overflow");
-    expect(rule).not.toContain("nowrap");
-    expect(rule).not.toContain("line-clamp");
-  });
-
-  test("the words after the name stay together on one line; only the name may wrap", async () => {
-    await open(fakeBridge([{ sessions: [ONE], active: ACTIVE_ONE }]));
-    expect(root.querySelector(".focus-bar .who")?.textContent).toBe(" · chosen by voice");
-    FakeSource.last?.emit("focus", { session: "a1", tool: "ask_active_session", at: "" });
-    expect(root.querySelector(".focus-bar .who")?.textContent).toBe(" · talking now");
-    const css = readFileSync("src/style.css", "utf8");
-    const start = css.indexOf(".focus-bar .who {");
-    expect(css.slice(start, css.indexOf("}", start))).toContain("white-space: nowrap");
-  });
-
-  test.each([".top h1 {", ".connection {"])("the top bar's own words never break: %s", (selector) => {
+  test.each([".top {", ".top h1 {", ".connection {"])("the top line never wraps: %s", (selector) => {
     const css = readFileSync("src/style.css", "utf8");
     const start = css.indexOf(selector);
     expect(css.slice(start, css.indexOf("}", start))).toContain("white-space: nowrap");
   });
 
-  test("with nothing chosen the bar says how to choose", async () => {
-    await open(fakeBridge([{ sessions: [ONE], active: null }]));
-    expect(text(".focus-bar")).toContain("Tap a session");
-  });
-
-  test("a focus event shows the session the voice is talking to now", async () => {
+  test("the card the voice is talking to now carries a microphone", async () => {
     await open(fakeBridge([{ sessions: [ONE, TWO], active: ACTIVE_ONE }]));
     FakeSource.last?.emit("focus", { session: "docs-cd", tool: "ask_active_session", at: "" });
-    expect(text(".focus-bar")).toContain("docs-cd");
-    expect(text(".focus-bar")).toContain("talking now");
     expect(card("b2")?.classList.contains("focus")).toBe(true);
+    expect(card("b2")?.querySelector(".mic")?.textContent).toBe("🎙");
+    expect(card("a1")?.querySelector(".mic")).toBeNull();
   });
 
   test("a focus event matches a session by id as well as by name", async () => {
@@ -239,12 +204,12 @@ describe("the focus bar", () => {
     expect(card("b2")?.classList.contains("focus")).toBe(true);
   });
 
-  test("after two quiet minutes the bar goes back to the active session", async () => {
+  test("after two quiet minutes the microphone goes away", async () => {
     await open(fakeBridge([{ sessions: [ONE, TWO], active: ACTIVE_ONE }]));
     FakeSource.last?.emit("focus", { session: "docs-cd", tool: "ask_active_session", at: "" });
     await vi.advanceTimersByTimeAsync(2 * 60_000 + 1);
-    expect(text(".focus-bar")).toContain("billing-ab");
     expect(card("b2")?.classList.contains("focus")).toBe(false);
+    expect(root.querySelector(".mic")).toBeNull();
   });
 
   test("an active event moves the mark to the new session", async () => {
@@ -257,7 +222,20 @@ describe("the focus bar", () => {
       set_at: "",
     });
     expect(card("b2")?.classList.contains("active")).toBe(true);
-    expect(text(".focus-bar")).toContain("docs-cd");
+    expect(card("a1")?.classList.contains("active")).toBe(false);
+  });
+
+  test("a microphone at the top leads to the session the voice is talking to", async () => {
+    await open(fakeBridge([{ sessions: [ONE, TWO], active: ACTIVE_ONE }]));
+    expect(root.querySelector("header .mic-jump")).toBeNull();
+    FakeSource.last?.emit("focus", { session: "docs-cd", tool: "ask_active_session", at: "" });
+    const scrolled = vi.fn();
+    const target = card("b2");
+    if (target) target.scrollIntoView = scrolled;
+    const jump = root.querySelector<HTMLButtonElement>("header .mic-jump");
+    expect(jump?.getAttribute("aria-label")).toBe("Show docs-cd, which the voice is talking to");
+    jump?.click();
+    expect(scrolled).toHaveBeenCalled();
   });
 });
 
