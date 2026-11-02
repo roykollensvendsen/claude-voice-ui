@@ -67,10 +67,20 @@ describe("the grid of sessions", () => {
     expect(tile("b2")?.querySelector(".number")).toBeNull();
   });
 
-  test("a waiting tile is marked as waiting and comes first", async () => {
-    await open(fakeBridge([{ sessions: [ONE, WAITING], active: null }]));
+  test("a waiting tile is marked as waiting, and stays in its place", async () => {
+    await open(
+      fakeBridge([
+        {
+          sessions: [
+            { ...ONE, number: 1 },
+            { ...WAITING, number: 2 },
+          ],
+          active: null,
+        },
+      ]),
+    );
     const tiles = [...root.querySelectorAll<HTMLElement>(".grid .tile")];
-    expect(tiles[0]?.dataset.session).toBe("w");
+    expect(tiles.map((x) => x.dataset.session)).toEqual(["a1", "w"]);
     expect(tile("w")?.classList.contains("waiting")).toBe(true);
     expect(tile("a1")?.classList.contains("waiting")).toBe(false);
   });
