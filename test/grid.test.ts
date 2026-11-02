@@ -120,6 +120,34 @@ describe("the grid of sessions", () => {
     expect(b.choose).not.toHaveBeenCalled();
   });
 
+  test("when the voice only looks at a session, its tile shows a faint eye and no microphone", async () => {
+    await open(fakeBridge([{ sessions: [ONE, TWO], active: null }]));
+    FakeSource.last?.emit("peek", { session: "docs-cd", tool: "side_question", at: "" });
+    expect(tile("b2")?.querySelector(".peek")?.textContent).toBe("👁");
+    expect(tile("b2")?.querySelector(".mic")).toBeNull();
+    expect(tile("b2")?.classList.contains("focus")).toBe(false);
+    expect(tile("a1")?.querySelector(".peek")).toBeNull();
+  });
+
+  test("the eye fades away after two minutes", async () => {
+    await open(fakeBridge([{ sessions: [ONE, TWO], active: null }]));
+    FakeSource.last?.emit("peek", { session: "b2", tool: "read_session_output", at: "" });
+    await vi.advanceTimersByTimeAsync(2 * 60_000 - 1000);
+    expect(tile("b2")?.querySelector(".peek")).not.toBeNull();
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(tile("b2")?.querySelector(".peek")).toBeNull();
+  });
+
+  test("several sessions looked at each keep their own eye", async () => {
+    await open(fakeBridge([{ sessions: [ONE, TWO], active: null }]));
+    FakeSource.last?.emit("peek", { session: "a1", tool: "digest_session", at: "" });
+    await vi.advanceTimersByTimeAsync(60_000);
+    FakeSource.last?.emit("peek", { session: "b2", tool: "digest_session", at: "" });
+    await vi.advanceTimersByTimeAsync(61_000);
+    expect(tile("a1")?.querySelector(".peek")).toBeNull();
+    expect(tile("b2")?.querySelector(".peek")).not.toBeNull();
+  });
+
   test("a session both chosen and talking now shows both marks", async () => {
     await open(
       fakeBridge([
@@ -179,12 +207,15 @@ describe("the grid of sessions", () => {
     root.querySelector<HTMLButtonElement>(".legend-toggle")?.click();
     const rows = [...root.querySelectorAll<HTMLElement>(".legend li")];
     const text = rows.map((r) => r.textContent);
-    expect(rows).toHaveLength(10);
+    expect(rows).toHaveLength(11);
     expect(text).toContain("?Waiting for an answer: it has asked you a question");
     expect(rows.find((r) => r.textContent?.startsWith("!"))?.classList.contains("tone-amber")).toBe(true);
     expect(text).toContain("White dot and ring: the session the voice talks to, chosen by a tap or by voice");
     expect(text).toContain(
       "🎙 and a blue ring: the voice is talking to it right now; with a white dot, it is also the chosen one",
+    );
+    expect(text).toContain(
+      "👁: the voice only looked at it or talked about it, without writing to it; fades after two minutes",
     );
   });
 });
