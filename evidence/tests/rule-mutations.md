@@ -10,7 +10,7 @@ Where a rule already exists, this is the substitute. Each rule is disabled in
 turn, by replacing its one line with something that can never hold, and the
 suite is run. A rule whose removal breaks no test is a rule nothing protects.
 
-**Result: 15 of 15 rules turned off the test that names them.** None survived.
+**Result: 16 of 16 rules turned off the test that names them.** None survived.
 
 | Rule turned off | Tests that went red | The test that names it | Did that one go red? |
 |---|---|---|---|
@@ -22,13 +22,14 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | being signed out while watching returns to the sign-in page | 6 | `test_being_signed_out_while_watching_returns_to_the_sign_in_page` | yes |
 | a missing required thing shows a red banner | 1 | `test_a_missing_required_thing_shows_a_red_banner` | yes |
 | the check is asked again every five minutes, not on every refresh | 1 | `test_the_check_is_asked_again_every_five_minutes_not_on_every_refresh` | yes |
-| the state the bridge reports wins over the app's own reading | 5 | `test_the_state_the_bridge_reports_wins_over_the_app_s_own_reading` | yes |
+| the state the bridge reports wins over the app's own reading | 6 | `test_the_state_the_bridge_reports_wins_over_the_app_s_own_reading` | yes |
 | being behind is marked as behind even when also ahead | 3 | `test_being_behind_is_marked_as_behind_even_when_also_ahead` | yes |
 | a reached limit says so | 1 | `test_a_reached_limit_says_so` | yes |
 | usage is asked again every minute | 1 | `test_usage_is_asked_again_every_minute` | yes |
 | the update starts only after the owner confirms | 1 | `test_the_update_starts_only_after_the_owner_confirms` | yes |
 | an approval it waits on is shown, to be answered by voice or at the screen | 1 | `test_an_approval_it_waits_on_is_shown_to_be_answered_by_voice_or_at_the_screen` | yes |
 | a new turn announced on the stream is fetched after the last one shown | 2 | `test_a_new_turn_announced_on_the_stream_is_fetched_after_the_last_one_shown` | yes |
+| a hidden session comes back when it starts waiting | 1 | `test_a_hidden_session_comes_back_when_it_starts_waiting` | yes |
 
 ## What this does not prove
 

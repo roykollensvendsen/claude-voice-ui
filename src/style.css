@@ -493,3 +493,59 @@ button {
 .prs a {
   color: var(--accent);
 }
+
+.card-top .expand {
+  margin-left: auto;
+  min-width: 44px;
+  min-height: 36px;
+  margin-right: -8px;
+  margin-top: -6px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.card:not(.open) .line {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.question .more,
+.card-actions button,
+.hidden-sessions button {
+  min-height: 36px;
+  padding: 0 12px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  cursor: pointer;
+}
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+.hidden-sessions {
+  margin-top: 12px;
+}
+.hidden-sessions .hidden-toggle {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  text-decoration: underline;
+}
+.hidden-list {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0;
+}
+.hidden-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}

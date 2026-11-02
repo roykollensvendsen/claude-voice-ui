@@ -104,3 +104,9 @@ name = "a new turn announced on the stream is fetched after the last one shown"
 file = "src/app.ts"
 find = '\(\) => deps\.bridge\.output\(id, home\.open\?\.lastIndex\),'
 replace = '() => deps.bridge.output(id, undefined),'
+
+[[rule]]
+name = "a hidden session comes back when it starts waiting"
+file = "src/app.ts"
+find = 'if \(at !== undefined && WAITS\.has\(cardState\(s\)\) && at !== moment\(s\)\) \{'
+replace = '      if (false) {'

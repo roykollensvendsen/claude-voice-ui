@@ -1,13 +1,20 @@
 // The app: signs in, shows the cards, and keeps them current.
 import { type Bridge, SignedOut, type SignIn, type UpdateStep } from "./bridge";
 import { type EventSourceLike, follow } from "./live";
+import { browserKeep, type Keep, recall, remember } from "./remember";
+import { cardState, type Session } from "./states";
 import { IDLE } from "./update";
 import { type Actions, type Home, homeScreen, signInScreen, type UpdateActions } from "./view";
 
 export interface Deps {
   bridge: Bridge;
   openEvents: (url: string) => EventSourceLike;
+  /** Where this phone remembers open and hidden cards; the browser's storage when left out. */
+  keep?: Keep;
 }
+
+const EXPANDED = "cvu.expanded";
+const HIDDEN = "cvu.hidden";
 
 /** Changes of state arrive on the stream; the timer catches what a dropped stream missed. */
 // RULE: the sessions are fetched again every minute
@@ -30,6 +37,7 @@ const REFUSED: Record<Exclude<SignIn, "ok">, string> = {
 
 /** Start the app in `root`. The returned function stops it: no more timers, no more stream. */
 export function start(root: HTMLElement, deps: Deps): () => void {
+  const keep = "keep" in deps ? deps.keep : browserKeep();
   const home: Home = {
     sessions: [],
     active: null,
@@ -41,6 +49,10 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     bridge: null,
     update: { ...IDLE },
     open: null,
+    expanded: new Set(recall<string[]>(keep, EXPANDED, [])),
+    hidden: recall<Record<string, string>>(keep, HIDDEN, {}),
+    more: new Set(),
+    hiddenOpen: false,
     doctorOpen: false,
   };
   let watching = false;
@@ -50,7 +62,27 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   let doctorTimer: ReturnType<typeof setInterval> | undefined;
   let usageTimer: ReturnType<typeof setInterval> | undefined;
 
-  const draw = () => root.replaceChildren(homeScreen(home, actions));
+  const draw = () => {
+    bringBackWaiting();
+    root.replaceChildren(homeScreen(home, actions));
+  };
+
+  /** What a session was doing, and since when, so a later wait can be told from the one it was hidden in. */
+  const moment = (s: Session) => `${cardState(s)}|${s.state_since ?? ""}`;
+  const WAITS = new Set(["answer", "approval", "input"]);
+
+  function bringBackWaiting() {
+    let changed = false;
+    for (const s of home.sessions) {
+      const at = home.hidden[s.id];
+      // RULE: a hidden session comes back when it starts waiting
+      if (at !== undefined && WAITS.has(cardState(s)) && at !== moment(s)) {
+        delete home.hidden[s.id];
+        changed = true;
+      }
+    }
+    if (changed) remember(keep, HIDDEN, home.hidden);
+  }
 
   const updating: UpdateActions = {
     ask() {
@@ -91,6 +123,32 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     },
     signOut: () => void signOut(),
     toggleDoctor,
+    toggleCard(id) {
+      if (!home.expanded.delete(id)) home.expanded.add(id);
+      remember(keep, EXPANDED, [...home.expanded]);
+      draw();
+    },
+    showMore(id) {
+      home.more.add(id);
+      draw();
+    },
+    hide(id) {
+      const s = home.sessions.find((x) => x.id === id);
+      home.hidden[id] = s ? moment(s) : "";
+      home.expanded.delete(id);
+      remember(keep, HIDDEN, home.hidden);
+      remember(keep, EXPANDED, [...home.expanded]);
+      draw();
+    },
+    unhide(id) {
+      delete home.hidden[id];
+      remember(keep, HIDDEN, home.hidden);
+      draw();
+    },
+    toggleHidden() {
+      home.hiddenOpen = !home.hiddenOpen;
+      draw();
+    },
     update: updating,
   };
 

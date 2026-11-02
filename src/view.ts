@@ -18,6 +18,13 @@ export interface Home {
   usage: Usage | null;
   bridge: BridgeInfo | null;
   update: UpdateState;
+  /** Cards opened with their arrow. */
+  expanded: Set<string>;
+  /** Hidden sessions, each with its state when it was hidden, so a new wait brings it back. */
+  hidden: Record<string, string>;
+  /** Cards whose long question is shown in full. */
+  more: Set<string>;
+  hiddenOpen: boolean;
   /** The session whose page is open, or null for the cards. */
   open: Detail | null;
   /** Whether the owner has opened the list of what is missing. */
@@ -38,6 +45,11 @@ export interface Actions {
   back(): void;
   signOut(): void;
   toggleDoctor(): void;
+  toggleCard(id: string): void;
+  showMore(id: string): void;
+  hide(id: string): void;
+  unhide(id: string): void;
+  toggleHidden(): void;
   update: UpdateActions;
 }
 
@@ -132,36 +144,104 @@ function gitRow(s: Session): HTMLElement[] {
   ];
 }
 
-function card(s: Session, home: Home, onPick: (id: string) => void): HTMLElement {
+/** A question longer than this is cut short in an opened card, behind "Show more". */
+const QUESTION_CHARS = 200;
+
+function card(s: Session, home: Home, act: Actions): HTMLElement {
   const state = cardState(s);
   const look = LOOK[state];
   const focused = matches(s, home.focus);
-  const button = el("button", `card tone-${look.tone}`);
-  button.type = "button";
-  button.dataset.session = s.id;
-  button.dataset.state = state;
-  if (home.active?.id === s.id) button.classList.add("active");
-  if (focused) button.classList.add("focus");
-  button.append(
+  const open = home.expanded.has(s.id);
+  // A div, not a button, because the arrow and the buttons inside an opened card are buttons themselves.
+  const box = el("div", `card tone-${look.tone}`);
+  box.setAttribute("role", "button");
+  box.tabIndex = 0;
+  box.dataset.session = s.id;
+  box.dataset.state = state;
+  if (home.active?.id === s.id) box.classList.add("active");
+  if (focused) box.classList.add("focus");
+  if (open) box.classList.add("open");
+  const arrow = button(open ? "▾" : "▸", () => act.toggleCard(s.id), "expand");
+  arrow.setAttribute("aria-expanded", String(open));
+  arrow.setAttribute("aria-label", open ? "Show less" : "Show more of this card");
+  box.append(
     el(
       "div",
       "card-top",
       el("span", "name", s.name || s.id),
       ...(focused ? [el("span", "chip", "Talking now")] : []),
+      arrow,
     ),
-    el("div", "meta", [s.project, s.kind].filter(Boolean).join(" · ")),
     stateLine(s),
   );
-  // The bridge's one line repeats the question while it waits, and the question is shown in full below.
-  if (s.doing && !s.question) button.append(el("div", "doing", s.doing));
-  button.append(...gitRow(s));
-  if (s.question) {
-    const options = el("ul", "options", ...(s.question.options ?? []).map((o) => el("li", undefined, o)));
-    button.append(el("div", "question", el("div", undefined, s.question.text), options));
+  // The bridge's one line repeats the question while it waits, so the question is the line then.
+  const line = s.question?.text || s.doing || (s.moved_to?.name ? `Continues in ${s.moved_to.name}` : "");
+  if (!open) {
+    if (line) box.append(el("div", "line", line));
+  } else {
+    box.append(el("div", "meta", [s.project, s.kind].filter(Boolean).join(" · ")));
+    if (s.doing && !s.question) box.append(el("div", "line doing", s.doing));
+    box.append(...gitRow(s));
+    if (s.question) {
+      const full = s.question.text;
+      const cut = full.length > QUESTION_CHARS && !home.more.has(s.id);
+      const options = el("ul", "options", ...(s.question.options ?? []).map((o) => el("li", undefined, o)));
+      box.append(
+        el(
+          "div",
+          "question",
+          el("div", "question-text line", cut ? `${full.slice(0, QUESTION_CHARS).trimEnd()}…` : full),
+          ...(cut ? [button("Show more", () => act.showMore(s.id), "more")] : []),
+          options,
+        ),
+      );
+    }
+    if (s.moved_to?.name) box.append(el("div", "doing", `Continues in ${s.moved_to.name}`));
+    box.append(
+      el(
+        "div",
+        "card-actions",
+        button("Hide", () => act.hide(s.id), "hide"),
+      ),
+    );
   }
-  if (s.moved_to?.name) button.append(el("div", "doing", `Continues in ${s.moved_to.name}`));
-  button.addEventListener("click", () => onPick(s.id));
-  return button;
+  box.addEventListener("click", (e) => {
+    // A tap on the arrow or a button inside the card is that button's, not a choice of session.
+    if ((e.target as Element).closest("button")) return;
+    act.pick(s.id);
+  });
+  box.addEventListener("keydown", (e) => {
+    if (e.target === box && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      act.pick(s.id);
+    }
+  });
+  return box;
+}
+
+/** Hidden sessions that are running, as a count that opens into a list with a way back for each. */
+function hiddenBlock(hidden: Session[], home: Home, act: Actions): HTMLElement[] {
+  if (!hidden.length) return [];
+  const count = hidden.length === 1 ? "1 hidden session" : `${hidden.length} hidden sessions`;
+  const toggle = button(count, act.toggleHidden, "hidden-toggle");
+  toggle.setAttribute("aria-expanded", String(home.hiddenOpen));
+  const list = home.hiddenOpen
+    ? [
+        el(
+          "ul",
+          "hidden-list",
+          ...hidden.map((s) =>
+            el(
+              "li",
+              undefined,
+              el("span", undefined, s.name || s.id),
+              button("Show again", () => act.unhide(s.id)),
+            ),
+          ),
+        ),
+      ]
+    : [];
+  return [el("section", "hidden-sessions", toggle, ...list)];
 }
 
 function usagePanel(home: Home): HTMLElement[] {
@@ -346,13 +426,21 @@ function detailScreen(home: Home, d: Detail, act: Actions): HTMLElement {
 export function homeScreen(home: Home, act: Actions): HTMLElement {
   const signOut = button("Sign out", act.signOut, "signout");
   const connection = el("span", `connection ${home.connection}`, CONNECTION[home.connection]);
-  const sessions = sortForCards(home.sessions);
+  const sorted = sortForCards(home.sessions);
+  const sessions = sorted.filter((s) => !(s.id in home.hidden));
+  const hidden = sorted.filter((s) => s.id in home.hidden);
   const cards = el(
     "div",
     "cards",
     ...(sessions.length
-      ? sessions.map((s) => card(s, home, act.pick))
-      : [el("p", "muted", "No sessions are running right now.")]),
+      ? sessions.map((s) => card(s, home, act))
+      : [
+          el(
+            "p",
+            "muted",
+            hidden.length ? "Every running session is hidden." : "No sessions are running right now.",
+          ),
+        ]),
   );
   const top = [el("header", "top", el("h1", undefined, "Claude voice"), connection, signOut), focusBar(home)];
   const problem = home.problem ? [el("p", "notice", home.problem)] : [];
@@ -366,5 +454,6 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
     ...usagePanel(home),
     ...problem,
     cards,
+    ...hiddenBlock(hidden, home, act),
   );
 }
