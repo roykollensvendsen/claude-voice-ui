@@ -64,6 +64,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     // RULE: the view chosen is remembered
     view: recall<View>(keep, VIEW, "grid") === "cards" ? "cards" : "grid",
     legendOpen: false,
+    usageOpen: false,
     picked: null,
     doctorOpen: false,
   };
@@ -212,6 +213,10 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     setView(view) {
       home.view = view;
       remember(keep, VIEW, view);
+      draw();
+    },
+    toggleUsage() {
+      home.usageOpen = !home.usageOpen;
       draw();
     },
     toggleLegend() {

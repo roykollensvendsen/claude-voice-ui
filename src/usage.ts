@@ -67,6 +67,24 @@ export function warningText(usage: Usage): { text: string; severity: "warn" | "s
   return { text: `Close to the plan's limit: ${w.used_percentage}% used`, severity: "warn" };
 }
 
+/** The highest share used of any current window: the limit that will be met first. */
+export function tightest(usage: Usage): number | null {
+  if (usage.warning?.status === "rejected") return 100;
+  const shown = planBars(usage, Date.now()).filter((b) => !b.stale);
+  return shown.length ? Math.max(...shown.map((b) => b.percent)) : null;
+}
+
+/** How the top bar's percentage is coloured: grey, then yellow, then red as the limit nears. */
+export function usageLevel(
+  percent: number,
+  warning?: "allowed_warning" | "rejected",
+): "ok" | "warn" | "full" {
+  // RULE: the percentage turns from grey to yellow to red near the limit
+  if (warning === "rejected" || percent >= 90) return "full";
+  if (warning === "allowed_warning" || percent >= 70) return "warn";
+  return "ok";
+}
+
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 function tokens(n: number): string {
