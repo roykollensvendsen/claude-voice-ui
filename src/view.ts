@@ -138,6 +138,16 @@ function focusBar(home: Home): HTMLElement {
   return el("div", "focus-bar", "Tap a session to choose who the voice talks to.");
 }
 
+/** A link into the Claude app for a session connected to Remote Control; Android hands it to the app. */
+function claudeLink(s: Session, label: string, className = "open-claude"): HTMLElement[] {
+  if (!s.app_url) return [];
+  const a = el("a", className, label);
+  a.href = s.app_url;
+  a.target = "_blank";
+  a.rel = "noopener";
+  return [a];
+}
+
 function stateLine(s: Session): HTMLElement {
   const look = LOOK[cardState(s)];
   // The tone is set here too, so the line keeps its colour on a session's own page.
@@ -231,12 +241,14 @@ function card(s: Session, home: Home, act: Actions): HTMLElement {
         "div",
         "card-actions",
         button("Hide", () => act.hide(s.id), "hide"),
+        button("Open ›", () => act.openPage(s.id), "open-detail"),
+        ...claudeLink(s, "Open in Claude"),
       ),
     );
   }
   box.addEventListener("click", (e) => {
-    // A tap on the arrow or a button inside the card is that button's, not a choice of session.
-    if ((e.target as Element).closest("button")) return;
+    // A tap on the arrow, a button or a link inside the card is theirs, not a choice of session.
+    if ((e.target as Element).closest("button, a")) return;
     act.pick(s.id);
   });
   box.addEventListener("keydown", (e) => {
@@ -266,7 +278,7 @@ function tile(s: Session, home: Home, act: Actions): HTMLElement {
   let held = false;
   let press: ReturnType<typeof setTimeout> | undefined;
   t.addEventListener("pointerdown", (e) => {
-    if ((e.target as Element).closest("button")) return;
+    if ((e.target as Element).closest("button, a")) return;
     held = false;
     press = setTimeout(() => {
       held = true;
@@ -279,7 +291,7 @@ function tile(s: Session, home: Home, act: Actions): HTMLElement {
   // The phone's own long-press menu would cover the page opening.
   t.addEventListener("contextmenu", (e) => e.preventDefault());
   t.addEventListener("click", (e) => {
-    if ((e.target as Element).closest("button")) return;
+    if ((e.target as Element).closest("button, a")) return;
     // RULE: a long press opens the session's page without choosing it
     if (held) {
       held = false;
@@ -305,6 +317,10 @@ function tile(s: Session, home: Home, act: Actions): HTMLElement {
     el("span", "icon", look.icon),
     el("span", "name", s.name || s.id),
     ...(home.active?.id === s.id ? [el("span", "pin")] : []),
+    ...claudeLink(s, "↗").map((a) => {
+      a.setAttribute("aria-label", `Open ${s.name || s.id} in Claude`);
+      return a;
+    }),
     details,
   );
   return t;
@@ -581,6 +597,7 @@ function detailScreen(home: Home, d: Detail, act: Actions): HTMLElement {
           el("p", "words", `${LOOK[cardState(s)].label} – ${timeInWords(minutesInState(s, Date.now()))}`),
           stateLine(s),
           ...gitRow(s),
+          ...claudeLink(s, "Open in Claude"),
         ]
       : [el("p", "notice", "This session is no longer running.")]),
     ...pendingBlock(d.pending),

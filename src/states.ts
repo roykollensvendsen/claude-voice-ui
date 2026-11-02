@@ -13,6 +13,8 @@ export interface Session {
   question?: { text: string; options?: string[] };
   waiting_for?: string | null;
   moved_to?: { id?: string; name?: string };
+  /** Opens the session in the Claude app while it is connected to Remote Control; null otherwise. */
+  app_url?: string | null;
   /** The bridge's own state; older bridges send only `status`. */
   state?: string;
   /** When `state` last changed. */
