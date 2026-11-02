@@ -827,3 +827,35 @@ button {
 .menu .signout {
   justify-self: start;
 }
+
+/* A link into the Claude app: a quiet button on the page and cards, a small mark in a tile's corner. */
+a.open-claude {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  margin-top: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  color: var(--text);
+  text-decoration: none;
+}
+.card-actions {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.card-actions a.open-claude {
+  margin-top: 6px;
+}
+.tile a.open-claude {
+  position: absolute;
+  top: 0;
+  right: 18px;
+  min-height: 0;
+  margin: 0;
+  padding: 4px 6px;
+  border: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1;
+}
