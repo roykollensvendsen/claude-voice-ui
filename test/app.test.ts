@@ -50,6 +50,22 @@ const ONE = session({
 const TWO = session({ id: "b2", name: "docs-cd", project: "docs", status: "idle", minutes_since_update: 12 });
 const ACTIVE_ONE: Active = { id: "a1", name: "billing-ab", kind: "terminal", set_by: "voice", set_at: "" };
 
+const ALL_OK: Doctor = { ready: true, checked_at: "", checks: [] };
+
+function check(over: Partial<Doctor["checks"][number]>): Doctor["checks"][number] {
+  return {
+    id: "x",
+    title: "X",
+    ok: true,
+    required: false,
+    affects: "",
+    detail: "",
+    fix: "",
+    fix_url: null,
+    ...over,
+  };
+}
+
 function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignIn = "ok") {
   let calls = 0;
   return {
@@ -65,6 +81,7 @@ function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignIn = "ok
     choose: vi.fn(
       async (id: string): Promise<Active> => ({ id, name: id, kind: "terminal", set_by: "page", set_at: "" }),
     ),
+    doctor: vi.fn(async (): Promise<Doctor> => ALL_OK),
   } satisfies Bridge & { snapshotCalls: () => number };
 }
 
@@ -289,5 +306,89 @@ describe("staying live", () => {
     await vi.advanceTimersByTimeAsync(15_000);
     expect(root.querySelector("form.signin")).not.toBeNull();
     expect(FakeSource.last?.closed).toBe(true);
+  });
+});
+
+describe("what is missing", () => {
+  const PORT = check({
+    id: "tailnet_port",
+    title: "Tailnet-only port",
+    ok: false,
+    affects: "the companion app on the phone",
+    detail: "nothing serves the bridge on the tailnet",
+    fix: "tailscale serve --bg --http=8813 http://127.0.0.1:8811",
+    fix_url: "https://tailscale.com/kb/1242/tailscale-serve",
+  });
+  const STATUSLINE = check({ id: "statusline", title: "Statusline", ok: false, detail: "no state file" });
+  const SIGNED_IN = check({
+    id: "claude_signed_in",
+    title: "Claude Code signed in",
+    ok: false,
+    required: true,
+  });
+
+  async function openWith(doctor: Doctor) {
+    const b = fakeBridge([{ sessions: [ONE], active: null }]);
+    b.doctor.mockResolvedValue(doctor);
+    await open(b);
+    return b;
+  }
+
+  test("with nothing missing there is no banner", async () => {
+    await openWith({ ...ALL_OK, checks: [check({ id: "git", title: "Git" })] });
+    expect(root.querySelector(".doctor-banner")).toBeNull();
+  });
+
+  test("missing optional things show an amber banner naming them", async () => {
+    await openWith({ ready: true, checked_at: "", checks: [check({ title: "Git" }), PORT, STATUSLINE] });
+    const banner = root.querySelector(".doctor-banner");
+    expect(banner?.classList.contains("optional")).toBe(true);
+    expect(banner?.textContent).toBe("2 things missing: Tailnet-only port, Statusline");
+  });
+
+  test("a missing required thing shows a red banner", async () => {
+    await openWith({ ready: false, checked_at: "", checks: [SIGNED_IN] });
+    const banner = root.querySelector(".doctor-banner");
+    expect(banner?.classList.contains("required")).toBe(true);
+    expect(banner?.textContent).toBe("1 thing missing: Claude Code signed in");
+  });
+
+  test("tapping the banner shows what each missing thing affects and how to fix it", async () => {
+    await openWith({ ready: true, checked_at: "", checks: [PORT] });
+    expect(root.querySelector(".doctor-panel")).toBeNull();
+    root.querySelector<HTMLButtonElement>(".doctor-banner")?.click();
+    const panel = root.querySelector(".doctor-panel");
+    expect(panel?.textContent).toContain("the companion app on the phone");
+    expect(panel?.textContent).toContain("nothing serves the bridge on the tailnet");
+    expect(panel?.querySelector("code")?.textContent).toBe(
+      "tailscale serve --bg --http=8813 http://127.0.0.1:8811",
+    );
+    expect(panel?.querySelector("a")?.getAttribute("href")).toBe(
+      "https://tailscale.com/kb/1242/tailscale-serve",
+    );
+  });
+
+  test("the panel stays open when the cards are redrawn", async () => {
+    await openWith({ ready: true, checked_at: "", checks: [PORT] });
+    root.querySelector<HTMLButtonElement>(".doctor-banner")?.click();
+    FakeSource.last?.emit("active", ACTIVE_ONE);
+    expect(root.querySelector(".doctor-panel")).not.toBeNull();
+  });
+
+  test("the check is asked again every five minutes, not on every refresh", async () => {
+    const b = await openWith(ALL_OK);
+    expect(b.doctor).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(4 * 60_000);
+    expect(b.doctor).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(b.doctor).toHaveBeenCalledTimes(2);
+  });
+
+  test("a check that fails to answer leaves the cards as they are", async () => {
+    const b = fakeBridge([{ sessions: [ONE], active: null }]);
+    b.doctor.mockRejectedValue(new Error("the bridge answered 500"));
+    await open(b);
+    expect(card("a1")).not.toBeNull();
+    expect(root.querySelector(".doctor-banner")).toBeNull();
   });
 });

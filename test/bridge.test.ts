@@ -85,3 +85,16 @@ describe("signing out", () => {
     expect(fetch).toHaveBeenCalledWith("/api/v1/signout", { method: "POST" });
   });
 });
+
+describe("asking what is missing", () => {
+  test("the check comes back as the bridge sent it", async () => {
+    const body = { ready: true, checked_at: "", checks: [] };
+    const fetch = vi.fn(async () => answer(200, body));
+    expect(await bridge(fetch).doctor()).toEqual(body);
+    expect(fetch).toHaveBeenCalledWith("/api/v1/doctor", { cache: "no-store" });
+  });
+
+  test("asking while signed out says so", async () => {
+    await expect(bridge(async () => answer(401)).doctor()).rejects.toBeInstanceOf(SignedOut);
+  });
+});
