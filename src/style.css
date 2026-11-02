@@ -139,10 +139,11 @@ button {
   border-left: 5px solid var(--tone);
   border-radius: 12px;
 }
+/* The chosen session is ringed in white: a colour no state uses, so it is never read as one. */
 .card.active {
-  border-color: var(--accent);
+  border-color: var(--text);
   border-left-color: var(--tone);
-  box-shadow: 0 0 0 1px var(--accent) inset;
+  box-shadow: 0 0 0 1px var(--text) inset;
 }
 .card.focus {
   box-shadow: 0 0 0 2px var(--focus);
@@ -615,8 +616,50 @@ button {
   font-size: 1.1rem;
 }
 .tile.active {
-  box-shadow: 0 0 0 1px var(--accent) inset;
+  box-shadow: 0 0 0 2px var(--text);
 }
 .tile.focus {
   box-shadow: 0 0 0 2px var(--focus);
+}
+
+.legend-toggle {
+  margin-right: auto;
+  min-width: 36px;
+  font-weight: 700;
+}
+.legend {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  display: grid;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+.legend li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.legend .icon {
+  width: 1.2em;
+  text-align: center;
+  color: var(--tone);
+  font-weight: 700;
+}
+.legend .ring::before {
+  content: "";
+  flex: none;
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 50%;
+  align-self: center;
+}
+.legend .ring.focus::before {
+  box-shadow: 0 0 0 2px var(--focus);
+}
+.legend .ring.active::before {
+  box-shadow: 0 0 0 2px var(--text);
 }

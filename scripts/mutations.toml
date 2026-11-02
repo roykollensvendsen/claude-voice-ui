@@ -116,3 +116,9 @@ name = "the view chosen is remembered"
 file = "src/app.ts"
 find = 'view: recall<View>\(keep, VIEW, "grid"\) === "cards" \? "cards" : "grid",'
 replace = '    view: "grid" as View,'
+
+[[rule]]
+name = "every kind of waiting is amber, as in the design draft"
+file = "src/states.ts"
+find = 'const WAITING_TONE = "amber";'
+replace = 'const WAITING_TONE = "gold";'

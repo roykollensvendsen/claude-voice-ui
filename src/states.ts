@@ -31,17 +31,37 @@ export interface Look {
   icon: string;
   /** The colour's name; the stylesheet gives each one its colour. */
   tone: string;
+  /** What the state means, for the legend. */
+  meaning: string;
 }
 
+// RULE: every kind of waiting is amber, as in the design draft
+const WAITING_TONE = "amber";
+
 export const LOOK: Record<CardState, Look> = {
-  working: { label: "Working", icon: "●", tone: "green" },
-  idle: { label: "Idle", icon: "○", tone: "grey" },
-  answer: { label: "Waiting for an answer", icon: "?", tone: "amber" },
-  approval: { label: "Waiting for approval", icon: "!", tone: "orange" },
-  input: { label: "Waiting for input", icon: "…", tone: "gold" },
-  shell: { label: "At the shell", icon: "›", tone: "slate" },
-  moved: { label: "Moved", icon: "→", tone: "faded" },
-  stopped: { label: "Stopped", icon: "■", tone: "red" },
+  working: { label: "Working", icon: "●", tone: "green", meaning: "running a turn or its tools" },
+  idle: { label: "Idle", icon: "○", tone: "grey", meaning: "done, ready for a new task" },
+  answer: {
+    label: "Waiting for an answer",
+    icon: "?",
+    tone: WAITING_TONE,
+    meaning: "it has asked you a question",
+  },
+  approval: {
+    label: "Waiting for approval",
+    icon: "!",
+    tone: WAITING_TONE,
+    meaning: "a tool needs your permission",
+  },
+  input: { label: "Waiting for input", icon: "…", tone: WAITING_TONE, meaning: "it waits for you to write" },
+  shell: {
+    label: "At the shell",
+    icon: "›",
+    tone: "slate",
+    meaning: "a terminal at its prompt, no Claude turn",
+  },
+  moved: { label: "Moved", icon: "→", tone: "faded", meaning: "continued in another session" },
+  stopped: { label: "Stopped", icon: "■", tone: "red", meaning: "ended, or stopped by an error" },
 };
 
 /** A bridge session reports the store's own words for an ended turn. */

@@ -56,6 +56,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     hiddenOpen: false,
     // RULE: the view chosen is remembered
     view: recall<View>(keep, VIEW, "grid") === "cards" ? "cards" : "grid",
+    legendOpen: false,
     doctorOpen: false,
   };
   let watching = false;
@@ -151,6 +152,10 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     setView(view) {
       home.view = view;
       remember(keep, VIEW, view);
+      draw();
+    },
+    toggleLegend() {
+      home.legendOpen = !home.legendOpen;
       draw();
     },
     toggleHidden() {

@@ -29,8 +29,8 @@ $ node scripts/states.ts
 ●  working  green  Working
 ○  idle     grey   Idle
 ?  answer   amber  Waiting for an answer
-!  approval orange Waiting for approval
-…  input    gold   Waiting for input
+!  approval amber  Waiting for approval
+…  input    amber  Waiting for input
 ›  shell    slate  At the shell
 →  moved    faded  Moved
 ■  stopped  red    Stopped

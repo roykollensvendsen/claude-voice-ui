@@ -1,7 +1,15 @@
 // Drawing the screens. Each function builds fresh elements from the state it is given.
 import type { Active, BridgeInfo, Doctor, Pending, Pr, Turn } from "./bridge";
 import { gitLine } from "./git";
-import { cardState, LOOK, minutesInState, type Session, sortForCards, timeInState } from "./states";
+import {
+  cardState,
+  LOOK,
+  type Look,
+  minutesInState,
+  type Session,
+  sortForCards,
+  timeInState,
+} from "./states";
 import { resultText, stepText, type UpdateState } from "./update";
 import { contextTone, planBars, type Usage, voiceLine, warningText } from "./usage";
 
@@ -26,6 +34,7 @@ export interface Home {
   more: Set<string>;
   hiddenOpen: boolean;
   view: View;
+  legendOpen: boolean;
   /** The session whose page is open, or null for the cards. */
   open: Detail | null;
   /** Whether the owner has opened the list of what is missing. */
@@ -54,6 +63,7 @@ export interface Actions {
   unhide(id: string): void;
   toggleHidden(): void;
   setView(view: View): void;
+  toggleLegend(): void;
   update: UpdateActions;
 }
 
@@ -246,7 +256,24 @@ function viewSwitch(home: Home, act: Actions): HTMLElement {
     b.setAttribute("aria-pressed", String(home.view === view));
     return b;
   };
-  return el("div", "view-switch", choice("Grid", "grid"), choice("Cards", "cards"));
+  const help = button("?", act.toggleLegend, "legend-toggle");
+  help.setAttribute("aria-label", "What the colours mean");
+  help.setAttribute("aria-expanded", String(home.legendOpen));
+  return el("div", "view-switch", help, choice("Grid", "grid"), choice("Cards", "cards"));
+}
+
+/** What each colour, icon and ring means, from the same table the tiles are drawn from. */
+function legend(): HTMLElement {
+  const states = (Object.values(LOOK) as Look[]).map((look) =>
+    el("li", `tone-${look.tone}`, el("span", "icon", look.icon), `${look.label}: ${look.meaning}`),
+  );
+  return el(
+    "ul",
+    "legend",
+    ...states,
+    el("li", "ring focus", "Blue ring: the voice is talking to it right now"),
+    el("li", "ring active", "White ring: the session the voice talks to, chosen by a tap or by voice"),
+  );
 }
 
 /** Hidden sessions that are running, as a count that opens into a list with a way back for each. */
@@ -479,6 +506,7 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
     ...usagePanel(home),
     ...problem,
     viewSwitch(home, act),
+    ...(home.legendOpen ? [legend()] : []),
     list,
     ...hiddenBlock(hidden, home, act),
   );
