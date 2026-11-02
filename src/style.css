@@ -907,3 +907,26 @@ a.open-claude {
   font-size: 0.9rem;
   line-height: 1;
 }
+
+/* The session's short number, to say to the voice: "number 3". */
+.number {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.tile .number {
+  position: absolute;
+  left: 10px;
+  bottom: 6px;
+  font-size: 0.85rem;
+}
+.card-top .number {
+  margin-right: 8px;
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  font-size: 0.85rem;
+}
+.tile:has(.number) {
+  padding-bottom: 24px;
+}
