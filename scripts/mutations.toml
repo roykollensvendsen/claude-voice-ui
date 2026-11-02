@@ -68,3 +68,9 @@ name = "the state the bridge reports wins over the app's own reading"
 file = "src/states.ts"
 find = 'if \(s\.state && Object\.hasOwn\(LOOK, s\.state\)\) return s\.state as CardState;'
 replace = 'if (false) return s.state as CardState;'
+
+[[rule]]
+name = "being behind is marked as behind even when also ahead"
+file = "src/git.ts"
+find = 'return \[\{ text: `\$\{arrows\} \$\{name\}`, kind: d\.behind \? "behind" : "ahead" \}\];'
+replace = 'return [{ text: `${arrows} ${name}`, kind: d.ahead ? "ahead" : "behind" }];'

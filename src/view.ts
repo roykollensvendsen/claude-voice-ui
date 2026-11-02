@@ -1,5 +1,6 @@
 // Drawing the screens. Each function builds fresh elements from the state it is given.
 import type { Active, Doctor } from "./bridge";
+import { gitLine } from "./git";
 import { cardState, LOOK, minutesInState, type Session, sortForCards, timeInState } from "./states";
 
 export type Connection = "connecting" | "live" | "reconnecting";
@@ -100,6 +101,18 @@ function card(s: Session, home: Home, onPick: (id: string) => void): HTMLElement
   );
   // The bridge's one line repeats the question while it waits, and the question is shown in full below.
   if (s.doing && !s.question) button.append(el("div", "doing", s.doing));
+  if (s.git) {
+    const g = gitLine(s.git);
+    button.append(
+      el(
+        "div",
+        "git",
+        el("span", "branch", `⎇ ${g.branch}`),
+        el("span", "commit", g.commit),
+        ...g.marks.map((m) => el("span", `mark ${m.kind}`, m.text)),
+      ),
+    );
+  }
   if (s.question) {
     const options = el("ul", "options", ...(s.question.options ?? []).map((o) => el("li", undefined, o)));
     button.append(el("div", "question", el("div", undefined, s.question.text), options));

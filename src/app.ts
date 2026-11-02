@@ -122,6 +122,12 @@ export function start(root: HTMLElement, deps: Deps): () => void {
         s.doing = st.doing;
         draw();
       },
+      git(change) {
+        const s = home.sessions.find((x) => x.id === change.session);
+        if (!s) return;
+        s.git = change.git;
+        draw();
+      },
       connection(state) {
         home.connection = state;
         draw();

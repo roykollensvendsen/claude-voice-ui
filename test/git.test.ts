@@ -43,6 +43,12 @@ describe("the git line on a card", () => {
     expect(line.marks).toEqual([{ text: "↑2 ↓5 main", kind: "behind" }]);
   });
 
+  test("being behind is marked as behind even when also ahead", () => {
+    expect(gitLine(git({ main: { name: "origin/main", ahead: 9, behind: 1 } })).marks[0]?.kind).toBe(
+      "behind",
+    );
+  });
+
   test("only the arrows that are not zero are shown", () => {
     expect(gitLine(git({ main: { name: "origin/main", ahead: 3, behind: 0 } })).marks).toEqual([
       { text: "↑3 main", kind: "ahead" },

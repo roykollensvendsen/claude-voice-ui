@@ -288,3 +288,40 @@ button {
 .doctor-panel a {
   color: var(--accent);
 }
+
+.git {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 6px;
+  font:
+    0.8rem / 1.4 ui-monospace,
+    "SFMono-Regular",
+    Menlo,
+    monospace;
+  color: var(--muted);
+}
+.git .commit {
+  flex-basis: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.git .branch {
+  color: var(--text);
+}
+.mark {
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+.mark.dirty {
+  color: var(--amber);
+}
+.mark.ahead {
+  color: var(--green);
+}
+.mark.behind {
+  color: var(--orange);
+  border-color: var(--orange);
+}

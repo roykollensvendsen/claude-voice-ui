@@ -1,5 +1,6 @@
-// The bridge's stream of live events: focus, active, news and status.
+// The bridge's stream of live events: focus, active, news, status and git.
 import type { Active } from "./bridge";
+import type { Git } from "./git";
 
 /** The part of the browser's EventSource this app uses, so a test can stand in for it. */
 export interface EventSourceLike {
@@ -33,11 +34,18 @@ export interface Status {
   at: string;
 }
 
+/** A session folder's git status changed. `session` is its id. */
+export interface GitChange {
+  session: string;
+  git: Git | null;
+}
+
 export interface Handlers {
   focus(focus: Focus): void;
   active(active: Active | null): void;
   news(news: News): void;
   status(status: Status): void;
+  git(change: GitChange): void;
   connection(state: "live" | "reconnecting"): void;
 }
 
@@ -53,5 +61,6 @@ export function follow(open: (url: string) => EventSourceLike, on: Handlers): ()
   source.addEventListener("active", (e) => on.active(parse(e)));
   source.addEventListener("news", (e) => on.news(parse(e)));
   source.addEventListener("status", (e) => on.status(parse(e)));
+  source.addEventListener("git", (e) => on.git(parse(e)));
   return () => source.close();
 }

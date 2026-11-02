@@ -1,4 +1,5 @@
 // What a session card shows: one of eight states, as the bridge reports it or as read from its rawer words.
+import type { Git } from "./git";
 
 /** One session as GET /api/v1/sessions gives it. */
 export interface Session {
@@ -17,6 +18,8 @@ export interface Session {
   /** When `state` last changed. */
   state_since?: string;
   waiting_kind?: "question" | "approval" | "input" | null;
+  /** The folder's git status; null outside a repository, absent from an older bridge. */
+  git?: Git | null;
 }
 
 export type CardState = "working" | "idle" | "answer" | "approval" | "input" | "shell" | "moved" | "stopped";
