@@ -18,7 +18,7 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | sessions waiting for the owner come first | 6 | `test_sessions_waiting_for_the_owner_come_first` | yes |
 | a focus event matches a session by id as well as by name | 5 | `test_a_focus_event_matches_a_session_by_id_as_well_as_by_name` | yes |
 | the sessions are fetched again every minute | 3 | `test_the_sessions_are_fetched_again_every_minute` | yes |
-| after two quiet minutes the microphone goes away | 3 | `test_after_two_quiet_minutes_the_microphone_goes_away` | yes |
+| after two quiet minutes the speech bubble goes away | 3 | `test_after_two_quiet_minutes_the_speech_bubble_goes_away` | yes |
 | being signed out while watching returns to the sign-in page | 6 | `test_being_signed_out_while_watching_returns_to_the_sign_in_page` | yes |
 | a missing required thing shows a red banner | 1 | `test_a_missing_required_thing_shows_a_red_banner` | yes |
 | the check is asked again every five minutes, not on every refresh | 1 | `test_the_check_is_asked_again_every_five_minutes_not_on_every_refresh` | yes |

@@ -22,7 +22,7 @@
   "legend.label": "Qué significan los colores",
   "legend.item": "{label}: {meaning}",
   "legend.chosen": "Punto y anillo blancos: la sesión con la que habla la voz, elegida con un toque o por voz",
-  "legend.talking": "🎙 y anillo azul: la voz habla con ella ahora mismo; con un punto blanco, también es la elegida",
+  "legend.talking": "💬 y anillo azul: la voz habla con ella ahora mismo; con un punto blanco, también es la elegida",
   "legend.peek": "👁: la voz solo la miró o habló de ella, sin escribirle; desaparece a los dos minutos",
   "state.working": "Trabajando",
   "state.working.meaning": "ejecutando un turno o sus herramientas",

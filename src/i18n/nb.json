@@ -22,7 +22,7 @@
   "legend.label": "Hva fargene betyr",
   "legend.item": "{label}: {meaning}",
   "legend.chosen": "Hvit prikk og ring: økten stemmen snakker med, valgt med et trykk eller med stemmen",
-  "legend.talking": "🎙 og blå ring: stemmen snakker med den akkurat nå; med hvit prikk er den også den valgte",
+  "legend.talking": "💬 og blå ring: stemmen snakker med den akkurat nå; med hvit prikk er den også den valgte",
   "legend.peek": "👁: stemmen bare så på den eller snakket om den, uten å skrive til den; forsvinner etter to minutter",
   "state.working": "Arbeider",
   "state.working.meaning": "kjører en tur eller verktøyene sine",
