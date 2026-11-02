@@ -1,5 +1,14 @@
 import { describe, expect, test } from "vitest";
-import { contextTone, planBars, resetsIn, type Usage, voiceLine, warningText } from "../src/usage";
+import {
+  contextTone,
+  planBars,
+  resetsIn,
+  tightest,
+  type Usage,
+  usageLevel,
+  voiceLine,
+  warningText,
+} from "../src/usage";
 
 const NOW = Date.parse("2026-11-02T15:00:00Z");
 
@@ -108,5 +117,44 @@ describe("how full a session's context is", () => {
     [95, "full"],
   ])("%i%% is %s", (percent, tone) => {
     expect(contextTone(percent)).toBe(tone);
+  });
+});
+
+describe("the tightest limit, for the top bar", () => {
+  test("it is the higher of the two windows", () => {
+    const u = usage();
+    if (!u.plan) throw new Error("no plan");
+    u.plan.five_hour = { used_percentage: 61, resets_at: "2026-11-02T17:00:00Z", stale: false };
+    expect(tightest(u)).toBe(61);
+  });
+
+  test("an old figure does not count", () => {
+    const u = usage();
+    if (!u.plan) throw new Error("no plan");
+    u.plan.five_hour = { used_percentage: 99, resets_at: "2026-11-02T14:00:00Z", stale: true };
+    expect(tightest(u)).toBe(41);
+  });
+
+  test("a reached limit counts as full", () => {
+    expect(tightest(usage({ warning: { status: "rejected", used_percentage: 100, at: "" } }))).toBe(100);
+  });
+
+  test("no figures give none", () => {
+    expect(tightest(usage({ plan: null }))).toBeNull();
+  });
+
+  test.each([
+    [0, "ok"],
+    [69, "ok"],
+    [70, "warn"],
+    [89, "warn"],
+    [90, "full"],
+  ])("near the limit: %i percent is %s", (percent, level) => {
+    expect(usageLevel(percent)).toBe(level);
+  });
+
+  test("a warning from the bridge turns the percentage yellow even below 70", () => {
+    expect(usageLevel(41, "allowed_warning")).toBe("warn");
+    expect(usageLevel(41, "rejected")).toBe("full");
   });
 });

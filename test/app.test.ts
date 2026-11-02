@@ -175,6 +175,12 @@ describe("the session cards", () => {
 });
 
 describe("the focus bar", () => {
+  test("the line naming the voice's session sits in the top bar, not in a box of its own", async () => {
+    await open(fakeBridge([{ sessions: [ONE], active: ACTIVE_ONE }]));
+    expect(root.querySelector("header .focus-bar")).not.toBeNull();
+    expect(root.querySelectorAll(".focus-bar")).toHaveLength(1);
+  });
+
   test("the bar names the active session and who chose it", async () => {
     await open(fakeBridge([{ sessions: [ONE], active: ACTIVE_ONE }]));
     expect(text(".focus-bar")).toContain("billing-ab");
@@ -425,8 +431,34 @@ describe("usage", () => {
     return b;
   }
 
+  const usageButton = () => root.querySelector<HTMLButtonElement>("header .usage-button");
+  const openUsage = () => usageButton()?.click();
+
+  test("the top bar shows the tightest of the plan's limits as a percentage", async () => {
+    const both = structuredClone(WEEKLY);
+    if (both.plan) both.plan.five_hour = { used_percentage: 61, resets_at: "", stale: false };
+    await openWith(both);
+    expect(usageButton()?.textContent).toBe("61%");
+    expect(root.querySelector(".usage")).toBeNull();
+  });
+
+  test("the percentage turns from grey to yellow to red near the limit", async () => {
+    await openWith(WEEKLY);
+    expect(usageButton()?.classList.contains("level-ok")).toBe(true);
+  });
+
+  test("tapping the percentage opens the bars, and tapping again closes them", async () => {
+    await openWith(WEEKLY);
+    openUsage();
+    expect(root.querySelector(".usage .bar")).not.toBeNull();
+    expect(usageButton()?.getAttribute("aria-expanded")).toBe("true");
+    openUsage();
+    expect(root.querySelector(".usage")).toBeNull();
+  });
+
   test("the plan's use shows as a bar with its label", async () => {
     await openWith(WEEKLY);
+    openUsage();
     const bar = root.querySelector(".usage .bar");
     expect(bar?.textContent).toContain("Weekly");
     expect(bar?.textContent).toContain("41%");
@@ -436,16 +468,21 @@ describe("usage", () => {
 
   test("without plan figures the page says so rather than hiding it", async () => {
     await openWith(NO_USAGE);
+    expect(usageButton()?.textContent).toBe("–%");
+    openUsage();
     expect(text(".usage")).toContain("No plan figures yet");
   });
 
-  test("a warning near the limit shows as a badge", async () => {
+  test("a warning near the limit colours the percentage and is said in the bars", async () => {
     await openWith({ ...WEEKLY, warning: { status: "allowed_warning", used_percentage: 85, at: "" } });
+    expect(usageButton()?.classList.contains("level-warn")).toBe(true);
+    openUsage();
     expect(text(".usage-warning")).toBe("Close to the plan's limit: 85% used");
   });
 
   test("the voice estimate is labelled as an estimate", async () => {
     await openWith(WEEKLY);
+    openUsage();
     expect(text(".voice")).toContain("estimate, voice activity via the bridge");
     expect(text(".voice")).toContain("Voice today: none yet");
   });
@@ -474,7 +511,7 @@ describe("usage", () => {
     b.usage.mockRejectedValue(new Error("the bridge answered 500"));
     await open(b);
     expect(card("a1")).not.toBeNull();
-    expect(root.querySelector(".usage")).toBeNull();
+    expect(root.querySelector(".usage-button")).toBeNull();
   });
 });
 
