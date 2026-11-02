@@ -10,7 +10,7 @@ Where a rule already exists, this is the substitute. Each rule is disabled in
 turn, by replacing its one line with something that can never hold, and the
 suite is run. A rule whose removal breaks no test is a rule nothing protects.
 
-**Result: 23 of 23 rules turned off the test that names them.** None survived.
+**Result: 24 of 24 rules turned off the test that names them.** None survived.
 
 | Rule turned off | Tests that went red | The test that names it | Did that one go red? |
 |---|---|---|---|
@@ -37,6 +37,7 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | a tap just after the sessions moved chooses nothing | 1 | `test_a_tap_just_after_the_sessions_moved_chooses_nothing` | yes |
 | the percentage turns from grey to yellow to red near the limit | 5 | `test_the_percentage_turns_from_grey_to_yellow_to_red_near_the_limit` | yes |
 | a new version is loaded only when the notice is tapped | 1 | `test_a_new_version_is_loaded_only_when_the_notice_is_tapped` | yes |
+| the theme chosen is remembered | 1 | `test_the_theme_chosen_is_remembered` | yes |
 
 ## What this does not prove
 

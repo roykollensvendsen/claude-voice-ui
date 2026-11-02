@@ -4,7 +4,15 @@ import { type EventSourceLike, follow } from "./live";
 import { browserKeep, type Keep, recall, remember } from "./remember";
 import { cardState, type Session } from "./states";
 import { IDLE } from "./update";
-import { type Actions, type Home, homeScreen, signInScreen, type UpdateActions, type View } from "./view";
+import {
+  type Actions,
+  type Home,
+  homeScreen,
+  signInScreen,
+  type Theme,
+  type UpdateActions,
+  type View,
+} from "./view";
 
 export interface Deps {
   bridge: Bridge;
@@ -30,6 +38,13 @@ const PICKED_MS = 700;
 const EXPANDED = "cvu.expanded";
 const HIDDEN = "cvu.hidden";
 const VIEW = "cvu.view";
+const THEME = "cvu.theme";
+
+/** Mark the page with the chosen theme; without a mark the stylesheet follows the phone. */
+function applyTheme(theme: Theme) {
+  if (theme === "system") delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = theme;
+}
 
 /** Changes of state arrive on the stream; the timer catches what a dropped stream missed. */
 // RULE: the sessions are fetched again every minute
@@ -73,6 +88,9 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     legendOpen: false,
     usageOpen: false,
     newVersion: false,
+    // RULE: the theme chosen is remembered
+    theme: (["light", "dark"] as const).find((t) => t === recall<string>(keep, THEME, "system")) ?? "system",
+    menuOpen: false,
     picked: null,
     doctorOpen: false,
   };
@@ -200,6 +218,8 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     },
   };
 
+  applyTheme(home.theme);
+
   const actions: Actions = {
     pick: (id) => {
       if (steadyTap(id)) void pick(id);
@@ -236,6 +256,16 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     setView(view) {
       home.view = view;
       remember(keep, VIEW, view);
+      draw();
+    },
+    toggleMenu() {
+      home.menuOpen = !home.menuOpen;
+      draw();
+    },
+    setTheme(theme) {
+      home.theme = theme;
+      applyTheme(theme);
+      remember(keep, THEME, theme);
       draw();
     },
     reload() {
