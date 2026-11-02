@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { start } from "../src/app";
 import type { Bridge } from "../src/bridge";
@@ -48,6 +49,15 @@ describe("the grid of sessions", () => {
     expect(tile("a1")?.querySelector(".icon")?.textContent).toBe("●");
     expect(tile("a1")?.classList.contains("tone-green")).toBe(true);
     expect(tile("a1")?.getAttribute("title")).toBe("billing-ab: Working");
+  });
+
+  test("a tile's name is never cut off: a long one wraps over as many lines as it needs", () => {
+    const css = readFileSync("src/style.css", "utf8");
+    const start = css.indexOf(".tile .name {");
+    const rule = css.slice(start, css.indexOf("}", start));
+    expect(rule).not.toContain("line-clamp");
+    expect(rule).not.toContain("text-overflow");
+    expect(rule).toContain("overflow-wrap: anywhere");
   });
 
   test("a waiting tile is marked as waiting and comes first", async () => {
