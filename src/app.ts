@@ -9,6 +9,7 @@ import { IDLE } from "./update";
 import {
   type Actions,
   type Home,
+  hasPrompt,
   homeScreen,
   signInScreen,
   type Theme,
@@ -78,6 +79,10 @@ const REFUSED: Record<Exclude<SignIn, "ok">, Key> = {
   unreachable: "signin.unreachable",
 };
 
+/** Whether the owner is typing an answer of his own. */
+const typing = () =>
+  document.activeElement instanceof HTMLInputElement && document.activeElement.matches(".prompt .own");
+
 /** Start the app in `root`. The returned function stops it: no more timers, no more stream. */
 export function start(root: HTMLElement, deps: Deps): () => void {
   const keep = "keep" in deps ? deps.keep : browserKeep();
@@ -87,6 +92,8 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     focus: null,
     peeks: [],
     placed: [],
+    prompts: [],
+    replies: {},
     connection: "connecting",
     problem: null,
     doctor: null,
@@ -168,7 +175,8 @@ export function start(root: HTMLElement, deps: Deps): () => void {
 
   const draw = () => {
     // RULE: the order holds still while a finger is on the screen
-    if (pressing) {
+    // A redraw would also throw away an answer being typed, so it waits until the field is left.
+    if (pressing || typing()) {
       waitingDraw = true;
       return;
     }
@@ -330,12 +338,28 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       }
       draw();
     },
+    async answer(prompt, reply, said) {
+      const done = await deps.bridge.answer(prompt.id, reply).catch((error) => {
+        failed(error);
+        return null;
+      });
+      if (done === null) return;
+      if (typeof done === "object") {
+        home.replies[prompt.id] = { error: done.refused };
+      } else {
+        home.prompts = home.prompts.filter((x) => x.id !== prompt.id);
+        home.replies[prompt.session] = {
+          note: done === "ok" ? t("prompt.answered", { answer: said }) : t("prompt.gone"),
+        };
+      }
+      draw();
+    },
     nextWaiting() {
       // In the order shown, the first waiting session after the one whose page is open, round to the start.
       const byId = new Map(home.sessions.map((s) => [s.id, s]));
       const queue = home.placed.filter((id) => {
         const s = byId.get(id);
-        return s && waitsForOwner(s) && !(id in home.hidden);
+        return s && (waitsForOwner(s) || hasPrompt(home, s)) && !(id in home.hidden);
       });
       if (!queue.length) return;
       const at = home.open ? queue.indexOf(home.open.id) : -1;
@@ -505,6 +529,15 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     }
   }
 
+  async function readPrompts() {
+    try {
+      home.prompts = await deps.bridge.prompts();
+      draw();
+    } catch (error) {
+      failed(error);
+    }
+  }
+
   async function refresh() {
     try {
       const snapshot = await deps.bridge.snapshot();
@@ -572,6 +605,8 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       },
       connection(state) {
         home.connection = state;
+        // The stream carries only changes, so what is open is read again on every connect.
+        if (state === "live") void readPrompts();
         if (home.update.phase === "running") {
           if (state === "reconnecting") home.update.restarting = true;
           else void readUpdate();
@@ -579,7 +614,16 @@ export function start(root: HTMLElement, deps: Deps): () => void {
         draw();
       },
       update: updateStep,
+      prompt(p) {
+        home.prompts = [...home.prompts.filter((x) => x.id !== p.id), p];
+        draw();
+      },
+      promptClosed(closed) {
+        home.prompts = home.prompts.filter((x) => x.id !== closed.id);
+        draw();
+      },
     });
+    void readPrompts();
     poll = setInterval(() => void refresh(), POLL_MS);
     doctorTimer = setInterval(() => {
       void checkDoctor();
@@ -636,10 +680,17 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     }
   };
   document.addEventListener("visibilitychange", onVisible);
+  // Leaving the answer field lets through the redraw that waited for it.
+  const onLeave = () =>
+    queueMicrotask(() => {
+      if (waitingDraw) draw();
+    });
+  document.addEventListener("focusout", onLeave);
   void refresh();
   return () => {
     stopWatching();
     document.removeEventListener("visibilitychange", onVisible);
+    document.removeEventListener("focusout", onLeave);
     document.removeEventListener("pointerup", onLift);
     document.removeEventListener("pointercancel", onLift);
     clearTimeout(liftTimer);

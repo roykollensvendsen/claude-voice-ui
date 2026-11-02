@@ -28,7 +28,8 @@ _NAMES = """
     a b button code div form h1 h2 h3 header input li ol p pre section span ul main
     click keydown pointerdown pointerup pointerleave pointercancel contextmenu visibilitychange
     submit role title true false aria expanded pressed label hidden password secret current
-    Enter ContextMenu blank noopener no store none center undefined feat fix kind
+    Enter ContextMenu object focusout gone prompt_closed tool checkbox
+    blank noopener no store none center undefined feat fix kind
     grid cards system light dark ok warn full stop required optional
     connecting live reconnecting page voice terminal
     working idle answer approval input shell moved stopped busy running waiting error cancelled interrupted

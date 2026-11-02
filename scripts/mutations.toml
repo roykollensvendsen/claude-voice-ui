@@ -132,8 +132,8 @@ replace = '    if (false) {'
 [[rule]]
 name = "the order holds still while a finger is on the screen"
 file = "src/app.ts"
-find = '^    if \(pressing\) \{$'
-replace = '    if (false) {'
+find = '^    if \(pressing \|\| typing\(\)\) \{$'
+replace = '    if (typing()) {'
 
 [[rule]]
 name = "a tap just after the sessions moved chooses nothing"
