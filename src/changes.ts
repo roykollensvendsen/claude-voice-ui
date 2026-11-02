@@ -2,7 +2,8 @@
 
 export interface Change {
   hash: string;
-  kind: "feat" | "fix";
+  /** Null for any other commit, kept so that a build made on it can be found. */
+  kind: "feat" | "fix" | null;
   text: string;
 }
 
@@ -12,8 +13,9 @@ const SUBJECT = /^(feat|fix)(\([^)]*\))?!?: (.+)$/;
 export function parseLog(log: string): Change[] {
   return log.split("\n").flatMap((line) => {
     const [hash = "", subject = ""] = line.split("\t");
+    if (!hash) return [];
     const m = SUBJECT.exec(subject.trim());
-    return m ? [{ hash, kind: m[1] as Change["kind"], text: m[3] ?? "" }] : [];
+    return [m ? { hash, kind: m[1] as Change["kind"], text: m[3] ?? "" } : { hash, kind: null, text: "" }];
   });
 }
 

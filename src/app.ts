@@ -43,6 +43,8 @@ const HIDDEN = "cvu.hidden";
 const VIEW = "cvu.view";
 const THEME = "cvu.theme";
 const LANG = "cvu.lang";
+/** The build this phone last loaded, where What's new starts. */
+const BUILD = "cvu.build";
 
 function recalledLanguage(keep: Keep | undefined): Language | "system" {
   const saved = recall<string>(keep, LANG, "system");
@@ -127,13 +129,16 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   let doctorTimer: ReturnType<typeof setInterval> | undefined;
   let usageTimer: ReturnType<typeof setInterval> | undefined;
   let versionTimer: ReturnType<typeof setInterval> | undefined;
+  let latestBuild = "";
+  if (deps.version) remember(keep, BUILD, deps.version.built);
 
   /** Only says a newer build is out; reloading waits for the owner's tap. */
   async function checkVersion() {
     if (!deps.version || home.newVersion) return;
     try {
       // RULE: a new version is loaded only when the notice is tapped
-      if ((await deps.version.latest()) !== deps.version.built) {
+      latestBuild = await deps.version.latest();
+      if (latestBuild !== deps.version.built) {
         home.newVersion = true;
         if (watching) draw();
       }
@@ -332,7 +337,8 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       }
       try {
         // Asked for only now, on the owner's tap; the page never fetches it by itself.
-        home.whatsNew = whatsNew((await deps.version?.changes?.()) ?? [], deps.version?.built ?? "");
+        const since = recall(keep, BUILD, deps.version?.built ?? "");
+        home.whatsNew = whatsNew((await deps.version?.changes?.()) ?? [], since);
       } catch {
         home.whatsNew = { feat: [], fix: [] };
       }
@@ -366,6 +372,8 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       openPage(queue[(at + 1) % queue.length] as string);
     },
     reload() {
+      // The build about to load is the one the next What's new counts from.
+      if (latestBuild) remember(keep, BUILD, latestBuild);
       (deps.reload ?? (() => location.reload()))();
     },
     toggleUsage() {
