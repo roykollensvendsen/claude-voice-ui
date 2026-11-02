@@ -148,7 +148,7 @@ button {
 }
 
 /* The session the voice talks to, as one small line under the title: each tile already shows it. */
-/* The microphone at the top, leading to the session the voice talks to. */
+/* The speech bubble at the top, leading to the session the voice talks to. */
 .mic-jump {
   min-height: 32px;
   padding: 0 8px;
@@ -159,7 +159,7 @@ button {
   line-height: 1;
   cursor: pointer;
 }
-/* On the tile or card the voice is talking to right now, beside its blue ring. */
+/* On the tile or card the voice has written to, beside its blue ring. */
 .mic {
   font-size: 0.85rem;
   line-height: 1;
@@ -169,7 +169,7 @@ button {
   top: 6px;
   left: 26px;
 }
-/* Only looked at: fainter than the microphone. It goes after two minutes; a fade would restart
+/* Only looked at: fainter than the speech bubble. It goes after two minutes; a fade would restart
    at every redraw of the page, so it simply stays faint until then. */
 .peek {
   font-size: 0.8rem;
