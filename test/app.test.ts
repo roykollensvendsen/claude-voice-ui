@@ -77,7 +77,8 @@ describe("signing in", () => {
   test("signing out returns to the sign-in page", async () => {
     const b = fakeBridge([{ sessions: [ONE], active: null }]);
     await open(b);
-    root.querySelector<HTMLButtonElement>("button.signout")?.click();
+    root.querySelector<HTMLButtonElement>(".menu-toggle")?.click();
+    root.querySelector<HTMLButtonElement>(".menu button.signout")?.click();
     await settle();
     expect(b.signOut).toHaveBeenCalled();
     expect(root.querySelector("form.signin")).not.toBeNull();
