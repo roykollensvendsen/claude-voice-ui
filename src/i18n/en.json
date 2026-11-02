@@ -35,8 +35,6 @@
   "state.approval.meaning": "a tool needs your permission",
   "state.input": "Waiting for input",
   "state.input.meaning": "it waits for you to write",
-  "state.shell": "At the shell",
-  "state.shell.meaning": "a terminal at its prompt, no Claude turn",
   "state.moved": "Moved",
   "state.moved.meaning": "continued in another session",
   "state.stopped": "Stopped",
