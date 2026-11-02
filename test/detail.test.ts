@@ -36,6 +36,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   root = document.createElement("main");
   document.body.replaceChildren(root);
+  localStorage.clear();
   FakeSource.last = undefined;
 });
 

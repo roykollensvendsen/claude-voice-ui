@@ -14,12 +14,14 @@ async function open(b: Bridge, over: Partial<Deps> = {}) {
 
 const settle = () => vi.advanceTimersByTimeAsync(0);
 const card = (id: string) => root.querySelector<HTMLButtonElement>(`[data-session="${id}"]`);
+const expand = (id: string) => card(id)?.querySelector<HTMLButtonElement>(".expand")?.click();
 const text = (selector: string) => root.querySelector(selector)?.textContent ?? "";
 
 beforeEach(() => {
   vi.useFakeTimers();
   root = document.createElement("main");
   document.body.replaceChildren(root);
+  localStorage.clear();
   FakeSource.last = undefined;
 });
 
@@ -93,13 +95,14 @@ describe("the session cards", () => {
     expect(card("b2")?.textContent).toContain("12 min");
   });
 
-  test("a waiting card shows the question and its options", async () => {
+  test("an opened waiting card shows the question and its options", async () => {
     const q = session({
       id: "q",
       status: "waiting",
       question: { text: "Which file?", options: ["a.py", "b.py"] },
     });
     await open(fakeBridge([{ sessions: [q], active: null }]));
+    expand("q");
     expect(card("q")?.textContent).toContain("Which file?");
     expect(card("q")?.textContent).toContain("b.py");
   });
@@ -112,10 +115,12 @@ describe("the session cards", () => {
       question: { text: "Which file?", options: [] },
     });
     await open(fakeBridge([{ sessions: [q], active: null }]));
+    expand("q");
     expect(card("q")?.querySelector(".doing")).toBeNull();
+    expect(card("q")?.querySelector(".line")?.textContent).toBe("Which file?");
   });
 
-  test("a card shows its branch, last commit and how far it is from main", async () => {
+  test("an opened card shows its branch, last commit and how far it is from main", async () => {
     const g = session({
       id: "g",
       git: {
@@ -130,6 +135,7 @@ describe("the session cards", () => {
       },
     });
     await open(fakeBridge([{ sessions: [g], active: null }]));
+    expand("g");
     const line = card("g")?.querySelector(".git");
     expect(line?.textContent).toContain("feat/totals");
     expect(line?.textContent).toContain("a1b2c3d Fix the export totals");
@@ -139,6 +145,7 @@ describe("the session cards", () => {
 
   test("a card for a folder outside git has no git line", async () => {
     await open(fakeBridge([{ sessions: [{ ...ONE, git: null }], active: null }]));
+    expand("a1");
     expect(card("a1")?.querySelector(".git")).toBeNull();
   });
 
@@ -277,6 +284,7 @@ describe("staying live", () => {
 
   test("a change in a session's git status updates its card", async () => {
     await open(fakeBridge([{ sessions: [ONE], active: null }]));
+    expand("a1");
     FakeSource.last?.emit("git", {
       session: "a1",
       git: {
