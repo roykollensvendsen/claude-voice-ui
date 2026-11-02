@@ -3,6 +3,7 @@ import { type Deps, start } from "../src/app";
 import { type Active, type Bridge, type Doctor, SignedOut, type SignIn, type Snapshot } from "../src/bridge";
 import type { EventSourceLike } from "../src/live";
 import type { Session } from "../src/states";
+import type { Usage } from "../src/usage";
 
 class FakeSource implements EventSourceLike {
   static last: FakeSource | undefined;
@@ -51,6 +52,15 @@ const TWO = session({ id: "b2", name: "docs-cd", project: "docs", status: "idle"
 const ACTIVE_ONE: Active = { id: "a1", name: "billing-ab", kind: "terminal", set_by: "voice", set_at: "" };
 
 const ALL_OK: Doctor = { ready: true, checked_at: "", checks: [] };
+const NO_USAGE: Usage = {
+  plan: null,
+  warning: null,
+  voice: {
+    label: "estimate, voice activity via the bridge",
+    today: { connections: 0, minutes: 0, tool_calls: 0, chars_out: 0, est_tokens: 0 },
+    last_7_days: [],
+  },
+};
 
 function check(over: Partial<Doctor["checks"][number]>): Doctor["checks"][number] {
   return {
@@ -82,6 +92,7 @@ function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignIn = "ok
       async (id: string): Promise<Active> => ({ id, name: id, kind: "terminal", set_by: "page", set_at: "" }),
     ),
     doctor: vi.fn(async (): Promise<Doctor> => ALL_OK),
+    usage: vi.fn(async (): Promise<Usage> => NO_USAGE),
   } satisfies Bridge & { snapshotCalls: () => number };
 }
 
@@ -470,5 +481,80 @@ describe("what is missing", () => {
     await open(b);
     expect(card("a1")).not.toBeNull();
     expect(root.querySelector(".doctor-banner")).toBeNull();
+  });
+});
+
+describe("usage", () => {
+  const WEEKLY: Usage = {
+    ...NO_USAGE,
+    plan: {
+      as_of: "",
+      label: "includes chat and voice; as of the last answer",
+      five_hour: null,
+      seven_day: {
+        used_percentage: 41,
+        resets_at: new Date(Date.now() + 3 * 3_600_000).toISOString(),
+        stale: false,
+      },
+    },
+  };
+
+  async function openWith(u: Usage, sessions = [ONE]) {
+    const b = fakeBridge([{ sessions, active: null }]);
+    b.usage.mockResolvedValue(u);
+    await open(b);
+    return b;
+  }
+
+  test("the plan's use shows as a bar with its label", async () => {
+    await openWith(WEEKLY);
+    const bar = root.querySelector(".usage .bar");
+    expect(bar?.textContent).toContain("Weekly");
+    expect(bar?.textContent).toContain("41%");
+    expect(bar?.querySelector<HTMLElement>(".fill")?.style.width).toBe("41%");
+    expect(text(".usage")).toContain("includes chat and voice; as of the last answer");
+  });
+
+  test("without plan figures the page says so rather than hiding it", async () => {
+    await openWith(NO_USAGE);
+    expect(text(".usage")).toContain("No plan figures yet");
+  });
+
+  test("a warning near the limit shows as a badge", async () => {
+    await openWith({ ...WEEKLY, warning: { status: "allowed_warning", used_percentage: 85, at: "" } });
+    expect(text(".usage-warning")).toBe("Close to the plan's limit: 85% used");
+  });
+
+  test("the voice estimate is labelled as an estimate", async () => {
+    await openWith(WEEKLY);
+    expect(text(".voice")).toContain("estimate, voice activity via the bridge");
+    expect(text(".voice")).toContain("No voice activity today");
+  });
+
+  test("a card shows how full its session's context is", async () => {
+    await openWith(NO_USAGE, [{ ...ONE, context: { used_percentage: 82, as_of: "" } }]);
+    const ctx = card("a1")?.querySelector(".context");
+    expect(ctx?.textContent).toBe("context 82%");
+    expect(ctx?.classList.contains("warn")).toBe(true);
+  });
+
+  test("a card with no context figure shows none", async () => {
+    await openWith(NO_USAGE, [{ ...ONE, context: null }]);
+    expect(card("a1")?.querySelector(".context")).toBeNull();
+  });
+
+  test("usage is asked again every minute", async () => {
+    const b = await openWith(NO_USAGE);
+    expect(b.usage).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(b.usage).toHaveBeenCalledTimes(2);
+  });
+
+  test("usage that fails to answer leaves the cards as they are", async () => {
+    const b = fakeBridge([{ sessions: [ONE], active: null }]);
+    b.usage.mockRejectedValue(new Error("the bridge answered 500"));
+    await open(b);
+    expect(card("a1")).not.toBeNull();
+    expect(root.querySelector(".usage")).toBeNull();
   });
 });

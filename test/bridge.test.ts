@@ -98,3 +98,12 @@ describe("asking what is missing", () => {
     await expect(bridge(async () => answer(401)).doctor()).rejects.toBeInstanceOf(SignedOut);
   });
 });
+
+describe("asking how much is used", () => {
+  test("usage comes back as the bridge sent it", async () => {
+    const body = { plan: null, warning: null, voice: { label: "", today: {}, last_7_days: [] } };
+    const fetch = vi.fn(async () => answer(200, body));
+    expect(await bridge(fetch).usage()).toEqual(body);
+    expect(fetch).toHaveBeenCalledWith("/api/v1/usage", { cache: "no-store" });
+  });
+});
