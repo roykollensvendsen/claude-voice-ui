@@ -13,14 +13,23 @@ const LOG = [
 ].join("\n");
 
 describe("the changes between two builds", () => {
-  test("only new features and fixes are kept, from the commit messages alone", () => {
+  test("every commit is kept, so any build can be found, but only features and fixes are listed", () => {
     expect(parseLog(LOG).map((c) => [c.kind, c.hash])).toEqual([
       ["feat", "c3c3c3c"],
       ["fix", "b2b2b2b"],
+      [null, "a9a9a9a"],
+      [null, "d4d4d4d"],
       ["feat", "e5e5e5e"],
       ["feat", "f6f6f6f"],
     ]);
-    expect(parseLog(LOG)[2]?.text).toBe("Drop the old focus line");
+    expect(parseLog(LOG)[4]?.text).toBe("Drop the old focus line");
+  });
+
+  test("a build made on a commit that is neither a feature nor a fix still marks where the new ones start", () => {
+    expect(whatsNew(parseLog(LOG), "a9a9a9a-1793645748421")).toEqual({
+      feat: ["Show a faint eye on a session the voice only looked at"],
+      fix: ["Keep labels in the top bar whole"],
+    });
   });
 
   test("what is new is everything after the build the phone runs, grouped", () => {
@@ -56,6 +65,21 @@ afterEach(() => {
 });
 
 describe("what's new in the notice", () => {
+  test("the list starts from the build last loaded on this phone, which the update tap moves on", async () => {
+    localStorage.setItem("cvu.build", JSON.stringify("b2b2b2b-1"));
+    stop = start(root, {
+      bridge: fakeBridge([{ sessions: [ONE], active: null }]),
+      openEvents: (url) => new FakeSource(url),
+      version: { built: "e5e5e5e-1", latest: async () => "c3c3c3c-2", changes },
+      reload,
+    });
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(JSON.parse(localStorage.getItem("cvu.build") ?? "null")).toBe("e5e5e5e-1");
+    root.querySelector<HTMLButtonElement>(".new-version")?.click();
+    expect(JSON.parse(localStorage.getItem("cvu.build") ?? "null")).toBe("c3c3c3c-2");
+    expect(reload).toHaveBeenCalled();
+  });
+
   test("the list is fetched and shown only when What's new is tapped, and nothing reloads", async () => {
     stop = start(root, {
       bridge: fakeBridge([{ sessions: [ONE], active: null }]),
