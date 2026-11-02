@@ -109,6 +109,13 @@ export interface Prompt {
   asked_at: string;
 }
 
+/** How the bridge starts new sessions, as GET /api/v1/settings gives it. */
+export interface Settings {
+  remote_control: boolean;
+  start_in: "terminal" | "background";
+  updated_at: string | null;
+}
+
 export type Reply =
   | { answer: string | string[] | { text: string } }
   | { decision: "allow" | "deny"; reason?: string };
@@ -151,6 +158,8 @@ export interface Bridge {
   prs(session: string): Promise<Prs>;
   prompts(): Promise<Prompt[]>;
   answer(prompt: string, reply: Reply): Promise<Answered>;
+  settings(): Promise<Settings>;
+  changeSettings(change: Partial<Settings>): Promise<Settings>;
 }
 
 /** The API is always at /api/v1 on the page's own origin, wherever the page itself is served. */
@@ -220,6 +229,18 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
     },
     async prs(session) {
       return read<Prs>(await fetch(`${one(session)}/prs`, { cache: "no-store" }));
+    },
+    async settings() {
+      return read<Settings>(await fetch(`${BASE}/settings`, { cache: "no-store" }));
+    },
+    async changeSettings(change) {
+      return read<Settings>(
+        await fetch(`${BASE}/settings`, {
+          method: "PUT",
+          headers: JSON_HEADERS,
+          body: JSON.stringify(change),
+        }),
+      );
     },
     async prompts() {
       return (await read<{ prompts: Prompt[] }>(await fetch(`${BASE}/prompts`, { cache: "no-store" })))

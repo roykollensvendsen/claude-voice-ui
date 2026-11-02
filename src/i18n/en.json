@@ -140,5 +140,13 @@
   "prompt.own": "Or write your own answer",
   "prompt.cut": "(cut short)",
   "prompt.answered": "Answered: {answer}",
-  "prompt.gone": "Already answered somewhere else."
+  "prompt.gone": "Already answered somewhere else.",
+  "menu.theme": "Theme",
+  "menu.language": "Language",
+  "settings.startIn": "New sessions open",
+  "settings.window": "In a window",
+  "settings.background": "In the background",
+  "settings.remoteControl": "Remote control",
+  "settings.on": "On",
+  "settings.off": "Off"
 }

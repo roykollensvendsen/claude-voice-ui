@@ -848,7 +848,15 @@ button {
   background: var(--card);
   border: 1px solid var(--line);
 }
-.menu .theme {
+.menu .row {
+  display: grid;
+  gap: 4px;
+}
+.menu .label {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.menu .choices {
   display: flex;
   gap: 4px;
   flex-wrap: wrap;

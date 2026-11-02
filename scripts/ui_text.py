@@ -29,6 +29,7 @@ _NAMES = """
     click keydown pointerdown pointerup pointerleave pointercancel contextmenu visibilitychange
     submit role title true false aria expanded pressed label hidden password secret current
     Enter ContextMenu object focusout gone prompt_closed tool checkbox
+    settings background terminal start-in remote-control
     blank noopener no store none center undefined feat fix kind
     grid cards system light dark ok warn full stop required optional
     connecting live reconnecting page voice terminal
