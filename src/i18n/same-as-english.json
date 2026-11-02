@@ -9,7 +9,8 @@
     "usage.minutes",
     "usage.tokens",
     "pending.approval",
-    "turn.claude"
+    "turn.claude",
+    "prompt.send"
   ],
   "es": [
     "app.title",

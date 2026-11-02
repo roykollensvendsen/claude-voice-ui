@@ -90,6 +90,32 @@ export interface Pending {
   approvals: { id: string; number: number; tool: string; summary: string }[];
 }
 
+/** A question or an approval a session holds for the phone, as GET /api/v1/prompts gives it. */
+export interface Prompt {
+  id: string;
+  /** The Claude session's id, the same as a session's `id`. */
+  session: string;
+  kind: "question" | "approval";
+  question: {
+    text: string;
+    header: string;
+    options: { label: string; description: string }[];
+    multi: boolean;
+  } | null;
+  tool: string | null;
+  /** What an approval would run: the command, the file or short JSON, at most 300 characters. */
+  input: string | null;
+  cut: boolean;
+  asked_at: string;
+}
+
+export type Reply =
+  | { answer: string | string[] | { text: string } }
+  | { decision: "allow" | "deny"; reason?: string };
+
+/** "gone" when it was answered or closed elsewhere; `refused` when the answer does not fit it. */
+export type Answered = "ok" | "gone" | { refused: string };
+
 export interface Pr {
   number: number;
   title: string;
@@ -123,6 +149,8 @@ export interface Bridge {
   output(session: string, after?: number): Promise<Output>;
   pending(session: string): Promise<Pending>;
   prs(session: string): Promise<Prs>;
+  prompts(): Promise<Prompt[]>;
+  answer(prompt: string, reply: Reply): Promise<Answered>;
 }
 
 /** The API is always at /api/v1 on the page's own origin, wherever the page itself is served. */
@@ -192,6 +220,24 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
     },
     async prs(session) {
       return read<Prs>(await fetch(`${one(session)}/prs`, { cache: "no-store" }));
+    },
+    async prompts() {
+      return (await read<{ prompts: Prompt[] }>(await fetch(`${BASE}/prompts`, { cache: "no-store" })))
+        .prompts;
+    },
+    async answer(prompt, reply) {
+      const response = await fetch(`${BASE}/prompts/${encodeURIComponent(prompt)}`, {
+        method: "POST",
+        headers: JSON_HEADERS,
+        body: JSON.stringify(reply),
+      });
+      if (response.status === 404) return "gone";
+      if (response.status === 409) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return { refused: body.error ?? "" };
+      }
+      await read<unknown>(response);
+      return "ok";
     },
     async choose(session) {
       return read<Active>(

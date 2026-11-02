@@ -135,5 +135,12 @@
   "git.changed": "endret",
   "git.detached": "frakoblet",
   "waiting.count.one": "{count} venter på deg",
-  "waiting.count.other": "{count} venter på deg"
+  "waiting.count.other": "{count} venter på deg",
+  "prompt.allow": "Tillat",
+  "prompt.deny": "Avslå",
+  "prompt.send": "Send",
+  "prompt.own": "Eller skriv ditt eget svar",
+  "prompt.cut": "(forkortet)",
+  "prompt.answered": "Svart: {answer}",
+  "prompt.gone": "Allerede besvart et annet sted."
 }

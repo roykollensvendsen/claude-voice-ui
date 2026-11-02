@@ -135,5 +135,12 @@
   "git.changed": "changed",
   "git.detached": "detached",
   "waiting.count.one": "{count} waiting for you",
-  "waiting.count.other": "{count} waiting for you"
+  "waiting.count.other": "{count} waiting for you",
+  "prompt.allow": "Allow",
+  "prompt.deny": "Deny",
+  "prompt.send": "Send",
+  "prompt.own": "Or write your own answer",
+  "prompt.cut": "(cut short)",
+  "prompt.answered": "Answered: {answer}",
+  "prompt.gone": "Already answered somewhere else."
 }
