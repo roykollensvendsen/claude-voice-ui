@@ -118,7 +118,7 @@ button {
 .top {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   white-space: nowrap;
   padding: 4px 0 10px;
 }
@@ -132,8 +132,15 @@ button {
   color: var(--muted);
   white-space: nowrap;
 }
+/* Live is the usual case, so it is a green dot; the word stays for a screen reader. Connecting and
+   reconnecting keep their words, because then the owner needs to know. */
 .connection.live {
   color: var(--green);
+  font-size: 0;
+}
+.connection.live::before {
+  content: "●";
+  font-size: 0.8rem;
 }
 .connection.reconnecting {
   color: var(--amber);
@@ -937,4 +944,21 @@ a.open-claude {
 }
 .card-top .kind {
   margin: 0 8px;
+}
+
+/* An ended session's place, kept empty so the others do not move until the page is opened again. */
+.tile.gap {
+  visibility: hidden;
+}
+/* How many sessions wait for the owner, in the top bar; a tap opens the next one's question. */
+.waiting-count {
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 16px;
+  border: 1px solid var(--amber);
+  background: color-mix(in srgb, var(--amber) 18%, transparent);
+  color: var(--amber);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
 }

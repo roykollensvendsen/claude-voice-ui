@@ -22,10 +22,10 @@ find = 'if \(s\.question\) return "answer";'
 replace = 'if (false) return "answer";'
 
 [[rule]]
-name = "sessions waiting for the owner come first"
+name = "sessions keep the order of their numbers, whatever their state"
 file = "src/states.ts"
-find = 'Number\(waitsForOwner\(b\)\) - Number\(waitsForOwner\(a\)\) \|\|'
-replace = '0 || a.minutes_since_update - b.minutes_since_update,'
+find = '\(a\.number \?\? Number\.POSITIVE_INFINITY\) - \(b\.number'
+replace = '      0 || a.name.localeCompare(b.name),'
 
 [[rule]]
 name = "a focus event matches a session by id as well as by name"
