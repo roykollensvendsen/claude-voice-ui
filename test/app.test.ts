@@ -6,8 +6,8 @@ import type { Session } from "../src/states";
 
 class FakeSource implements EventSourceLike {
   static last: FakeSource | undefined;
-  onopen: (() => void) | null = null;
-  onerror: (() => void) | null = null;
+  onopen: ((event: Event) => void) | null = null;
+  onerror: ((event: Event) => void) | null = null;
   readyState = 0;
   closed = false;
   private listeners = new Map<string, ((e: MessageEvent) => void)[]>();
@@ -168,6 +168,17 @@ describe("the session cards", () => {
     expect(card("q")?.textContent).toContain("b.py");
   });
 
+  test("a waiting card does not repeat the question as what it is doing", async () => {
+    const q = session({
+      id: "q",
+      status: "waiting",
+      doing: "venter på valg: Which file?",
+      question: { text: "Which file?", options: [] },
+    });
+    await open(fakeBridge([{ sessions: [q], active: null }]));
+    expect(card("q")?.querySelector(".doing")).toBeNull();
+  });
+
   test("the active session's card is marked", async () => {
     await open(fakeBridge([{ sessions: [ONE, TWO], active: ACTIVE_ONE }]));
     expect(card("a1")?.classList.contains("active")).toBe(true);
@@ -267,9 +278,9 @@ describe("staying live", () => {
 
   test("a lost stream shows that the page is reconnecting", async () => {
     await open(fakeBridge([{ sessions: [ONE], active: null }]));
-    FakeSource.last?.onopen?.();
+    FakeSource.last?.onopen?.(new Event("open"));
     expect(text(".connection")).toBe("Live");
-    FakeSource.last?.onerror?.();
+    FakeSource.last?.onerror?.(new Event("error"));
     expect(text(".connection")).toBe("Reconnecting…");
   });
 

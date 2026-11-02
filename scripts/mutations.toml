@@ -26,3 +26,27 @@ name = "sessions waiting for the owner come first"
 file = "src/states.ts"
 find = 'Number\(waitsForOwner\(b\)\) - Number\(waitsForOwner\(a\)\) \|\|'
 replace = '0 || a.minutes_since_update - b.minutes_since_update,'
+
+[[rule]]
+name = "a focus event matches a session by id as well as by name"
+file = "src/view.ts"
+find = 'return key != null && \(key === s\.id \|\| key === s\.name\);'
+replace = 'return key != null && key === s.name;'
+
+[[rule]]
+name = "the sessions are fetched again every fifteen seconds"
+file = "src/app.ts"
+find = '^const POLL_MS = 15_000;'
+replace = 'const POLL_MS = 60_000;'
+
+[[rule]]
+name = "after two quiet minutes the bar goes back to the active session"
+file = "src/app.ts"
+find = '^const FOCUS_MS = 2 \* 60_000;'
+replace = 'const FOCUS_MS = 20 * 60_000;'
+
+[[rule]]
+name = "being signed out while watching returns to the sign-in page"
+file = "src/app.ts"
+find = 'if \(error instanceof SignedOut\) showSignIn\(\);'
+replace = 'if (false) showSignIn();'

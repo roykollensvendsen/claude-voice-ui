@@ -3,6 +3,9 @@ import { defineConfig } from "vitest/config";
 // The bridge to talk to while developing. The page itself always calls its own
 // origin, so in development Vite passes /api on to the bridge.
 const bridge = process.env.CLAUDE_VOICE_URL ?? "http://127.0.0.1:8811";
+// With the login secret in the environment, the proxy signs every call in with it, so a
+// developer need not type it. It stays in the dev server; the page never sees it.
+const token = process.env.CLAUDE_VOICE_TOKEN;
 
 export default defineConfig({
   // Relative paths, so the same build works at the bridge's /ui/ and anywhere else.
@@ -14,7 +17,7 @@ export default defineConfig({
         changeOrigin: true,
         // The bridge refuses a cookie-signed change whose Origin is not its own.
         // Through this proxy the page is the bridge, as it is when the bridge serves it.
-        headers: { origin: bridge },
+        headers: { origin: bridge, ...(token ? { authorization: `Bearer ${token}` } : {}) },
       },
     },
   },

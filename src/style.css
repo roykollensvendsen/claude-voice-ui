@@ -1,0 +1,228 @@
+/* Dark, high contrast, large tap targets. Colour is used only for state. */
+:root {
+  --bg: #121316;
+  --card: #1c1d22;
+  --line: #2e3038;
+  --text: #ecebe7;
+  --muted: #9c9ba3;
+  --accent: #e2795a;
+  --focus: #5b9cf5;
+  --green: #4fc27f;
+  --grey: #8a8a92;
+  --amber: #f0b43c;
+  --orange: #f08a3c;
+  --slate: #7f9bb5;
+  --faded: #5a5a62;
+  --red: #ef5b5b;
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    16px / 1.45 system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 12px 16px calc(24px + env(safe-area-inset-bottom));
+}
+h1 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+.muted {
+  color: var(--muted);
+}
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.signin-screen {
+  max-width: 420px;
+  margin: 18vh auto 0;
+}
+.signin input,
+.signin button {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.8rem;
+  margin: 0.6rem 0;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+}
+.signin button {
+  background: var(--accent);
+  border: 0;
+  color: #111;
+  font-weight: 600;
+}
+.error {
+  color: var(--red);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0 10px;
+}
+.top h1 {
+  flex: 1;
+}
+.connection {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.connection.live {
+  color: var(--green);
+}
+.connection.reconnecting {
+  color: var(--amber);
+}
+.signout {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  min-height: 44px;
+  padding: 0 4px;
+  text-decoration: underline;
+}
+
+.focus-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.focus-bar.talking {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 1px var(--focus) inset;
+}
+.notice {
+  color: var(--amber);
+  margin: 0 0 12px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+.card {
+  --tone: var(--grey);
+  display: block;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  padding: 12px 12px 12px 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--tone);
+  border-radius: 12px;
+}
+.card.active {
+  border-color: var(--accent);
+  border-left-color: var(--tone);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+.card.focus {
+  box-shadow: 0 0 0 2px var(--focus);
+}
+.card-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.name {
+  font-weight: 600;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.chip {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--focus);
+  color: #0b1220;
+}
+.meta,
+.since {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.state {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--tone);
+}
+.doing {
+  margin-top: 4px;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.question {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-left: 3px solid var(--tone);
+  background: #ffffff08;
+}
+.options {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+.tone-green {
+  --tone: var(--green);
+}
+.tone-grey {
+  --tone: var(--grey);
+}
+.tone-amber {
+  --tone: var(--amber);
+}
+.tone-orange {
+  --tone: var(--orange);
+}
+.tone-slate {
+  --tone: var(--slate);
+}
+.tone-faded {
+  --tone: var(--faded);
+  opacity: 0.6;
+}
+.tone-red {
+  --tone: var(--red);
+}
+.tone-green .icon {
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tone-green .icon {
+    animation: none;
+  }
+}

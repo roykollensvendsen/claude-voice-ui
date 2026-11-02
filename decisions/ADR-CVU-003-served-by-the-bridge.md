@@ -13,6 +13,11 @@ The bridge signs a page in with a cookie that is sent only to the same site
 when `CLAUDE_VOICE_UI_DIR` names it, and answers another origin only when
 `CLAUDE_VOICE_UI_ORIGINS` lists it.
 
+The owner wants the app reachable only inside his tailnet, not over the public
+Funnel address the voice connector uses. The bridge's maintainers propose a
+second `tailscale serve` port in front of the same bridge, which refuses `/api/`
+and `/ui/` to anything arriving through Funnel.
+
 ## Options considered
 
 - **Served by the bridge at `/ui/`.** One address for the page and the API, so
@@ -28,7 +33,7 @@ when `CLAUDE_VOICE_UI_DIR` names it, and answers another origin only when
 
 The app is built with relative paths and served by the bridge from
 `CLAUDE_VOICE_UI_DIR` at `/ui/`. It calls the API on its own origin and signs in
-with the cookie. In development, Vite passes `/api` on to a running bridge, so
+with the cookie, at the tailnet-only address. In development, Vite passes `/api` on to a running bridge, so
 the page still calls its own origin.
 
 ## Consequences
