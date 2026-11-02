@@ -169,6 +169,24 @@ button {
   top: 6px;
   left: 26px;
 }
+/* Only looked at: fainter than the microphone. It goes after two minutes; a fade would restart
+   at every redraw of the page, so it simply stays faint until then. */
+.peek {
+  font-size: 0.8rem;
+  line-height: 1;
+  opacity: 0.55;
+}
+.legend .peek {
+  opacity: 1;
+}
+.tile .peek {
+  position: absolute;
+  top: 6px;
+  left: 26px;
+}
+.card-top .peek {
+  margin-left: 6px;
+}
 .card-top .mic {
   margin-left: 6px;
 }

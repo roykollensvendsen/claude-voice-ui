@@ -22,6 +22,8 @@ export interface Home {
   active: Active | null;
   /** The session the voice is talking to right now, by name or id, while that is recent. */
   focus: string | null;
+  /** Sessions the voice only looked at lately, by id or name as the bridge gave them. */
+  peeks: string[];
   connection: Connection;
   problem: string | null;
   doctor: Doctor | null;
@@ -134,6 +136,9 @@ export function signInScreen(error: string | null, onSubmit: (secret: string) =>
 
 /** The voice's microphone, marking the session it is talking to right now. */
 const mic = () => el("span", "mic", "🎙");
+/** A fainter mark for a session the voice only looked at, without writing to it. */
+const peekMark = (s: Session, home: Home) =>
+  !matches(s, home.focus) && home.peeks.some((key) => matches(s, key)) ? [el("span", "peek", "👁")] : [];
 
 /** A microphone at the top that leads to the session the voice is talking to, when there is one. */
 function micJump(home: Home): HTMLElement[] {
@@ -217,7 +222,14 @@ function card(s: Session, home: Home, act: Actions): HTMLElement {
   arrow.setAttribute("aria-expanded", String(open));
   arrow.setAttribute("aria-label", open ? t("session.showLess") : t("session.showMoreCard"));
   box.append(
-    el("div", "card-top", el("span", "name", s.name || s.id), ...(focused ? [mic()] : []), arrow),
+    el(
+      "div",
+      "card-top",
+      el("span", "name", s.name || s.id),
+      ...(focused ? [mic()] : []),
+      ...peekMark(s, home),
+      arrow,
+    ),
     stateLine(s),
   );
   // The bridge's one line repeats the question while it waits, so the question is the line then.
@@ -326,6 +338,7 @@ function tile(s: Session, home: Home, act: Actions): HTMLElement {
   box.append(
     el("span", "icon", look.icon),
     ...(matches(s, home.focus) ? [mic()] : []),
+    ...peekMark(s, home),
     el("span", "name", s.name || s.id),
     ...(home.active?.id === s.id ? [el("span", "pin")] : []),
     ...claudeLink(s, "↗").map((a) => {
@@ -400,6 +413,7 @@ function legend(): HTMLElement {
     ...states,
     el("li", "ring active", t("legend.chosen")),
     el("li", "ring focus", t("legend.talking")),
+    el("li", "peek", t("legend.peek")),
   );
 }
 
