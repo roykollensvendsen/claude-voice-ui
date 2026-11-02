@@ -196,6 +196,33 @@ describe("the session cards", () => {
     expect(card("q")?.querySelector(".doing")).toBeNull();
   });
 
+  test("a card shows its branch, last commit and how far it is from main", async () => {
+    const g = session({
+      id: "g",
+      git: {
+        branch: "feat/totals",
+        commit: { hash: "a1b2c3d", subject: "Fix the export totals" },
+        dirty: true,
+        changed_files: 2,
+        tracking: null,
+        main: { name: "origin/main", ahead: 2, behind: 5 },
+        parent: null,
+        checked_at: "",
+      },
+    });
+    await open(fakeBridge([{ sessions: [g], active: null }]));
+    const line = card("g")?.querySelector(".git");
+    expect(line?.textContent).toContain("feat/totals");
+    expect(line?.textContent).toContain("a1b2c3d Fix the export totals");
+    expect(line?.textContent).toContain("2 changed");
+    expect(line?.querySelector(".mark.behind")?.textContent).toBe("↑2 ↓5 main");
+  });
+
+  test("a card for a folder outside git has no git line", async () => {
+    await open(fakeBridge([{ sessions: [{ ...ONE, git: null }], active: null }]));
+    expect(card("a1")?.querySelector(".git")).toBeNull();
+  });
+
   test("the active session's card is marked", async () => {
     await open(fakeBridge([{ sessions: [ONE, TWO], active: ACTIVE_ONE }]));
     expect(card("a1")?.classList.contains("active")).toBe(true);
@@ -326,6 +353,24 @@ describe("staying live", () => {
     });
     await settle();
     expect(b.snapshotCalls()).toBe(calls + 1);
+  });
+
+  test("a change in a session's git status updates its card", async () => {
+    await open(fakeBridge([{ sessions: [ONE], active: null }]));
+    FakeSource.last?.emit("git", {
+      session: "a1",
+      git: {
+        branch: "main",
+        commit: { hash: "0f0f0f0", subject: "Merge the totals" },
+        dirty: false,
+        changed_files: 0,
+        tracking: null,
+        main: null,
+        parent: null,
+        checked_at: "",
+      },
+    });
+    expect(card("a1")?.querySelector(".git")?.textContent).toContain("0f0f0f0 Merge the totals");
   });
 
   test("a lost stream shows that the page is reconnecting", async () => {
