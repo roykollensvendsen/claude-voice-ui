@@ -109,6 +109,18 @@ describe("short cards", () => {
   });
 });
 
+describe("opening a session from its card", () => {
+  test("an opened card has an Open button that opens the page without choosing the session", async () => {
+    const b = fakeBridge([{ sessions: [ONE], active: null }]);
+    await open(b);
+    inCard("a1", ".expand")?.click();
+    buttonIn("a1", "Open ›")?.click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(root.querySelector(".detail h2")?.textContent).toBe("billing-ab");
+    expect(b.choose).not.toHaveBeenCalled();
+  });
+});
+
 describe("hiding sessions", () => {
   test("a hidden session leaves the cards and is counted at the bottom", async () => {
     await open(fakeBridge([{ sessions: [ONE, TWO], active: null }]));
