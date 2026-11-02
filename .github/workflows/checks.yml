@@ -62,6 +62,8 @@ jobs:
       # committed's own imperative rule flags nothing, so this is what does.
       - name: Subjects in the imperative
         run: python scripts/imperative.py ${{ steps.range.outputs.range }}
+      - name: No links to a Claude session
+        run: python scripts/no_session_links.py ${{ steps.range.outputs.range }}
 
   # The app: lint, types, the suite, and a build a browser can load.
   app:

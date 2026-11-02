@@ -164,7 +164,14 @@ noun phrase like "A new check". The linter has a setting for this, and it fires 
 word while the same configuration requires a capital, so it can never fire;
 `scripts/imperative.py` is what refuses it.
 
-A `commit-msg` hook runs both while you are writing the message, rather than
+**No links to a Claude session in a commit message.** A `Claude-Session:`
+line, or any `claude.ai/code/session_` address, points into one person's
+account and is a dead link to everyone else. Credit with `Co-Authored-By:`
+only. `scripts/no_session_links.py` refuses it, in the commit-msg hook and in
+continuous integration; the history was cleaned of them before it was
+published, so every commit is held to it.
+
+A `commit-msg` hook runs these checks while you are writing the message, rather than
 in CI afterwards. Turn it on once per clone:
 
 <!-- not run: it is already on in this clone -->

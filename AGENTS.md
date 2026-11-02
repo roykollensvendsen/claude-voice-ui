@@ -33,6 +33,8 @@ the bridge only through the bridge's event API, specified in claude-voice's
 
 ## What never to do
 
+- **Never put a `Claude-Session:` line or a claude.ai/code session address in a
+  commit message**; the checks refuse it. Credit with `Co-Authored-By:` only.
 - **Never print the login secret** (`CLAUDE_VOICE_TOKEN` in
   `~/.config/claude-voice/env`).
 - **Never leave the bridge changed after a live test.** Read what you are about
