@@ -35,8 +35,6 @@
   "state.approval.meaning": "et verktøy trenger din tillatelse",
   "state.input": "Venter på innskriving",
   "state.input.meaning": "den venter på at du skriver",
-  "state.shell": "I skallet",
-  "state.shell.meaning": "en terminal ved ledeteksten, ingen Claude-tur",
   "state.moved": "Flyttet",
   "state.moved.meaning": "fortsatt i en annen økt",
   "state.stopped": "Stoppet",

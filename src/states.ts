@@ -29,7 +29,7 @@ export interface Session {
   context?: { used_percentage: number; as_of: string } | null;
 }
 
-export type CardState = "working" | "idle" | "answer" | "approval" | "input" | "shell" | "moved" | "stopped";
+export type CardState = "working" | "idle" | "answer" | "approval" | "input" | "moved" | "stopped";
 
 export interface Look {
   label: string;
@@ -49,7 +49,6 @@ const LOOKS: Record<CardState, { icon: string; tone: string }> = {
   answer: { icon: "?", tone: WAITING_TONE },
   approval: { icon: "!", tone: WAITING_TONE },
   input: { icon: "…", tone: WAITING_TONE },
-  shell: { icon: "›", tone: "slate" },
   moved: { icon: "→", tone: "faded" },
   stopped: { icon: "■", tone: "red" },
 };
@@ -79,9 +78,9 @@ export function cardState(s: Session): CardState {
   switch (s.status) {
     case "busy":
     case "running":
-      return "working";
+    // Claude Code's word for Claude running a command.
     case "shell":
-      return "shell";
+      return "working";
     case "moved":
       return "moved";
     case "waiting":
