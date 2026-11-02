@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { type Deps, start } from "../src/app";
 import type { Active, Bridge, BridgeInfo, Doctor } from "../src/bridge";
@@ -186,6 +187,20 @@ describe("the focus bar", () => {
     await open(fakeBridge([{ sessions: [ONE], active: ACTIVE_ONE }]));
     expect(text(".focus-bar")).toContain("billing-ab");
     expect(text(".focus-bar")).toContain("chosen by voice");
+  });
+
+  test("the bar spends its room on the session's name, with a microphone for a label", async () => {
+    await open(fakeBridge([{ sessions: [ONE], active: ACTIVE_ONE }]));
+    const bar = root.querySelector<HTMLElement>(".focus-bar");
+    expect(bar?.textContent?.startsWith("🎙 billing-ab")).toBe(true);
+    expect(bar?.getAttribute("aria-label")).toBe("Voice talks to billing-ab, chosen by voice");
+  });
+
+  test("a long name wraps onto a second line instead of being cut off", () => {
+    const css = readFileSync("src/style.css", "utf8");
+    const rule = css.slice(css.indexOf(".focus-bar {"), css.indexOf("}", css.indexOf(".focus-bar {")));
+    expect(rule).not.toContain("text-overflow");
+    expect(rule).not.toContain("nowrap");
   });
 
   test("with nothing chosen the bar says how to choose", async () => {
