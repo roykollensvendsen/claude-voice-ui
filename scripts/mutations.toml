@@ -40,7 +40,7 @@ find = '^const POLL_MS = 60_000;'
 replace = 'const POLL_MS = 120_000;'
 
 [[rule]]
-name = "after two quiet minutes the bar goes back to the active session"
+name = "after two quiet minutes the microphone goes away"
 file = "src/app.ts"
 find = '^const FOCUS_MS = 2 \* 60_000;'
 replace = 'const FOCUS_MS = 20 * 60_000;'

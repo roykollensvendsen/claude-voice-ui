@@ -61,8 +61,8 @@ function applyTheme(theme: Theme) {
 /** Changes of state arrive on the stream; the timer catches what a dropped stream missed. */
 // RULE: the sessions are fetched again every minute
 const POLL_MS = 60_000;
-/** How long the bar keeps showing the session the voice last reached, once nothing more happens. */
-// RULE: after two quiet minutes the bar goes back to the active session
+/** How long the microphone stays on the session the voice last reached, once nothing more happens. */
+// RULE: after two quiet minutes the microphone goes away
 const FOCUS_MS = 2 * 60_000;
 /** The bridge's dependency check runs other programs and takes seconds, so it is asked seldom. */
 // RULE: the check is asked again every five minutes, not on every refresh
@@ -140,6 +140,19 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   let movedAt = 0;
   let shownOrder = "";
 
+  let inView: IntersectionObserver | undefined;
+  /** The microphone at the top is needed only while the session it leads to is off the screen. */
+  function hideJumpWhileInView() {
+    inView?.disconnect();
+    const jump = root.querySelector<HTMLElement>(".mic-jump");
+    const target = jump && root.querySelector(`[data-session="${CSS.escape(jump.dataset.target ?? "")}"]`);
+    if (!jump || !target || typeof IntersectionObserver === "undefined") return;
+    inView = new IntersectionObserver(([entry]) => {
+      jump.hidden = Boolean(entry?.isIntersecting);
+    });
+    inView.observe(target);
+  }
+
   const draw = () => {
     // RULE: the order holds still while a finger is on the screen
     if (pressing) {
@@ -149,6 +162,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     waitingDraw = false;
     bringBackWaiting();
     root.replaceChildren(homeScreen(home, actions));
+    hideJumpWhileInView();
     const order = [...root.querySelectorAll<HTMLElement>("[data-session]")]
       .map((x) => x.dataset.session)
       .join(" ");
@@ -415,6 +429,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
 
   function stopWatching() {
     watching = false;
+    inView?.disconnect();
     unfollow?.();
     unfollow = null;
     clearInterval(poll);

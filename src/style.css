@@ -114,14 +114,17 @@ button {
   color: var(--red);
 }
 
+/* One line: the title, then the buttons. It never wraps. */
 .top {
   display: flex;
   align-items: center;
   gap: 12px;
+  white-space: nowrap;
   padding: 4px 0 10px;
 }
 .top h1 {
   margin: 0;
+  margin-right: auto;
   white-space: nowrap;
 }
 .connection {
@@ -145,26 +148,29 @@ button {
 }
 
 /* The session the voice talks to, as one small line under the title: each tile already shows it. */
-.titles {
-  flex: 1;
-  min-width: 0;
+/* The microphone at the top, leading to the session the voice talks to. */
+.mic-jump {
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--focus);
+  border-radius: 16px;
+  background: none;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
 }
-/* Never cut off: a long name breaks onto the next line wherever it has to. */
-.focus-bar {
-  font-size: 0.8rem;
-  color: var(--muted);
-  overflow-wrap: anywhere;
+/* On the tile or card the voice is talking to right now, beside its blue ring. */
+.mic {
+  font-size: 0.85rem;
+  line-height: 1;
 }
-/* Who chose it, or "talking now": short words that move to the next line whole, never split. */
-.focus-bar .who {
-  white-space: nowrap;
+.tile .mic {
+  position: absolute;
+  top: 6px;
+  left: 26px;
 }
-.focus-bar b {
-  color: var(--text);
-  font-weight: 600;
-}
-.focus-bar.talking b {
-  color: var(--focus);
+.card-top .mic {
+  margin-left: 6px;
 }
 .usage-button {
   min-height: 32px;
@@ -228,13 +234,6 @@ button {
   font-weight: 600;
   flex: 1;
   overflow-wrap: anywhere;
-}
-.chip {
-  font-size: 0.75rem;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--focus);
-  color: #0b1220;
 }
 .meta,
 .since {
