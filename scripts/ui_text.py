@@ -28,7 +28,7 @@ _NAMES = """
     a b button code div form h1 h2 h3 header input li ol p pre section span ul main
     click keydown pointerdown pointerup pointerleave pointercancel contextmenu visibilitychange
     submit role title true false aria expanded pressed label hidden password secret current
-    Enter ContextMenu object focusout gone prompt_closed tool checkbox
+    Enter ContextMenu object focusout gone prompt_closed tool checkbox hello message_sent
     settings background terminal start-in remote-control generating ready summary_state
     bad class points polyline repo svg unknown viewBox success failure running
     blank noopener no store none center undefined feat fix kind

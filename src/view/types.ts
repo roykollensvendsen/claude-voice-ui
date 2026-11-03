@@ -66,6 +66,10 @@ export interface Home {
   replies: Record<string, { error?: string; note?: string }>;
   /** Whether the owner has opened the list of what is missing. */
   doctorOpen: boolean;
+  /** Why the last message to a session could not be handed over, by session id. */
+  undelivered: Record<string, string>;
+  /** When the bridge started again while the page watched, until the note is put away. */
+  restarted: string | null;
 }
 
 export interface Detail {
@@ -103,6 +107,7 @@ export interface Actions {
   changeSettings(change: Partial<Settings>): void;
   openHealth(): void;
   closeHealth(): void;
+  dismissRestart(): void;
   /** Ask for a new summary of the open session. */
   summarize(): void;
   /** `said` is the answer in words, for the note shown once it is sent. */

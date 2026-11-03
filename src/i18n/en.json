@@ -186,5 +186,9 @@
   "health.ciPassing": "passing",
   "health.ciFailing": "failing",
   "health.ciRunning": "running",
-  "connection.lost": "Lost contact with the bridge. Reconnecting…"
+  "connection.lost": "Lost contact with the bridge. Reconnecting…",
+  "session.sending.one": "{count} message on the way",
+  "session.sending.other": "{count} messages on the way",
+  "session.undelivered": "Not delivered: {detail}",
+  "bridge.restarted": "Bridge restarted {time}"
 }
