@@ -11,6 +11,7 @@ export const FOCUS_MS = 2 * 60_000;
 export interface Reads {
   refresh(): Promise<void>;
   readPrompts(): Promise<void>;
+  readSettings(): Promise<void>;
 }
 
 /** The handlers for `follow`, and `stop` to clear the timers they leave running. */
@@ -21,7 +22,22 @@ export function streamHandlers(
   reads: Reads,
 ): { handlers: Handlers; stop(): void } {
   let focusTimer: ReturnType<typeof setTimeout> | undefined;
+  let lost = false;
   const peekTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  /** The stream carries only changes, so what is open is read again on every connect. */
+  function reconnected(afterDrop: boolean) {
+    void reads.readPrompts();
+    // Nothing is replayed after a drop, so everything that may have changed meanwhile is read again.
+    if (!afterDrop) return;
+    void reads.refresh();
+    void reads.readSettings();
+    const open = home.open?.id;
+    if (!open) return;
+    void page.readDetail(open);
+    void page.readPending(open);
+    void page.moreOutput(open);
+  }
+
   const handlers: Handlers = {
     focus(f) {
       home.focus = f.session;
@@ -74,8 +90,8 @@ export function streamHandlers(
     },
     connection(state) {
       home.connection = state;
-      // The stream carries only changes, so what is open is read again on every connect.
-      if (state === "live") void reads.readPrompts();
+      if (state === "live") reconnected(lost);
+      lost = state === "reconnecting";
       if (home.update.phase === "running") {
         if (state === "reconnecting") home.update.restarting = true;
         else void update.read();

@@ -1150,3 +1150,18 @@ a.open-claude {
   stroke: var(--muted);
   stroke-width: 1.5;
 }
+
+/* While the stream from the bridge is down, the page says so and shows its sessions as stale. */
+.lost-contact {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--amber);
+  background: color-mix(in srgb, var(--amber) 14%, var(--card));
+  color: var(--text);
+  font-weight: 600;
+}
+.stale {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
