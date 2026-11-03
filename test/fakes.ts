@@ -16,6 +16,7 @@ import {
   SignedOut,
   type SignIn,
   type Snapshot,
+  type SoftwareHealth,
   type UpdateRun,
   type UpdateStart,
 } from "../src/bridge";
@@ -164,6 +165,7 @@ export function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignI
     answer: vi.fn(async (_id: string, _reply: Reply): Promise<Answered> => "ok"),
     detail: vi.fn(async (id: string): Promise<SessionDetail> => ({ ...NO_DETAIL, session: id })),
     summarize: vi.fn(async (_id: string, _language: string): Promise<void> => {}),
+    health: vi.fn(async (): Promise<SoftwareHealth> => ({ as_of: "", repos: [] })),
     settings: vi.fn(
       async (): Promise<Settings> => ({ remote_control: true, start_in: "terminal", updated_at: null }),
     ),
