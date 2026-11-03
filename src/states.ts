@@ -27,6 +27,8 @@ export interface Session {
   git?: Git | null;
   /** How full its context is, from its own latest status line. */
   context?: { used_percentage: number; as_of: string } | null;
+  /** Messages the bridge is still handing over to the session, oldest first. */
+  sending?: { id: string; text: string; at: string }[];
 }
 
 export type CardState = "working" | "idle" | "answer" | "approval" | "input" | "moved" | "stopped";

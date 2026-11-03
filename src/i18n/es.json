@@ -186,5 +186,9 @@
   "health.ciPassing": "pasan",
   "health.ciFailing": "fallan",
   "health.ciRunning": "en curso",
-  "connection.lost": "Se perdió el contacto con el puente. Reconectando…"
+  "connection.lost": "Se perdió el contacto con el puente. Reconectando…",
+  "session.sending.one": "{count} mensaje en camino",
+  "session.sending.other": "{count} mensajes en camino",
+  "session.undelivered": "No entregado: {detail}",
+  "bridge.restarted": "El puente se reinició {time}"
 }

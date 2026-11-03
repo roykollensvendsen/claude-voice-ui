@@ -65,6 +65,10 @@ export interface Handlers {
   /** A summary asked for is ready, or failed. */
   summary(change: Pick<SessionDetail, "summary" | "summary_state"> & { session: string }): void;
   connection(state: "live" | "reconnecting"): void;
+  /** The first event on every connection: when the bridge started. */
+  hello(hello: { started_at: string }): void;
+  /** A message on its way was handed over to the session's inbox, or could not be. */
+  messageSent(sent: { session: string; id: string; delivered: boolean; detail: string }): void;
 }
 
 export const EVENTS_URL = "/api/v1/events";
@@ -87,5 +91,7 @@ export function follow(open: (url: string) => EventSourceLike, on: Handlers): ()
   source.addEventListener("prompt_closed", (e) => on.promptClosed(parse(e)));
   source.addEventListener("settings", (e) => on.settings(parse(e)));
   source.addEventListener("summary", (e) => on.summary(parse(e)));
+  source.addEventListener("hello", (e) => on.hello(parse(e)));
+  source.addEventListener("message_sent", (e) => on.messageSent(parse(e)));
   return () => source.close();
 }

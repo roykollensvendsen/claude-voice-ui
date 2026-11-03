@@ -112,6 +112,10 @@ export function tapActions({ home, deps, keep, draw, failed }: Context, means: M
       }
       draw();
     },
+    dismissRestart() {
+      home.restarted = null;
+      draw();
+    },
     closeHealth() {
       home.health = null;
       draw();

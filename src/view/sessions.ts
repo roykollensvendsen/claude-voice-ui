@@ -48,6 +48,7 @@ export function card(s: Session, home: Home, act: Actions): HTMLElement {
       arrow,
     ),
     stateLine(s),
+    ...onTheWay(s, home, true),
   );
   // The bridge's one line repeats the question while it waits, so the question is the line then.
   const line =
@@ -59,6 +60,19 @@ export function card(s: Session, home: Home, act: Actions): HTMLElement {
   } else box.append(...openedCard(s, home, act));
   pressable(box, s, act, () => act.pick(s.id));
   return box;
+}
+
+/** Messages still on their way to the session, and why the last one did not get there. */
+function onTheWay(s: Session, home: Home, withText: boolean): HTMLElement[] {
+  const sending = s.sending ?? [];
+  const failed = home.undelivered[s.id];
+  const count = plural(sending.length, "session.sending");
+  return [
+    ...(sending.length
+      ? [el("div", "sending", withText ? `${count}: ${sending.map((m) => m.text).join(" · ")}` : count)]
+      : []),
+    ...(failed === undefined ? [] : [el("div", "undelivered", t("session.undelivered", { detail: failed }))]),
+  ];
 }
 
 /** What an opened card shows below its top line. */
@@ -171,6 +185,7 @@ export function tile(s: Session, home: Home, act: Actions): HTMLElement {
       return a;
     }),
     ...kindMark(s),
+    ...onTheWay(s, home, false),
   );
   return box;
 }

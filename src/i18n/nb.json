@@ -186,5 +186,9 @@
   "health.ciPassing": "består",
   "health.ciFailing": "feiler",
   "health.ciRunning": "kjører",
-  "connection.lost": "Mistet kontakten med broen. Kobler til igjen…"
+  "connection.lost": "Mistet kontakten med broen. Kobler til igjen…",
+  "session.sending.one": "{count} melding på vei",
+  "session.sending.other": "{count} meldinger på vei",
+  "session.undelivered": "Ikke levert: {detail}",
+  "bridge.restarted": "Broen startet på nytt {time}"
 }

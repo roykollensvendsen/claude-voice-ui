@@ -15,7 +15,7 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | Rule turned off | Tests that went red | The test that names it | Did that one go red? |
 |---|---|---|---|
 | a session with a question waits for an answer | 1 | `test_a_session_with_a_question_waits_for_an_answer` | yes |
-| sessions keep the order of their numbers, whatever their state | 156 | `test_sessions_keep_the_order_of_their_numbers_whatever_their_state` | yes |
+| sessions keep the order of their numbers, whatever their state | 165 | `test_sessions_keep_the_order_of_their_numbers_whatever_their_state` | yes |
 | a focus event matches a session by id as well as by name | 18 | `test_a_focus_event_matches_a_session_by_id_as_well_as_by_name` | yes |
 | the sessions are fetched again every minute | 6 | `test_the_sessions_are_fetched_again_every_minute` | yes |
 | after two quiet minutes the speech bubble goes away | 3 | `test_after_two_quiet_minutes_the_speech_bubble_goes_away` | yes |
@@ -30,7 +30,7 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | an approval it waits on is shown, to be answered by voice or at the screen | 1 | `test_an_approval_it_waits_on_is_shown_to_be_answered_by_voice_or_at_the_screen` | yes |
 | a new turn announced on the stream is fetched after the last one shown | 2 | `test_a_new_turn_announced_on_the_stream_is_fetched_after_the_last_one_shown` | yes |
 | a hidden session comes back when it starts waiting | 4 | `test_a_hidden_session_comes_back_when_it_starts_waiting` | yes |
-| the view chosen is remembered | 21 | `test_the_view_chosen_is_remembered` | yes |
+| the view chosen is remembered | 22 | `test_the_view_chosen_is_remembered` | yes |
 | every kind of waiting is amber, as in the design draft | 2 | `test_every_kind_of_waiting_is_amber_as_in_the_design_draft` | yes |
 | a long press opens the session's page without choosing it | 3 | `test_a_long_press_opens_the_session_s_page_without_choosing_it` | yes |
 | the order holds still while a finger is on the screen | 2 | `test_the_order_holds_still_while_a_finger_is_on_the_screen` | yes |

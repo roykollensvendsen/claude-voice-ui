@@ -1165,3 +1165,26 @@ a.open-claude {
   opacity: 0.45;
   filter: grayscale(1);
 }
+
+/* Messages still on their way to a session, and one that did not get there. */
+.sending,
+.undelivered {
+  font-size: 0.8em;
+  margin-top: 4px;
+}
+.sending {
+  color: var(--amber);
+}
+.undelivered {
+  color: var(--red);
+}
+
+/* The note that the bridge started again; a tap puts it away. */
+.restarted {
+  font-size: 0.8em;
+  border: 1px solid var(--amber);
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: transparent;
+  color: var(--amber);
+}

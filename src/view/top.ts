@@ -117,6 +117,13 @@ export function newVersion(home: Home, act: Actions): HTMLElement[] {
 }
 
 /** How many sessions wait for the owner; a tap opens the next one's page, question first. */
+/** A short note, with the time, that the bridge started again while the page watched. */
+export function restartNote(home: Home, act: Actions): HTMLElement[] {
+  if (!home.restarted) return [];
+  const time = new Date(home.restarted).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return [button(t("bridge.restarted", { time }), act.dismissRestart, "restarted")];
+}
+
 export function waitingCount(home: Home, act: Actions): HTMLElement[] {
   const count = home.sessions.filter(
     (s) => (waitsForOwner(s) || hasPrompt(home, s)) && !(s.id in home.hidden),

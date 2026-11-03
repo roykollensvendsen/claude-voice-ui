@@ -23,6 +23,8 @@ export function streamHandlers(
 ): { handlers: Handlers; stop(): void } {
   let focusTimer: ReturnType<typeof setTimeout> | undefined;
   let lost = false;
+  /** When the bridge said it started, on the last connection. */
+  let started: string | undefined;
   const peekTimers = new Map<string, ReturnType<typeof setTimeout>>();
   /** The stream carries only changes, so what is open is read again on every connect. */
   function reconnected(afterDrop: boolean) {
@@ -80,6 +82,20 @@ export function streamHandlers(
       s.state = st.state;
       s.state_since = st.since;
       s.doing = st.doing;
+      draw();
+    },
+    hello({ started_at }) {
+      if (started && started_at !== started) {
+        home.restarted = started_at;
+        draw();
+      }
+      started = started_at;
+    },
+    messageSent({ session, id, delivered, detail }) {
+      const s = home.sessions.find((x) => x.id === session);
+      if (s?.sending) s.sending = s.sending.filter((m) => m.id !== id);
+      if (delivered) delete home.undelivered[session];
+      else home.undelivered[session] = detail;
       draw();
     },
     git(change) {

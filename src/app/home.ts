@@ -39,5 +39,7 @@ export function freshHome(keep: Keep | undefined): Home {
     language: recalledLanguage(keep),
     picked: null,
     doctorOpen: false,
+    undelivered: {},
+    restarted: null,
   };
 }
