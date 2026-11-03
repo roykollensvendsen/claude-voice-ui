@@ -211,16 +211,21 @@ def compare(base: Levels, now: Levels, committed: Levels, allowed: set[str]) -> 
 
 
 def _grown(base: dict[str, int] | None, now: dict[str, int], allowed: set[str]) -> list[str]:
-    """Modules that grew, and new ones over the ceiling; nothing when the base does not count lines yet."""
+    """Modules over the ceiling: any may grow to it, and one already over it may not grow.
+
+    Nothing is checked while the base does not count lines yet.
+    """
     if base is None or "max_module_lines" in allowed:
         return []
     found = []
     for module, lines in now.items():
         before = base.get(module)
-        if before is not None and lines > before:
-            found.append(f"{module} grew: {before} -> {lines} lines")
-        elif before is None and lines > MODULE_CEILING:
-            found.append(f"new module {module} has {lines} lines, over the ceiling of {MODULE_CEILING}")
+        if before is not None and before > MODULE_CEILING:
+            if lines > before:
+                over = f"and is already over the ceiling of {MODULE_CEILING}"
+                found.append(f"{module} grew: {before} -> {lines} lines, {over}")
+        elif lines > MODULE_CEILING:
+            found.append(f"{module} has {lines} lines, over the ceiling of {MODULE_CEILING}")
     return found
 
 

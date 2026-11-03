@@ -62,7 +62,7 @@
     "seconds": 60,
     "tolerance": 0.25
   },
-  "test_seconds": 9.0,
+  "test_seconds": 11.8,
   "tests": 370,
   "type_errors": 0
 }
