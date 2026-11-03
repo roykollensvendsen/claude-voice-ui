@@ -171,5 +171,19 @@
   "timeline.commit": "Commit: {text}",
   "timeline.prOpened": "PR åpnet: {text}",
   "timeline.prMerged": "PR flettet: {text}",
-  "timeline.compact": "Konteksten ble komprimert"
+  "timeline.compact": "Konteksten ble komprimert",
+  "menu.health": "Slik står det til med koden",
+  "health.title": "Slik står det til med koden",
+  "health.loading": "Leser målingene…",
+  "health.coverage": "Testdekning",
+  "health.mutation": "Regler bevist av en test",
+  "health.tests": "Tester",
+  "health.problems": "Lint- og typefeil",
+  "health.cycles": "Importsykluser",
+  "health.complexity": "Mest floket funksjon",
+  "health.testTime": "Tid testene tar",
+  "health.ci": "Sjekker på main",
+  "health.ciPassing": "består",
+  "health.ciFailing": "feiler",
+  "health.ciRunning": "kjører"
 }

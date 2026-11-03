@@ -1108,3 +1108,45 @@ a.open-claude {
 .timeline .kind-error {
   color: var(--red);
 }
+
+/* How both programs' code is doing. */
+.health .metrics {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+.health .metric {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--card);
+  border-left: 4px solid var(--muted);
+}
+.health .status-ok {
+  border-left-color: var(--green);
+}
+.health .status-warn {
+  border-left-color: var(--amber);
+}
+.health .status-bad {
+  border-left-color: var(--red);
+}
+.health .value {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.health .trend {
+  width: 60px;
+  height: 20px;
+}
+.health .trend polyline {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+}

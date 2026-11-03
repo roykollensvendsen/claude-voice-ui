@@ -171,5 +171,19 @@
   "timeline.commit": "Commit: {text}",
   "timeline.prOpened": "Pull request abierto: {text}",
   "timeline.prMerged": "Pull request fusionado: {text}",
-  "timeline.compact": "Contexto compactado"
+  "timeline.compact": "Contexto compactado",
+  "menu.health": "Cómo va el código",
+  "health.title": "Cómo va el código",
+  "health.loading": "Leyendo las medidas…",
+  "health.coverage": "Cobertura de pruebas",
+  "health.mutation": "Reglas probadas por un test",
+  "health.tests": "Pruebas",
+  "health.problems": "Errores de lint y de tipos",
+  "health.cycles": "Ciclos de importación",
+  "health.complexity": "Función más enredada",
+  "health.testTime": "Tiempo de las pruebas",
+  "health.ci": "Comprobaciones en main",
+  "health.ciPassing": "pasan",
+  "health.ciFailing": "fallan",
+  "health.ciRunning": "en curso"
 }

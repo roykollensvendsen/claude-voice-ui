@@ -96,6 +96,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     placed: [],
     prompts: [],
     settings: null,
+    health: null,
     replies: {},
     connection: "connecting",
     problem: null,
@@ -352,6 +353,22 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       draw();
       // The page never makes one by itself: only this tap asks.
       await deps.bridge.summarize(open.id, t("summary.language")).catch(failed);
+    },
+    async openHealth() {
+      home.menuOpen = false;
+      home.health = { data: null };
+      draw();
+      try {
+        const data = await deps.bridge.health();
+        if (home.health) home.health = { data };
+      } catch (error) {
+        failed(error);
+      }
+      draw();
+    },
+    closeHealth() {
+      home.health = null;
+      draw();
     },
     async changeSettings(change) {
       try {

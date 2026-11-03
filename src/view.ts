@@ -3,12 +3,14 @@ import type {
   Active,
   BridgeInfo,
   Doctor,
+  Metric,
   Pending,
   Pr,
   Prompt,
   Reply,
   SessionDetail,
   Settings,
+  SoftwareHealth,
   Turn,
 } from "./bridge";
 import { gitLine } from "./git";
@@ -70,6 +72,8 @@ export interface Home {
   prompts: Prompt[];
   /** How the bridge starts new sessions; null when it has no such settings. */
   settings: Settings | null;
+  /** The page of how both programs' code is doing, when open; `data` is null while it loads. */
+  health: { data: SoftwareHealth | null } | null;
   /** What came of an answer: a refusal by prompt id, or a note by session id once it is gone. */
   replies: Record<string, { error?: string; note?: string }>;
   /** Whether the owner has opened the list of what is missing. */
@@ -108,6 +112,8 @@ export interface Actions {
   reload(): void;
   nextWaiting(): void;
   changeSettings(change: Partial<Settings>): void;
+  openHealth(): void;
+  closeHealth(): void;
   /** Ask for a new summary of the open session. */
   summarize(): void;
   /** `said` is the answer in words, for the note shown once it is sent. */
@@ -445,6 +451,7 @@ function menu(home: Home, act: Actions): HTMLElement[] {
             ),
           ]
         : []),
+      button(t("menu.health"), act.openHealth, "open-health"),
       button(t("menu.signOut"), act.signOut, "signout"),
     ),
   ];
@@ -877,6 +884,81 @@ function detailScreen(home: Home, d: Detail, act: Actions): HTMLElement {
   );
 }
 
+const MEASURES: Record<string, Key> = {
+  coverage: "health.coverage",
+  mutation: "health.mutation",
+  tests: "health.tests",
+  problems: "health.problems",
+  cycles: "health.cycles",
+  complexity: "health.complexity",
+  test_time: "health.testTime",
+  ci: "health.ci",
+};
+/** The checks on main, as GitHub states them. */
+const CHECKS: Record<string, Key> = {
+  success: "health.ciPassing",
+  failure: "health.ciFailing",
+  running: "health.ciRunning",
+};
+const SVG = "http://www.w3.org/2000/svg";
+
+/** A small line of a measure's history, drawn to fit its own range. */
+function trendLine(values: number[]): Element[] {
+  if (values.length < 2) return [];
+  const low = Math.min(...values);
+  const span = Math.max(...values) - low || 1;
+  const points = values
+    .map(
+      (v, i) => `${((i / (values.length - 1)) * 60).toFixed(1)},${(18 - ((v - low) / span) * 16).toFixed(1)}`,
+    )
+    .join(" ");
+  const svg = document.createElementNS(SVG, "svg");
+  svg.setAttribute("class", "trend");
+  svg.setAttribute("viewBox", "0 0 60 20");
+  svg.setAttribute("aria-hidden", "true");
+  const line = document.createElementNS(SVG, "polyline");
+  line.setAttribute("points", points);
+  svg.append(line);
+  return [svg];
+}
+
+function measureRow(m: Metric): HTMLElement {
+  const key = MEASURES[m.id];
+  const said = CHECKS[String(m.value)];
+  const value =
+    typeof m.value === "number" ? [m.value, m.unit].filter(Boolean).join(" ") : said ? t(said) : m.text;
+  const link = el("a", "value", value);
+  link.href = m.url;
+  link.target = "_blank";
+  link.rel = "noopener";
+  return el(
+    "li",
+    `metric status-${m.status}`,
+    el("span", "name", key ? t(key) : m.label),
+    ...trendLine(m.trend),
+    link,
+  );
+}
+
+function healthScreen(data: SoftwareHealth | null, act: Actions): HTMLElement {
+  return el(
+    "section",
+    "health",
+    button(t("detail.back"), act.closeHealth, "back"),
+    el("h2", undefined, t("health.title")),
+    ...(data
+      ? data.repos.map((r) =>
+          el(
+            "section",
+            "repo",
+            el("h3", undefined, r.name),
+            el("ul", "metrics", ...r.metrics.map(measureRow)),
+          ),
+        )
+      : [el("p", "muted", t("health.loading"))]),
+  );
+}
+
 export function homeScreen(home: Home, act: Actions): HTMLElement {
   const menuToggle = button("⋯", act.toggleMenu, "menu-toggle");
   menuToggle.setAttribute("aria-label", t("menu.label"));
@@ -912,6 +994,7 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
   ];
   const problem = home.problem ? [el("p", "notice", home.problem)] : [];
   if (home.open) return el("section", "home", ...top, ...problem, detailScreen(home, home.open, act));
+  if (home.health) return el("section", "home", ...top, ...problem, healthScreen(home.health.data, act));
   return el(
     "section",
     "home",
