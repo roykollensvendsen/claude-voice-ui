@@ -1,6 +1,11 @@
 {
   "complexity": {
     "app.ts": 6,
+    "app/actions.ts": 5,
+    "app/page.ts": 5,
+    "app/preferences.ts": 3,
+    "app/stream.ts": 5,
+    "app/updating.ts": 5,
     "bridge.ts": 5,
     "changes.ts": 4,
     "git.ts": 8,
@@ -11,9 +16,14 @@
     "states.ts": 11,
     "update.ts": 8,
     "usage.ts": 5,
-    "view.ts": 21
+    "view.ts": 8,
+    "view/detail.ts": 15,
+    "view/dom.ts": 3,
+    "view/health.ts": 4,
+    "view/sessions.ts": 13,
+    "view/top.ts": 12
   },
-  "coverage": 94.96,
+  "coverage": 94.93,
   "cycles": 0,
   "duplication": 0.0,
   "layer_violations": 0,
@@ -26,7 +36,7 @@
     "seconds": 60,
     "tolerance": 0.25
   },
-  "test_seconds": 13.9,
+  "test_seconds": 9.8,
   "tests": 368,
   "type_errors": 0
 }

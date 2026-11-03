@@ -147,7 +147,7 @@ def test_a_module_importing_from_a_layer_above_it_breaks_the_layers(tmp_path):
     (tmp_path / "states.ts").write_text('import type { V } from "./view";\nexport type S = V;\n')
     found = ratchet.structure(tmp_path)
     assert found["layer_violations"] == 1
-    assert found["breaches"] == ["i18n.ts (layer 0) imports view.ts (layer 3)"]
+    assert found["breaches"] == ["i18n.ts (layer 0) imports view.ts (layer 5)"]
 
 
 def test_a_module_in_no_layer_counts_as_a_breach_until_it_is_given_one(tmp_path):

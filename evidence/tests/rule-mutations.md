@@ -26,7 +26,7 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | being behind is marked as behind even when also ahead | 3 | `test_being_behind_is_marked_as_behind_even_when_also_ahead` | yes |
 | a reached limit says so | 1 | `test_a_reached_limit_says_so` | yes |
 | usage is asked again every minute | 2 | `test_usage_is_asked_again_every_minute` | yes |
-| the update starts only after the owner confirms | 1 | `test_the_update_starts_only_after_the_owner_confirms` | yes |
+| the update starts only after the owner confirms | 3 | `test_the_update_starts_only_after_the_owner_confirms` | yes |
 | an approval it waits on is shown, to be answered by voice or at the screen | 1 | `test_an_approval_it_waits_on_is_shown_to_be_answered_by_voice_or_at_the_screen` | yes |
 | a new turn announced on the stream is fetched after the last one shown | 2 | `test_a_new_turn_announced_on_the_stream_is_fetched_after_the_last_one_shown` | yes |
 | a hidden session comes back when it starts waiting | 4 | `test_a_hidden_session_comes_back_when_it_starts_waiting` | yes |
