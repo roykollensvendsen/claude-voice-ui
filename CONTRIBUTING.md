@@ -44,6 +44,39 @@ Run them after the last edit, not before it. A file edited after the format
 gate ran will fail in continuous integration, which is the cheapest possible
 way to learn that the gates are not a ritual performed once.
 
+## The quality ratchet
+
+`quality.json` at the root records how the code stands: how much of `src`
+the suite runs (`coverage`), how many guarded rules turn their test red when
+switched off (`mutation`), the passing tests of both suites, lint and type
+errors, import cycles among the modules that load, and the most tangled
+function in each module (`complexity`, McCabe's count). The `quality` job in
+CI measures the pull request and compares it with the base's `quality.json`:
+
+- a measure may stay or get better, never worse; coverage may wobble half a
+  point, and a new module has nothing to compare with;
+- a level that got better is recorded in the same pull request, so it cannot
+  slip back unnoticed;
+- the suites together stay within `test_budget`, a limit changed by hand.
+
+Record the levels after a change, and commit `quality.json` with it:
+
+<!-- not run: it runs the whole suite and the mutation run, a few minutes -->
+```
+uv run python scripts/ratchet.py update
+```
+
+When a change has to make something worse, say so in the pull request, on a
+line of its own, and still record the new level:
+
+<!-- not run: a line in a pull request, not a command -->
+```
+Ratchet-Exception: coverage - the reason
+```
+
+The measures and their rules are the same as in claude-voice, so the bridge's
+health page reads both repositories alike.
+
 ## How a change is made
 
 1. **Decide before you build.** A choice that costs more to reverse than to

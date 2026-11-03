@@ -1,0 +1,30 @@
+{
+  "complexity": {
+    "app.ts": 6,
+    "bridge.ts": 5,
+    "changes.ts": 4,
+    "git.ts": 8,
+    "i18n.ts": 6,
+    "live.ts": 1,
+    "main.ts": 2,
+    "remember.ts": 3,
+    "states.ts": 11,
+    "update.ts": 8,
+    "usage.ts": 5,
+    "view.ts": 21
+  },
+  "coverage": 94.85,
+  "cycles": 0,
+  "lint_errors": 0,
+  "mutation": {
+    "killed": 25,
+    "total": 25
+  },
+  "test_budget": {
+    "seconds": 60,
+    "tolerance": 0.25
+  },
+  "test_seconds": 6.1,
+  "tests": 344,
+  "type_errors": 0
+}
