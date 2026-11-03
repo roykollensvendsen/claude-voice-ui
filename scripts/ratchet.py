@@ -45,7 +45,9 @@ FILE = ROOT / "quality.json"
 SOURCE = ROOT / "src"
 COVERAGE_WOBBLE = 0.5  # percentage points: coverage differs slightly between machines and versions
 HIGHER = ("coverage", "mutation", "tests")
-LOWER = ("lint_errors", "type_errors", "cycles")
+LOWER = ("lint_errors", "type_errors", "cycles", "layer_violations", "duplication")
+CEILING = 15  # the most tangled function a new module may have
+BLOCK = 6  # consecutive lines that, repeated, count as a copy
 EXCEPTION = re.compile(r"^\s*ratchet-exception:\s*([a-z_]+)", re.IGNORECASE | re.MULTILINE)
 
 
@@ -57,11 +59,35 @@ def _run(*command: str) -> subprocess.CompletedProcess[str]:
 
 
 def structure(folder: Path) -> dict[str, Any]:
-    """The most tangled function in each module, and the import cycles, from scripts/structure.ts."""
+    """Complexity, import cycles and the imports that reach up a layer, from scripts/structure.ts."""
     shown = _run("node", str(ROOT / "scripts" / "structure.ts"), str(folder))
     if shown.returncode:
         raise SystemExit("Could not read the source's structure.\n" + shown.stderr[-2000:])
     return json.loads(shown.stdout)
+
+
+def duplication(folder: Path) -> float:
+    """The share of non-blank source lines in blocks of BLOCK or more lines that appear more than once.
+
+    Lines are compared with their whitespace squeezed, so indenting a copy does not hide it.
+    """
+    lines: list[tuple[str, int]] = []  # (normalised text, file number)
+    for number, path in enumerate(sorted(folder.rglob("*.ts"))):
+        for raw in path.read_text(encoding="utf-8").splitlines():
+            text = " ".join(raw.split())
+            if text:
+                lines.append((text, number))
+    seen: dict[tuple[str, ...], list[int]] = {}
+    for start in range(len(lines) - BLOCK + 1):
+        window = lines[start : start + BLOCK]
+        if len({file for _, file in window}) == 1:  # a block never runs across two files
+            seen.setdefault(tuple(text for text, _ in window), []).append(start)
+    copied: set[int] = set()
+    for starts in seen.values():
+        if len(starts) > 1:
+            for start in starts:
+                copied.update(range(start, start + BLOCK))
+    return round(100.0 * len(copied) / len(lines), 2) if lines else 0.0
 
 
 def measure(*, skip_mutation: bool = False, recorded: Levels | None = None) -> Levels:
@@ -99,6 +125,8 @@ def measure(*, skip_mutation: bool = False, recorded: Levels | None = None) -> L
         killed, total = (int(tally[1]), int(tally[2])) if tally else (0, 1)
         mutation = {"killed": killed if mutate.returncode == 0 else min(killed, total - 1), "total": total}
     found = structure(SOURCE)
+    for breach in found["breaches"]:
+        print(f"layers: {breach}", file=sys.stderr)  # noqa: T201
     return {
         "coverage": coverage,
         "mutation": mutation,
@@ -107,6 +135,8 @@ def measure(*, skip_mutation: bool = False, recorded: Levels | None = None) -> L
         + len(json.loads(python_lint.stdout or "[]")),
         "type_errors": len(re.findall(r"error TS\d+", types.stdout)),
         "cycles": found["cycles"],
+        "layer_violations": found["layer_violations"],
+        "duplication": duplication(SOURCE),
         "complexity": found["complexity"],
         "test_seconds": seconds,
         "test_budget": None,
@@ -143,13 +173,18 @@ def compare(base: Levels, now: Levels, committed: Levels, allowed: set[str]) -> 
     found = [
         f"{metric} got worse: {base[metric]} -> {now[metric]}"
         for metric in (*HIGHER, *LOWER)
-        if _worse(metric, base[metric], now[metric]) and metric not in allowed
+        # A measure the base does not record yet has nothing to compare with.
+        if metric in base and _worse(metric, base[metric], now[metric]) and metric not in allowed
     ]
     for module, score in now["complexity"].items():
         before = base["complexity"].get(module)
-        if before is not None and score > before and "complexity" not in allowed:
+        if "complexity" in allowed:
+            continue
+        if before is not None and score > before:
             found.append(f"complexity of {module} got worse: {before} -> {score}")
-    stale = [m for m in (*HIGHER, *LOWER) if _differs(m, committed[m], now[m])]
+        elif before is None and score > CEILING:
+            found.append(f"complexity of new module {module} is {score}, over the ceiling of {CEILING}")
+    stale = [m for m in (*HIGHER, *LOWER) if m not in committed or _differs(m, committed[m], now[m])]
     if committed["complexity"] != now["complexity"]:
         stale.append("complexity")
     if stale:

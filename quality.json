@@ -15,6 +15,8 @@
   },
   "coverage": 94.96,
   "cycles": 0,
+  "duplication": 0.0,
+  "layer_violations": 0,
   "lint_errors": 0,
   "mutation": {
     "killed": 25,
@@ -24,7 +26,7 @@
     "seconds": 60,
     "tolerance": 0.25
   },
-  "test_seconds": 8.1,
-  "tests": 360,
+  "test_seconds": 13.9,
+  "tests": 368,
   "type_errors": 0
 }
