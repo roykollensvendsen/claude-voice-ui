@@ -13,7 +13,7 @@
     "usage.ts": 5,
     "view.ts": 21
   },
-  "coverage": 94.97,
+  "coverage": 94.96,
   "cycles": 0,
   "lint_errors": 0,
   "mutation": {
@@ -24,7 +24,7 @@
     "seconds": 60,
     "tolerance": 0.25
   },
-  "test_seconds": 7.9,
-  "tests": 353,
+  "test_seconds": 8.1,
+  "tests": 360,
   "type_errors": 0
 }

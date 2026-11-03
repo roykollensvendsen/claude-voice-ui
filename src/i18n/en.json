@@ -171,5 +171,19 @@
   "timeline.commit": "Commit: {text}",
   "timeline.prOpened": "Pull request opened: {text}",
   "timeline.prMerged": "Pull request merged: {text}",
-  "timeline.compact": "Context compacted"
+  "timeline.compact": "Context compacted",
+  "menu.health": "How the code is doing",
+  "health.title": "How the code is doing",
+  "health.loading": "Reading the measures…",
+  "health.coverage": "Test coverage",
+  "health.mutation": "Rules proven by a test",
+  "health.tests": "Tests",
+  "health.problems": "Lint and type errors",
+  "health.cycles": "Import cycles",
+  "health.complexity": "Most tangled function",
+  "health.testTime": "Time the tests take",
+  "health.ci": "Checks on main",
+  "health.ciPassing": "passing",
+  "health.ciFailing": "failing",
+  "health.ciRunning": "running"
 }
