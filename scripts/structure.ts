@@ -1,13 +1,34 @@
 // How the source is put together, for the quality ratchet: the most tangled function in each
-// module, and how many groups of modules import each other in a circle when they load.
+// module, how many groups of modules import each other in a circle when they load, and which
+// imports reach up a layer.
 //
-//     node scripts/structure.ts src    # prints {"complexity": {...}, "cycles": n}
+//     node scripts/structure.ts src    # prints {"complexity", "cycles", "layer_violations", "breaches"}
 
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import ts from "typescript";
 
 const folder = resolve(process.argv[2] ?? "src");
+
+/**
+ * Each module's layer. A module may import, when it loads, only from a layer below its own:
+ * words and storage at the bottom, then what the data means and how the bridge is reached,
+ * then drawing, then the app that ties them together, and the start at the top.
+ */
+const LAYERS: Record<string, number> = {
+  "i18n.ts": 0,
+  "remember.ts": 0,
+  "states.ts": 1,
+  "usage.ts": 1,
+  "git.ts": 1,
+  "changes.ts": 1,
+  "update.ts": 1,
+  "bridge.ts": 2,
+  "live.ts": 2,
+  "view.ts": 3,
+  "app.ts": 4,
+  "main.ts": 5,
+};
 
 function modules(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -127,4 +148,19 @@ for (const path of paths) {
   if (scores.length) complexity[name] = Math.max(...scores);
   graph.set(name, loads(file, names));
 }
-console.log(JSON.stringify({ complexity, cycles: cycles(graph) }));
+const breaches: string[] = [];
+for (const [name, imports] of graph) {
+  const own = LAYERS[name];
+  if (own === undefined) {
+    breaches.push(`${name} is in no layer: add it to LAYERS`);
+    continue;
+  }
+  for (const target of imports) {
+    const theirs = LAYERS[target];
+    if (theirs !== undefined && theirs > own)
+      breaches.push(`${name} (layer ${own}) imports ${target} (layer ${theirs})`);
+  }
+}
+console.log(
+  JSON.stringify({ complexity, cycles: cycles(graph), layer_violations: breaches.length, breaches }),
+);

@@ -49,12 +49,19 @@ way to learn that the gates are not a ritual performed once.
 `quality.json` at the root records how the code stands: how much of `src`
 the suite runs (`coverage`), how many guarded rules turn their test red when
 switched off (`mutation`), the passing tests of both suites, lint and type
-errors, import cycles among the modules that load, and the most tangled
-function in each module (`complexity`, McCabe's count). The `quality` job in
+errors, import cycles among the modules that load, the most tangled
+function in each module (`complexity`, McCabe's count), imports that reach up
+a layer (`layer_violations`), and the share of lines in copied blocks of six
+or more (`duplication`). The `quality` job in
 CI measures the pull request and compares it with the base's `quality.json`:
 
 - a measure may stay or get better, never worse; coverage may wobble half a
-  point, and a new module has nothing to compare with;
+  point;
+- a new module may have no function more tangled than 15;
+- a module imports, when it loads, only from layers below its own: words and
+  storage, then what the data means and how the bridge is reached, then
+  drawing, then the app, then the start. The layers are `LAYERS` in
+  `scripts/structure.ts`, and a new module goes into one there;
 - a level that got better is recorded in the same pull request, so it cannot
   slip back unnoticed;
 - the suites together stay within `test_budget`, a limit changed by hand.
