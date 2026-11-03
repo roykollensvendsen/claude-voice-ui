@@ -223,7 +223,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   };
   const page = sessionPage(ctx);
   const update = updating(ctx);
-  const stream = streamHandlers(ctx, page, update, { refresh, readPrompts });
+  const stream = streamHandlers(ctx, page, update, { refresh, readPrompts, readSettings });
 
   applyTheme(home.theme);
   applyLanguage(home.language);

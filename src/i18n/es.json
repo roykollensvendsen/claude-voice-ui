@@ -185,5 +185,6 @@
   "health.ci": "Comprobaciones en main",
   "health.ciPassing": "pasan",
   "health.ciFailing": "fallan",
-  "health.ciRunning": "en curso"
+  "health.ciRunning": "en curso",
+  "connection.lost": "Se perdió el contacto con el puente. Reconectando…"
 }

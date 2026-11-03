@@ -46,6 +46,21 @@ export function signInScreen(error: string | null, onSubmit: (secret: string) =>
   );
 }
 
+/** While the stream is down, what is shown is only the last that was known. */
+function staleWhileLost(home: Home, list: HTMLElement): HTMLElement {
+  if (home.connection !== "reconnecting") return list;
+  list.setAttribute("aria-busy", "true");
+  for (const item of list.querySelectorAll<HTMLElement>("[data-session]")) item.classList.add("stale");
+  return list;
+}
+
+function lostContact(home: Home): HTMLElement[] {
+  if (home.connection !== "reconnecting") return [];
+  const banner = el("p", "lost-contact", t("connection.lost"));
+  banner.setAttribute("role", "status");
+  return [banner];
+}
+
 export function homeScreen(home: Home, act: Actions): HTMLElement {
   const menuToggle = button("⋯", act.toggleMenu, "menu-toggle");
   menuToggle.setAttribute("aria-label", t("menu.label"));
@@ -63,7 +78,7 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
           !s ? [el("div", "tile gap")] : s.id in home.hidden ? [] : [tile(s, home, act)],
         )
       : sessions.map((s) => card(s, home, act));
-  const list = el("div", home.view, ...(sessions.length ? items : [none]));
+  const list = staleWhileLost(home, el("div", home.view, ...(sessions.length ? items : [none])));
   const top = [
     el(
       "header",
@@ -75,6 +90,7 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
       ...usageButton(home, act),
       menuToggle,
     ),
+    ...lostContact(home),
     ...menu(home, act),
     ...usagePanel(home),
     ...newVersion(home, act),

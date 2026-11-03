@@ -185,5 +185,6 @@
   "health.ci": "Sjekker på main",
   "health.ciPassing": "består",
   "health.ciFailing": "feiler",
-  "health.ciRunning": "kjører"
+  "health.ciRunning": "kjører",
+  "connection.lost": "Mistet kontakten med broen. Kobler til igjen…"
 }

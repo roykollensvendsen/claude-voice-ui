@@ -23,7 +23,7 @@
     "view/sessions.ts": 13,
     "view/top.ts": 12
   },
-  "coverage": 94.93,
+  "coverage": 95.03,
   "cycles": 0,
   "duplication": 0.0,
   "layer_violations": 0,
@@ -34,7 +34,7 @@
     "app/context.ts": 29,
     "app/page.ts": 79,
     "app/preferences.ts": 28,
-    "app/stream.ts": 116,
+    "app/stream.ts": 132,
     "app/updating.ts": 85,
     "bridge.ts": 325,
     "changes.ts": 31,
@@ -46,7 +46,7 @@
     "states.ts": 129,
     "update.ts": 51,
     "usage.ts": 110,
-    "view.ts": 97,
+    "view.ts": 113,
     "view/detail.ts": 206,
     "view/dom.ts": 99,
     "view/health.ts": 82,
@@ -62,7 +62,7 @@
     "seconds": 60,
     "tolerance": 0.25
   },
-  "test_seconds": 11.8,
-  "tests": 370,
+  "test_seconds": 19.9,
+  "tests": 376,
   "type_errors": 0
 }

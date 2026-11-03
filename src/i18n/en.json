@@ -185,5 +185,6 @@
   "health.ci": "Checks on main",
   "health.ciPassing": "passing",
   "health.ciFailing": "failing",
-  "health.ciRunning": "running"
+  "health.ciRunning": "running",
+  "connection.lost": "Lost contact with the bridge. Reconnecting…"
 }
