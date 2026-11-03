@@ -115,7 +115,7 @@ describe("the session cards", () => {
     const q = session({
       id: "q",
       status: "waiting",
-      doing: "venter på valg: Which file?",
+      doing: "waiting on a choice: Which file?",
       question: { text: "Which file?", options: [] },
     });
     await open(fakeBridge([{ sessions: [q], active: null }]));
