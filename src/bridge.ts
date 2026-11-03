@@ -109,6 +109,22 @@ export interface Prompt {
   asked_at: string;
 }
 
+/** What a session's own page shows, as GET /api/v1/sessions/{session}/detail gives it. */
+export interface SessionDetail {
+  session: string;
+  number: number | null;
+  name: string;
+  context: { used_percentage: number; as_of: string } | null;
+  tool_calls: { total: number; by_tool: Record<string, number> };
+  subagents: { running: number; total: number };
+  /** At most the 50 newest, newest first. */
+  timeline: { at: string | null; kind: string; text: string; url?: string }[];
+  summary: string | null;
+  summary_state: "none" | "generating" | "ready" | "error";
+  summary_error: string | null;
+  summary_at: string | null;
+}
+
 /** How the bridge starts new sessions, as GET /api/v1/settings gives it. */
 export interface Settings {
   remote_control: boolean;
@@ -158,6 +174,9 @@ export interface Bridge {
   prs(session: string): Promise<Prs>;
   prompts(): Promise<Prompt[]>;
   answer(prompt: string, reply: Reply): Promise<Answered>;
+  detail(session: string): Promise<SessionDetail>;
+  /** Asks for a new summary in `language`; it arrives on the stream. */
+  summarize(session: string, language: string): Promise<void>;
   settings(): Promise<Settings>;
   changeSettings(change: Partial<Settings>): Promise<Settings>;
 }
@@ -229,6 +248,17 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
     },
     async prs(session) {
       return read<Prs>(await fetch(`${one(session)}/prs`, { cache: "no-store" }));
+    },
+    async detail(session) {
+      return read<SessionDetail>(await fetch(`${one(session)}/detail`, { cache: "no-store" }));
+    },
+    async summarize(session, language) {
+      const response = await fetch(`${one(session)}/summary`, {
+        method: "POST",
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ language }),
+      });
+      if (response.status === 401) throw new SignedOut();
     },
     async settings() {
       return read<Settings>(await fetch(`${BASE}/settings`, { cache: "no-store" }));

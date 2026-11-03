@@ -1,5 +1,5 @@
-// The bridge's stream of live events: focus, peek, active, news, status, git, update, output, prompts and settings.
-import type { Active, Prompt, Settings, UpdateStep } from "./bridge";
+// The bridge's stream of live events: focus, peek, active, news, status, git, update, output, prompts, settings and summaries.
+import type { Active, Prompt, SessionDetail, Settings, UpdateStep } from "./bridge";
 import type { Git } from "./git";
 
 /** The part of the browser's EventSource this app uses, so a test can stand in for it. */
@@ -62,6 +62,8 @@ export interface Handlers {
   promptClosed(closed: { id: string; how: string }): void;
   /** How new sessions start changed; the whole object. */
   settings(settings: Settings): void;
+  /** A summary asked for is ready, or failed. */
+  summary(change: Pick<SessionDetail, "summary" | "summary_state"> & { session: string }): void;
   connection(state: "live" | "reconnecting"): void;
 }
 
@@ -84,5 +86,6 @@ export function follow(open: (url: string) => EventSourceLike, on: Handlers): ()
   source.addEventListener("prompt", (e) => on.prompt(parse(e)));
   source.addEventListener("prompt_closed", (e) => on.promptClosed(parse(e)));
   source.addEventListener("settings", (e) => on.settings(parse(e)));
+  source.addEventListener("summary", (e) => on.summary(parse(e)));
   return () => source.close();
 }
