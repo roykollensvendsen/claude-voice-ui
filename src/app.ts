@@ -345,6 +345,14 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       }
       draw();
     },
+    async summarize() {
+      const open = home.open;
+      if (!open?.info) return;
+      open.info.summary_state = "generating";
+      draw();
+      // The page never makes one by itself: only this tap asks.
+      await deps.bridge.summarize(open.id, t("summary.language")).catch(failed);
+    },
     async changeSettings(change) {
       try {
         home.settings = await deps.bridge.changeSettings(change);
@@ -413,8 +421,9 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   }
 
   function openPage(id: string) {
-    home.open = { id, turns: [], lastIndex: undefined, pending: null, prs: [] };
+    home.open = { id, turns: [], lastIndex: undefined, pending: null, prs: [], info: null };
     draw();
+    void readDetail(id);
     void moreOutput(id);
     void readPending(id);
     void load(
@@ -442,6 +451,16 @@ export function start(root: HTMLElement, deps: Deps): () => void {
         more = after !== undefined && out.turns_left > 0 && out.turns.length > 0;
       },
     ).then(() => (more ? moreOutput(id) : undefined));
+  }
+
+  function readDetail(id: string) {
+    return load(
+      id,
+      () => deps.bridge.detail(id),
+      (d) => {
+        if (home.open) home.open.info = d;
+      },
+    );
   }
 
   function readPending(id: string) {
@@ -608,7 +627,9 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       },
       news: () => void refresh(),
       output(t) {
-        if (home.open?.id === t.session) void moreOutput(t.session);
+        if (home.open?.id !== t.session) return;
+        void moreOutput(t.session);
+        void readDetail(t.session);
       },
       status(st) {
         if (home.open?.id === st.session) void readPending(st.session);
@@ -639,6 +660,15 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       update: updateStep,
       prompt(p) {
         home.prompts = [...home.prompts.filter((x) => x.id !== p.id), p];
+        draw();
+      },
+      summary(change) {
+        const info = home.open?.id === change.session ? home.open.info : null;
+        if (!info) return;
+        info.summary_state = change.summary_state;
+        if (change.summary) info.summary = change.summary;
+        // The age shown comes with the next read of the page; until then it is new.
+        if (change.summary_state === "ready") info.summary_at = new Date().toISOString();
         draw();
       },
       settings(settings) {

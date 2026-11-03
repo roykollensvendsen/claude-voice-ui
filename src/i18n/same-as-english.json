@@ -10,7 +10,8 @@
     "usage.tokens",
     "pending.approval",
     "turn.claude",
-    "prompt.send"
+    "prompt.send",
+    "timeline.commit"
   ],
   "es": [
     "app.title",
@@ -23,6 +24,8 @@
     "usage.minutes",
     "usage.tokens",
     "usage.inH",
-    "turn.claude"
+    "turn.claude",
+    "timeline.error",
+    "timeline.commit"
   ]
 }
