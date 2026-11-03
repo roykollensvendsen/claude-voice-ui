@@ -1,32 +1,29 @@
 // The app: signs in, shows the cards, and keeps them current.
-import { type Bridge, SignedOut, type SignIn, type UpdateStep } from "./bridge";
-import { type Change, whatsNew } from "./changes";
-import { type Key, LANGUAGES, type Language, pickLanguage, setLanguage, t } from "./i18n";
-import { type EventSourceLike, follow } from "./live";
-import { browserKeep, type Keep, recall, remember } from "./remember";
-import { byNumber, cardState, type Session, waitsForOwner } from "./states";
-import { IDLE } from "./update";
-import {
-  type Actions,
-  type Home,
-  hasPrompt,
-  homeScreen,
-  signInScreen,
-  type Theme,
-  type UpdateActions,
-  type View,
-} from "./view";
 
-export interface Deps {
-  bridge: Bridge;
-  openEvents: (url: string) => EventSourceLike;
-  /** Where this phone remembers open and hidden cards; the browser's storage when left out. */
-  keep?: Keep;
-  /** The build this page came from, and how to ask which build is deployed now. */
-  version?: { built: string; latest(): Promise<string>; changes?(): Promise<Change[]> };
-  /** Load the page again; the browser's own reload when left out. */
-  reload?: () => void;
-}
+import { tapActions } from "./app/actions";
+import type { Context, Deps } from "./app/context";
+import { sessionPage } from "./app/page";
+import {
+  applyLanguage,
+  applyTheme,
+  BUILD,
+  EXPANDED,
+  HIDDEN,
+  recalledLanguage,
+  THEME,
+  VIEW,
+} from "./app/preferences";
+import { streamHandlers } from "./app/stream";
+import { updating } from "./app/updating";
+import { SignedOut, type SignIn } from "./bridge";
+import { type Key, t } from "./i18n";
+import { follow } from "./live";
+import { browserKeep, recall, remember } from "./remember";
+import { byNumber, cardState, type Session } from "./states";
+import { IDLE } from "./update";
+import { type Home, homeScreen, signInScreen, type View } from "./view";
+
+export type { Deps } from "./app/context";
 
 /** How often the page asks whether a newer build of itself has been deployed. */
 const VERSION_MS = 60_000;
@@ -38,36 +35,9 @@ const AFTER_LIFT_MS = 400;
 /** How long a tapped tile flashes. */
 const PICKED_MS = 700;
 
-const EXPANDED = "cvu.expanded";
-const HIDDEN = "cvu.hidden";
-const VIEW = "cvu.view";
-const THEME = "cvu.theme";
-const LANG = "cvu.lang";
-/** The build this phone last loaded, where What's new starts. */
-const BUILD = "cvu.build";
-
-function recalledLanguage(keep: Keep | undefined): Language | "system" {
-  const saved = recall<string>(keep, LANG, "system");
-  return Object.hasOwn(LANGUAGES, saved) ? (saved as Language) : "system";
-}
-
-/** Show the page in the chosen language, or the first of the phone's that the page has. */
-function applyLanguage(choice: Language | "system") {
-  setLanguage(choice === "system" ? pickLanguage(navigator.languages ?? [navigator.language]) : choice);
-}
-
-/** Mark the page with the chosen theme; without a mark the stylesheet follows the phone. */
-function applyTheme(theme: Theme) {
-  if (theme === "system") delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = theme;
-}
-
 /** Changes of state arrive on the stream; the timer catches what a dropped stream missed. */
 // RULE: the sessions are fetched again every minute
 const POLL_MS = 60_000;
-/** How long the speech bubble stays on the session the voice last reached, once nothing more happens. */
-// RULE: after two quiet minutes the speech bubble goes away
-const FOCUS_MS = 2 * 60_000;
 /** The bridge's dependency check runs other programs and takes seconds, so it is asked seldom. */
 // RULE: the check is asked again every five minutes, not on every refresh
 const DOCTOR_MS = 5 * 60_000;
@@ -126,8 +96,6 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   let watching = false;
   let unfollow: (() => void) | null = null;
   let poll: ReturnType<typeof setInterval> | undefined;
-  let focusTimer: ReturnType<typeof setTimeout> | undefined;
-  const peekTimers = new Map<string, ReturnType<typeof setTimeout>>();
   let doctorTimer: ReturnType<typeof setInterval> | undefined;
   let usageTimer: ReturnType<typeof setInterval> | undefined;
   let versionTimer: ReturnType<typeof setInterval> | undefined;
@@ -245,289 +213,31 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     if (changed) remember(keep, HIDDEN, home.hidden);
   }
 
-  const updating: UpdateActions = {
-    ask() {
-      // RULE: the update starts only after the owner confirms
-      home.update = { ...IDLE, phase: "confirm" };
-      draw();
-    },
-    cancel() {
-      home.update = { ...IDLE };
-      draw();
-    },
-    async confirm() {
-      home.update = { ...IDLE, phase: "running" };
-      draw();
-      try {
-        const started = await deps.bridge.startUpdate();
-        if (started.outcome === "started") home.update.note = started.note;
-        else {
-          home.update.phase = "done";
-          home.update.message =
-            started.outcome === "running" ? t("update.alreadyRunning") : t("update.notAClone");
-        }
-      } catch (error) {
-        home.update = { ...IDLE };
-        failed(error);
-      }
-      draw();
-    },
+  const ctx: Context = {
+    home,
+    deps,
+    keep,
+    draw: () => draw(),
+    failed: (error) => failed(error),
+    watching: () => watching,
   };
+  const page = sessionPage(ctx);
+  const update = updating(ctx);
+  const stream = streamHandlers(ctx, page, update, { refresh, readPrompts });
 
   applyTheme(home.theme);
   applyLanguage(home.language);
 
-  const actions: Actions = {
-    pick: (id) => {
-      if (steadyTap(id)) void pick(id);
-    },
-    openPage: (id) => openPage(id),
-    back() {
-      home.open = null;
-      draw();
-    },
+  const actions = tapActions(ctx, {
+    steadyTap,
+    pick: (id) => void pick(id),
+    openPage: page.open,
     signOut: () => void signOut(),
     toggleDoctor,
-    toggleCard(id) {
-      if (!home.expanded.delete(id)) home.expanded.add(id);
-      remember(keep, EXPANDED, [...home.expanded]);
-      draw();
-    },
-    showMore(id) {
-      home.more.add(id);
-      draw();
-    },
-    hide(id) {
-      const s = home.sessions.find((x) => x.id === id);
-      home.hidden[id] = s ? moment(s) : "";
-      home.expanded.delete(id);
-      remember(keep, HIDDEN, home.hidden);
-      remember(keep, EXPANDED, [...home.expanded]);
-      draw();
-    },
-    unhide(id) {
-      delete home.hidden[id];
-      remember(keep, HIDDEN, home.hidden);
-      draw();
-    },
-    setView(view) {
-      home.view = view;
-      remember(keep, VIEW, view);
-      draw();
-    },
-    toggleMenu() {
-      home.menuOpen = !home.menuOpen;
-      draw();
-    },
-    setLanguage(choice) {
-      home.language = choice;
-      applyLanguage(choice);
-      remember(keep, LANG, choice);
-      draw();
-    },
-    setTheme(theme) {
-      home.theme = theme;
-      applyTheme(theme);
-      remember(keep, THEME, theme);
-      draw();
-    },
-    async toggleWhatsNew() {
-      if (home.whatsNew) {
-        home.whatsNew = null;
-        draw();
-        return;
-      }
-      try {
-        // Asked for only now, on the owner's tap; the page never fetches it by itself.
-        const since = recall(keep, BUILD, deps.version?.built ?? "");
-        home.whatsNew = whatsNew((await deps.version?.changes?.()) ?? [], since);
-      } catch {
-        home.whatsNew = { feat: [], fix: [] };
-      }
-      draw();
-    },
-    async summarize() {
-      const open = home.open;
-      if (!open?.info) return;
-      open.info.summary_state = "generating";
-      draw();
-      // The page never makes one by itself: only this tap asks.
-      await deps.bridge.summarize(open.id, t("summary.language")).catch(failed);
-    },
-    async openHealth() {
-      home.menuOpen = false;
-      home.health = { data: null };
-      draw();
-      try {
-        const data = await deps.bridge.health();
-        if (home.health) home.health = { data };
-      } catch (error) {
-        failed(error);
-      }
-      draw();
-    },
-    closeHealth() {
-      home.health = null;
-      draw();
-    },
-    async changeSettings(change) {
-      try {
-        home.settings = await deps.bridge.changeSettings(change);
-        draw();
-      } catch (error) {
-        failed(error);
-      }
-    },
-    async answer(prompt, reply, said) {
-      const done = await deps.bridge.answer(prompt.id, reply).catch((error) => {
-        failed(error);
-        return null;
-      });
-      if (done === null) return;
-      if (typeof done === "object") {
-        home.replies[prompt.id] = { error: done.refused };
-      } else {
-        home.prompts = home.prompts.filter((x) => x.id !== prompt.id);
-        home.replies[prompt.session] = {
-          note: done === "ok" ? t("prompt.answered", { answer: said }) : t("prompt.gone"),
-        };
-      }
-      draw();
-    },
-    nextWaiting() {
-      // In the order shown, the first waiting session after the one whose page is open, round to the start.
-      const byId = new Map(home.sessions.map((s) => [s.id, s]));
-      const queue = home.placed.filter((id) => {
-        const s = byId.get(id);
-        return s && (waitsForOwner(s) || hasPrompt(home, s)) && !(id in home.hidden);
-      });
-      if (!queue.length) return;
-      const at = home.open ? queue.indexOf(home.open.id) : -1;
-      openPage(queue[(at + 1) % queue.length] as string);
-    },
-    reload() {
-      // The build about to load is the one the next What's new counts from.
-      if (latestBuild) remember(keep, BUILD, latestBuild);
-      (deps.reload ?? (() => location.reload()))();
-    },
-    toggleUsage() {
-      home.usageOpen = !home.usageOpen;
-      draw();
-    },
-    toggleLegend() {
-      home.legendOpen = !home.legendOpen;
-      draw();
-    },
-    toggleHidden() {
-      home.hiddenOpen = !home.hiddenOpen;
-      draw();
-    },
-    update: updating,
-  };
-
-  /** Read one part of the open page, unless the owner has moved on to another. */
-  async function load<T>(id: string, read: () => Promise<T>, put: (value: T) => void) {
-    try {
-      const value = await read();
-      if (home.open?.id !== id) return;
-      put(value);
-      draw();
-    } catch (error) {
-      if (error instanceof SignedOut) failed(error);
-    }
-  }
-
-  function openPage(id: string) {
-    home.open = { id, turns: [], lastIndex: undefined, pending: null, prs: [], info: null };
-    draw();
-    void readDetail(id);
-    void moreOutput(id);
-    void readPending(id);
-    void load(
-      id,
-      () => deps.bridge.prs(id),
-      (r) => {
-        if (home.open) home.open.prs = r.prs;
-      },
-    );
-  }
-
-  function moreOutput(id: string): Promise<void> {
-    const after = home.open?.lastIndex;
-    let more = false;
-    return load(
-      id,
-      // RULE: a new turn announced on the stream is fetched after the last one shown
-      () => deps.bridge.output(id, home.open?.lastIndex),
-      (out) => {
-        if (!home.open) return;
-        home.open.turns.push(...out.turns);
-        home.open.lastIndex = out.next_after || home.open.turns.at(-1)?.index;
-        // The stream names only the last of several new turns, and one read brings at most six.
-        // A first read without `after` is the latest six; what is left then is older, and stays out.
-        more = after !== undefined && out.turns_left > 0 && out.turns.length > 0;
-      },
-    ).then(() => (more ? moreOutput(id) : undefined));
-  }
-
-  function readDetail(id: string) {
-    return load(
-      id,
-      () => deps.bridge.detail(id),
-      (d) => {
-        if (home.open) home.open.info = d;
-      },
-    );
-  }
-
-  function readPending(id: string) {
-    return load(
-      id,
-      () => deps.bridge.pending(id),
-      (p) => {
-        if (home.open) home.open.pending = p;
-      },
-    );
-  }
-
-  function updateStep(step: UpdateStep) {
-    if (home.update.phase !== "running") home.update = { ...IDLE, phase: "running" };
-    home.update.steps.push(step);
-    if (step.step === "done" || step.result) {
-      home.update.phase = "done";
-      home.update.result = step.result ?? null;
-      void readUpdate();
-    }
-    draw();
-  }
-
-  /** After the restart nothing is replayed, so the rest of the run is read in one go. */
-  async function readUpdate() {
-    try {
-      const run = await deps.bridge.lastUpdate();
-      home.update.steps = run.steps;
-      home.update.restarting = false;
-      if (!run.running) {
-        home.update.phase = "done";
-        home.update.result = run.result ?? home.update.result;
-        home.update.detail = run.detail;
-        home.update.to = run.to ?? "";
-        void checkBridge();
-      }
-      draw();
-    } catch {
-      // The bridge may still be starting; the next reconnect asks again.
-    }
-  }
-
-  async function checkBridge() {
-    try {
-      home.bridge = await deps.bridge.bridgeInfo();
-      if (watching) draw();
-    } catch (error) {
-      if (error instanceof SignedOut) failed(error);
-    }
-  }
+    moment,
+    latestBuild: () => latestBuild,
+    update: update.actions,
+  });
 
   function toggleDoctor() {
     home.doctorOpen = !home.doctorOpen;
@@ -550,9 +260,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     unfollow?.();
     unfollow = null;
     clearInterval(poll);
-    clearTimeout(focusTimer);
-    for (const timer of peekTimers.values()) clearTimeout(timer);
-    peekTimers.clear();
+    stream.stop();
     clearInterval(doctorTimer);
     clearInterval(usageTimer);
     clearInterval(versionTimer);
@@ -614,98 +322,16 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   function watch() {
     watching = true;
     home.connection = "connecting";
-    unfollow = follow(deps.openEvents, {
-      focus(f) {
-        home.focus = f.session;
-        clearTimeout(focusTimer);
-        focusTimer = setTimeout(() => {
-          home.focus = null;
-          draw();
-        }, FOCUS_MS);
-        draw();
-      },
-      peek(p) {
-        // Each look keeps its own two minutes; a new look at the same session starts them again.
-        clearTimeout(peekTimers.get(p.session));
-        if (!home.peeks.includes(p.session)) home.peeks = [...home.peeks, p.session];
-        peekTimers.set(
-          p.session,
-          setTimeout(() => {
-            peekTimers.delete(p.session);
-            home.peeks = home.peeks.filter((key) => key !== p.session);
-            draw();
-          }, FOCUS_MS),
-        );
-        draw();
-      },
-      active(a) {
-        home.active = a;
-        draw();
-      },
-      news: () => void refresh(),
-      output(t) {
-        if (home.open?.id !== t.session) return;
-        void moreOutput(t.session);
-        void readDetail(t.session);
-      },
-      status(st) {
-        if (home.open?.id === st.session) void readPending(st.session);
-        const s = home.sessions.find((x) => x.id === st.session);
-        // A session the page has not seen yet comes with the rest of the list.
-        if (!s) return void refresh();
-        s.state = st.state;
-        s.state_since = st.since;
-        s.doing = st.doing;
-        draw();
-      },
-      git(change) {
-        const s = home.sessions.find((x) => x.id === change.session);
-        if (!s) return;
-        s.git = change.git;
-        draw();
-      },
-      connection(state) {
-        home.connection = state;
-        // The stream carries only changes, so what is open is read again on every connect.
-        if (state === "live") void readPrompts();
-        if (home.update.phase === "running") {
-          if (state === "reconnecting") home.update.restarting = true;
-          else void readUpdate();
-        }
-        draw();
-      },
-      update: updateStep,
-      prompt(p) {
-        home.prompts = [...home.prompts.filter((x) => x.id !== p.id), p];
-        draw();
-      },
-      summary(change) {
-        const info = home.open?.id === change.session ? home.open.info : null;
-        if (!info) return;
-        info.summary_state = change.summary_state;
-        if (change.summary) info.summary = change.summary;
-        // The age shown comes with the next read of the page; until then it is new.
-        if (change.summary_state === "ready") info.summary_at = new Date().toISOString();
-        draw();
-      },
-      settings(settings) {
-        home.settings = settings;
-        draw();
-      },
-      promptClosed(closed) {
-        home.prompts = home.prompts.filter((x) => x.id !== closed.id);
-        draw();
-      },
-    });
+    unfollow = follow(deps.openEvents, stream.handlers);
     void readPrompts();
     void readSettings();
     poll = setInterval(() => void refresh(), POLL_MS);
     doctorTimer = setInterval(() => {
       void checkDoctor();
-      void checkBridge();
+      void update.checkBridge();
     }, DOCTOR_MS);
     void checkDoctor();
-    void checkBridge();
+    void update.checkBridge();
     usageTimer = setInterval(() => void checkUsage(), USAGE_MS);
     versionTimer = setInterval(() => void checkVersion(), VERSION_MS);
     void checkUsage();

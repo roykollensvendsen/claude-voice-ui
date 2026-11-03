@@ -13,7 +13,8 @@ const folder = resolve(process.argv[2] ?? "src");
 /**
  * Each module's layer. A module may import, when it loads, only from a layer below its own:
  * words and storage at the bottom, then what the data means and how the bridge is reached,
- * then drawing, then the app that ties them together, and the start at the top.
+ * then drawing (its shared pieces, the parts of the screen, the screens), then the app that ties
+ * them together, and the start at the top.
  */
 const LAYERS: Record<string, number> = {
   "i18n.ts": 0,
@@ -25,9 +26,21 @@ const LAYERS: Record<string, number> = {
   "update.ts": 1,
   "bridge.ts": 2,
   "live.ts": 2,
-  "view.ts": 3,
-  "app.ts": 4,
-  "main.ts": 5,
+  "view/types.ts": 3,
+  "view/dom.ts": 3,
+  "view/sessions.ts": 4,
+  "view/top.ts": 4,
+  "view/detail.ts": 4,
+  "view/health.ts": 4,
+  "view.ts": 5,
+  "app/context.ts": 6,
+  "app/preferences.ts": 6,
+  "app/page.ts": 7,
+  "app/updating.ts": 7,
+  "app/stream.ts": 7,
+  "app/actions.ts": 7,
+  "app.ts": 8,
+  "main.ts": 9,
 };
 
 function modules(dir: string): string[] {

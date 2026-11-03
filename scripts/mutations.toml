@@ -29,7 +29,7 @@ replace = '      0 || a.name.localeCompare(b.name),'
 
 [[rule]]
 name = "a focus event matches a session by id as well as by name"
-file = "src/view.ts"
+file = "src/view/dom.ts"
 find = 'return key != null && \(key === s\.id \|\| key === s\.name\);'
 replace = 'return key != null && key === s.name;'
 
@@ -41,9 +41,9 @@ replace = 'const POLL_MS = 120_000;'
 
 [[rule]]
 name = "after two quiet minutes the speech bubble goes away"
-file = "src/app.ts"
-find = '^const FOCUS_MS = 2 \* 60_000;'
-replace = 'const FOCUS_MS = 20 * 60_000;'
+file = "src/app/stream.ts"
+find = '^export const FOCUS_MS = 2 \* 60_000;'
+replace = 'export const FOCUS_MS = 20 * 60_000;'
 
 [[rule]]
 name = "being signed out while watching returns to the sign-in page"
@@ -53,7 +53,7 @@ replace = 'if (false) showSignIn();'
 
 [[rule]]
 name = "a missing required thing shows a red banner"
-file = "src/view.ts"
+file = "src/view/top.ts"
 find = 'const severity = failing\.some\(\(c\) => c\.required\) \? "required" : "optional";'
 replace = 'const severity = "optional";'
 
@@ -89,19 +89,19 @@ replace = 'const USAGE_MS = 120_000;'
 
 [[rule]]
 name = "the update starts only after the owner confirms"
-file = "src/app.ts"
+file = "src/app/updating.ts"
 find = 'home\.update = \{ \.\.\.IDLE, phase: "confirm" \};'
 replace = 'void updating.confirm();'
 
 [[rule]]
 name = "an approval it waits on is shown, to be answered by voice or at the screen"
-file = "src/view.ts"
+file = "src/view/detail.ts"
 find = 'if \(p\.approvals\.length\) parts\.push\(el\("p", "muted", t\("pending\.answerElsewhere"\)\)\);'
 replace = 'if (false) parts.push(el("p", "muted", ""));'
 
 [[rule]]
 name = "a new turn announced on the stream is fetched after the last one shown"
-file = "src/app.ts"
+file = "src/app/page.ts"
 find = '\(\) => deps\.bridge\.output\(id, home\.open\?\.lastIndex\),'
 replace = '() => deps.bridge.output(id, undefined),'
 
@@ -125,7 +125,7 @@ replace = 'const WAITING_TONE = "gold";'
 
 [[rule]]
 name = "a long press opens the session's page without choosing it"
-file = "src/view.ts"
+file = "src/view/sessions.ts"
 find = '^    if \(held\) \{$'
 replace = '    if (false) {'
 
