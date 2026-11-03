@@ -1,5 +1,16 @@
 // Drawing the screens. Each function builds fresh elements from the state it is given.
-import type { Active, BridgeInfo, Doctor, Pending, Pr, Prompt, Reply, Settings, Turn } from "./bridge";
+import type {
+  Active,
+  BridgeInfo,
+  Doctor,
+  Pending,
+  Pr,
+  Prompt,
+  Reply,
+  SessionDetail,
+  Settings,
+  Turn,
+} from "./bridge";
 import { gitLine } from "./git";
 import { type Key, type Language, NAMES, plural, t } from "./i18n";
 import {
@@ -72,6 +83,8 @@ export interface Detail {
   lastIndex: number | undefined;
   pending: Pending | null;
   prs: Pr[];
+  /** What the bridge reads from the transcript; null until it has come. */
+  info: SessionDetail | null;
 }
 
 export type View = "grid" | "cards";
@@ -95,6 +108,8 @@ export interface Actions {
   reload(): void;
   nextWaiting(): void;
   changeSettings(change: Partial<Settings>): void;
+  /** Ask for a new summary of the open session. */
+  summarize(): void;
   /** `said` is the answer in words, for the note shown once it is sent. */
   answer(prompt: Prompt, reply: Reply, said: string): void;
   toggleWhatsNew(): void;
@@ -710,6 +725,76 @@ function promptBlock(p: Prompt, home: Home, act: Actions): HTMLElement {
   return el("section", "prompt", ...parts, ...(error ? [el("p", "error", error)] : []));
 }
 
+/** "20 min ago", or "just now". */
+function ago(at: string): string {
+  const minutes = Math.max(0, Math.floor((Date.now() - Date.parse(at)) / 60_000));
+  return minutes < 1 ? t("time.justNow") : t("time.ago", { time: timeInState(minutes) });
+}
+
+const MOST_USED = 3;
+const TIMELINE: Record<string, Key> = {
+  prompt: "timeline.prompt",
+  question: "timeline.question",
+  error: "timeline.error",
+  commit: "timeline.commit",
+  pr_opened: "timeline.prOpened",
+  pr_merged: "timeline.prMerged",
+  compact: "timeline.compact",
+};
+
+/** What the transcript tells: context, tools, helpers, the summary, and a timeline. */
+function sessionInfo(info: SessionDetail, act: Actions): HTMLElement[] {
+  const facts = [
+    ...(info.context ? [t("detail.context", { percent: info.context.used_percentage })] : []),
+    plural(info.tool_calls.total, "detail.toolCalls"),
+    ...(info.subagents.total
+      ? [plural(info.subagents.total, "detail.helpers", { running: info.subagents.running })]
+      : []),
+  ];
+  const tools = Object.entries(info.tool_calls.by_tool).sort((a, b) => b[1] - a[1]);
+  const rest = tools.length - MOST_USED;
+  const used = [
+    ...tools.slice(0, MOST_USED).map(([name, n]) => `${name} ${n}`),
+    ...(rest > 0 ? [plural(rest, "detail.otherTools")] : []),
+  ];
+  const generating = info.summary_state === "generating";
+  const refresh = button("↻", act.summarize, "refresh");
+  refresh.disabled = generating;
+  refresh.setAttribute("aria-label", t("summary.refresh"));
+  const summary = el(
+    "section",
+    "summary",
+    el("div", "summary-head", el("h3", undefined, t("summary.title")), refresh),
+    ...(generating ? [el("p", "muted", t("summary.generating"))] : []),
+    ...(info.summary ? [el("p", undefined, info.summary)] : []),
+    ...(info.summary && info.summary_at && !generating
+      ? [el("div", "muted", t("summary.made", { time: ago(info.summary_at) }))]
+      : []),
+    ...(info.summary_state === "error"
+      ? [el("p", "error", t("summary.failed", { why: info.summary_error ?? "" }))]
+      : []),
+    ...(!info.summary && !generating ? [el("p", "muted", t("summary.none"))] : []),
+  );
+  const items = info.timeline.map((item) => {
+    const key = TIMELINE[item.kind];
+    const said = key ? t(key, { text: item.text }) : item.text;
+    const body: HTMLElement | string = item.url
+      ? Object.assign(el("a", undefined, said), {
+          href: item.url,
+          target: "_blank",
+          rel: "noopener",
+        })
+      : said;
+    return el("li", `kind-${item.kind}`, ...(item.at ? [el("span", "when", ago(item.at))] : []), body);
+  });
+  return [
+    el("div", "facts", facts.join(" · ")),
+    ...(used.length ? [el("div", "tools muted", used.join(" · "))] : []),
+    summary,
+    ...(items.length ? [el("h3", undefined, t("timeline.title")), el("ol", "timeline", ...items)] : []),
+  ];
+}
+
 function pendingBlock(p: Pending | null): HTMLElement[] {
   if (!p || (!p.question && !p.approvals.length)) return [];
   const parts: HTMLElement[] = [];
@@ -786,6 +871,7 @@ function detailScreen(home: Home, d: Detail, act: Actions): HTMLElement {
         ]
       : [el("p", "notice", t("detail.gone"))]),
     ...(prompts.length ? [] : pendingBlock(d.pending)),
+    ...(d.info ? sessionInfo(d.info, act) : []),
     el("div", "turns", ...d.turns.map(turn)),
     ...(prs.length ? [el("h3", undefined, t("detail.prs")), el("ul", "prs", ...prs)] : []),
   );

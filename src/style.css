@@ -1052,3 +1052,59 @@ a.open-claude {
 .answered {
   color: var(--muted);
 }
+
+/* What a session's transcript tells, on its own page. */
+.detail .facts {
+  margin: 8px 0 2px;
+}
+.detail .tools {
+  font-size: 0.85rem;
+}
+.summary {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+.summary-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.summary-head h3 {
+  margin: 0;
+}
+.summary .refresh {
+  min-width: 44px;
+  min-height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.summary .refresh:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+.timeline li {
+  display: grid;
+  gap: 1px;
+  overflow-wrap: anywhere;
+}
+.timeline .when {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.timeline .kind-error {
+  color: var(--red);
+}
