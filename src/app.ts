@@ -2,26 +2,17 @@
 
 import { tapActions } from "./app/actions";
 import type { Context, Deps } from "./app/context";
+import { freshHome } from "./app/home";
 import { sessionPage } from "./app/page";
-import {
-  applyLanguage,
-  applyTheme,
-  BUILD,
-  EXPANDED,
-  HIDDEN,
-  recalledLanguage,
-  THEME,
-  VIEW,
-} from "./app/preferences";
+import { applyLanguage, applyTheme, BUILD, HIDDEN } from "./app/preferences";
 import { streamHandlers } from "./app/stream";
 import { updating } from "./app/updating";
 import { SignedOut, type SignIn } from "./bridge";
 import { type Key, t } from "./i18n";
 import { follow } from "./live";
-import { browserKeep, recall, remember } from "./remember";
+import { browserKeep, remember } from "./remember";
 import { byNumber, cardState, type Session } from "./states";
-import { IDLE } from "./update";
-import { type Home, homeScreen, signInScreen, type View } from "./view";
+import { homeScreen, signInScreen } from "./view";
 
 export type { Deps } from "./app/context";
 
@@ -58,41 +49,7 @@ const typing = () =>
 /** Start the app in `root`. The returned function stops it: no more timers, no more stream. */
 export function start(root: HTMLElement, deps: Deps): () => void {
   const keep = "keep" in deps ? deps.keep : browserKeep();
-  const home: Home = {
-    sessions: [],
-    active: null,
-    focus: null,
-    peeks: [],
-    placed: [],
-    prompts: [],
-    settings: null,
-    health: null,
-    replies: {},
-    connection: "connecting",
-    problem: null,
-    doctor: null,
-    usage: null,
-    bridge: null,
-    update: { ...IDLE },
-    open: null,
-    expanded: new Set(recall<string[]>(keep, EXPANDED, [])),
-    hidden: recall<Record<string, string>>(keep, HIDDEN, {}),
-    more: new Set(),
-    hiddenOpen: false,
-    // RULE: the view chosen is remembered
-    view: recall<View>(keep, VIEW, "grid") === "cards" ? "cards" : "grid",
-    legendOpen: false,
-    usageOpen: false,
-    newVersion: false,
-    whatsNew: null,
-    // RULE: the theme chosen is remembered
-    theme: (["light", "dark"] as const).find((t) => t === recall<string>(keep, THEME, "system")) ?? "system",
-    menuOpen: false,
-    // RULE: the language chosen is remembered
-    language: recalledLanguage(keep),
-    picked: null,
-    doctorOpen: false,
-  };
+  const home = freshHome(keep);
   let watching = false;
   let unfollow: (() => void) | null = null;
   let poll: ReturnType<typeof setInterval> | undefined;

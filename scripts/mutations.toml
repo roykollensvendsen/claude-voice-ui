@@ -113,7 +113,7 @@ replace = '      if (false) {'
 
 [[rule]]
 name = "the view chosen is remembered"
-file = "src/app.ts"
+file = "src/app/home.ts"
 find = 'view: recall<View>\(keep, VIEW, "grid"\) === "cards" \? "cards" : "grid",'
 replace = '    view: "grid" as View,'
 
@@ -155,12 +155,12 @@ replace = '      if (latestBuild !== deps.version.built) { (deps.reload ?? (() =
 
 [[rule]]
 name = "the theme chosen is remembered"
-file = "src/app.ts"
+file = "src/app/home.ts"
 find = 'theme: \(\["light", "dark"\] as const\)\.find\(\(t\) => t === recall<string>\(keep, THEME, "system"\)\) \?\? "system",'
 replace = '    theme: "system" as Theme,'
 
 [[rule]]
 name = "the language chosen is remembered"
-file = "src/app.ts"
+file = "src/app/home.ts"
 find = 'language: recalledLanguage\(keep\),'
 replace = '    language: "system" as Language | "system",'

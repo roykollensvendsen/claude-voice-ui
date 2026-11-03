@@ -2,6 +2,7 @@
   "complexity": {
     "app.ts": 6,
     "app/actions.ts": 5,
+    "app/home.ts": 3,
     "app/page.ts": 5,
     "app/preferences.ts": 3,
     "app/stream.ts": 5,
@@ -23,15 +24,16 @@
     "view/sessions.ts": 13,
     "view/top.ts": 12
   },
-  "coverage": 95.03,
+  "coverage": 95.04,
   "cycles": 0,
   "duplication": 0.0,
   "layer_violations": 0,
   "lint_errors": 0,
   "max_module_lines": {
-    "app.ts": 400,
+    "app.ts": 357,
     "app/actions.ts": 174,
     "app/context.ts": 29,
+    "app/home.ts": 43,
     "app/page.ts": 79,
     "app/preferences.ts": 28,
     "app/stream.ts": 132,
@@ -62,7 +64,7 @@
     "seconds": 60,
     "tolerance": 0.25
   },
-  "test_seconds": 19.9,
+  "test_seconds": 20.0,
   "tests": 376,
   "type_errors": 0
 }

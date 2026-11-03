@@ -37,6 +37,7 @@ const LAYERS: Record<string, number> = {
   "view.ts": 5,
   "app/context.ts": 6,
   "app/preferences.ts": 6,
+  "app/home.ts": 7,
   "app/page.ts": 7,
   "app/updating.ts": 7,
   "app/stream.ts": 7,
