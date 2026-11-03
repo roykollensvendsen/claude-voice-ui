@@ -77,6 +77,13 @@ Ratchet-Exception: coverage - the reason
 The measures and their rules are the same as in claude-voice, so the bridge's
 health page reads both repositories alike.
 
+## Dependency updates
+
+Dependabot opens one grouped pull request a month for each ecosystem. One
+that brings only fixes and minor versions merges itself once every check is
+green. One with a major version waits for a person to read what changed,
+because a major version can change behaviour the checks do not see.
+
 ## How a change is made
 
 1. **Decide before you build.** A choice that costs more to reverse than to
