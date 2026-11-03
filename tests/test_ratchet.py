@@ -77,12 +77,15 @@ def test_a_new_module_may_have_no_function_more_tangled_than_fifteen():
     assert problem == "complexity of new module new.ts is 16, over the ceiling of 15"
 
 
-def test_a_module_may_not_grow_and_a_new_module_stays_within_four_hundred_lines():
-    assert _problems(_now(max_module_lines={"app.ts": 390, "view.ts": 100, "new.ts": 400})) == []
-    problems = _problems(_now(max_module_lines={"app.ts": 401, "view.ts": 100, "new.ts": 401}))
+def test_any_module_may_grow_to_four_hundred_lines_but_one_already_over_may_not_grow():
+    level = {**LEVEL, "max_module_lines": {"app.ts": 120, "big.ts": 500}}
+    grown = {"app.ts": 400, "big.ts": 500, "new.ts": 400}
+    assert _problems(_now(max_module_lines=grown), base=level) == []
+    problems = _problems(_now(max_module_lines={"app.ts": 401, "big.ts": 501, "new.ts": 401}), base=level)
     assert problems == [
-        "app.ts grew: 400 -> 401 lines",
-        "new module new.ts has 401 lines, over the ceiling of 400",
+        "app.ts has 401 lines, over the ceiling of 400",
+        "big.ts grew: 500 -> 501 lines, and is already over the ceiling of 400",
+        "new.ts has 401 lines, over the ceiling of 400",
     ]
 
 
