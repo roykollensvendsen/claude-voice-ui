@@ -11,6 +11,7 @@ import {
   type Prompt,
   type Prs,
   type Reply,
+  type SessionDetail,
   type Settings,
   SignedOut,
   type SignIn,
@@ -105,6 +106,21 @@ export function check(over: Partial<Doctor["checks"][number]>): Doctor["checks"]
   };
 }
 
+/** A session's page with nothing on it yet. */
+export const NO_DETAIL: SessionDetail = {
+  session: "",
+  number: null,
+  name: "",
+  context: null,
+  tool_calls: { total: 0, by_tool: {} },
+  subagents: { running: 0, total: 0 },
+  timeline: [],
+  summary: null,
+  summary_state: "none",
+  summary_error: null,
+  summary_at: null,
+};
+
 export function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignIn = "ok") {
   let calls = 0;
   return {
@@ -146,6 +162,8 @@ export function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignI
     prs: vi.fn(async (_id: string): Promise<Prs> => ({ prs: [] })),
     prompts: vi.fn(async (): Promise<Prompt[]> => []),
     answer: vi.fn(async (_id: string, _reply: Reply): Promise<Answered> => "ok"),
+    detail: vi.fn(async (id: string): Promise<SessionDetail> => ({ ...NO_DETAIL, session: id })),
+    summarize: vi.fn(async (_id: string, _language: string): Promise<void> => {}),
     settings: vi.fn(
       async (): Promise<Settings> => ({ remote_control: true, start_in: "terminal", updated_at: null }),
     ),
