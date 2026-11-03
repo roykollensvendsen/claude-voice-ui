@@ -19,6 +19,10 @@ the bridge only through the bridge's event API, specified in claude-voice's
 - **Topic branches.** Once the repository is on GitHub, work happens on a
   branch named for what it does, and lands on `main` through a pull request,
   by rebase.
+- **The quality ratchet.** Nothing in `quality.json` may get worse; run
+  `uv run python scripts/ratchet.py update` and commit the file with the
+  change. A change that must make a measure worse says why in a
+  `Ratchet-Exception:` line in its pull request.
 - **The gates** in CONTRIBUTING pass before every commit. The commit-msg hook
   checks the message locally, and CI checks every commit again.
 

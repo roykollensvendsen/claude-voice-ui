@@ -93,6 +93,32 @@ jobs:
       - name: The build
         run: npm run build
 
+  # The quality ratchet: nothing measured in quality.json may get worse than on the base,
+  # unless the pull request has a Ratchet-Exception line for it.
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20          # the mutation run is the slow part: the suite once per rule
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0         # the ratchet reads the base's quality.json
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"     # runs scripts/structure.ts as it is
+          cache: npm
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          enable-cache: true
+          version: "0.12.13"
+          python-version: "3.12"
+      - run: npm ci
+      - run: uv sync --locked
+      - name: The quality ratchet
+        env:                     # the pull request's text, for its Ratchet-Exception lines; never inline in run
+          RATCHET_EXCEPTIONS: ${{ github.event.pull_request.body }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: uv run python scripts/ratchet.py check --base "$BASE"
+
   # The tooling that guards the rules: commit checks, mutation runner, document tests.
   tooling:
     runs-on: ubuntu-latest
