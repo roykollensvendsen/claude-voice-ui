@@ -48,6 +48,7 @@ HIGHER = ("coverage", "mutation", "tests")
 LOWER = ("lint_errors", "type_errors", "cycles", "layer_violations", "duplication")
 CEILING = 15  # the most tangled function a new module may have
 BLOCK = 6  # consecutive lines that, repeated, count as a copy
+MODULE_CEILING = 400  # the most lines a new module may have
 EXCEPTION = re.compile(r"^\s*ratchet-exception:\s*([a-z_]+)", re.IGNORECASE | re.MULTILINE)
 
 
@@ -64,6 +65,14 @@ def structure(folder: Path) -> dict[str, Any]:
     if shown.returncode:
         raise SystemExit("Could not read the source's structure.\n" + shown.stderr[-2000:])
     return json.loads(shown.stdout)
+
+
+def module_lines(folder: Path) -> dict[str, int]:
+    """How many lines each module has, every line counted."""
+    return {
+        path.relative_to(folder).as_posix(): len(path.read_text(encoding="utf-8").splitlines())
+        for path in sorted(folder.rglob("*.ts"))
+    }
 
 
 def duplication(folder: Path) -> float:
@@ -137,6 +146,7 @@ def measure(*, skip_mutation: bool = False, recorded: Levels | None = None) -> L
         "cycles": found["cycles"],
         "layer_violations": found["layer_violations"],
         "duplication": duplication(SOURCE),
+        "max_module_lines": module_lines(SOURCE),
         "complexity": found["complexity"],
         "test_seconds": seconds,
         "test_budget": None,
@@ -184,9 +194,9 @@ def compare(base: Levels, now: Levels, committed: Levels, allowed: set[str]) -> 
             found.append(f"complexity of {module} got worse: {before} -> {score}")
         elif before is None and score > CEILING:
             found.append(f"complexity of new module {module} is {score}, over the ceiling of {CEILING}")
+    found += _grown(base.get("max_module_lines"), now["max_module_lines"], allowed)
     stale = [m for m in (*HIGHER, *LOWER) if m not in committed or _differs(m, committed[m], now[m])]
-    if committed["complexity"] != now["complexity"]:
-        stale.append("complexity")
+    stale += [m for m in ("complexity", "max_module_lines") if committed.get(m) != now[m]]
     if stale:
         listed = ", ".join(stale)
         found.append(f"quality.json does not record the levels now ({listed}): run scripts/ratchet.py update")
@@ -197,6 +207,20 @@ def compare(base: Levels, now: Levels, committed: Levels, allowed: set[str]) -> 
             f"test_seconds is {now['test_seconds']}, over the budget of {budget['seconds']}"
             f" (+{budget['tolerance']:.0%})"
         )
+    return found
+
+
+def _grown(base: dict[str, int] | None, now: dict[str, int], allowed: set[str]) -> list[str]:
+    """Modules that grew, and new ones over the ceiling; nothing when the base does not count lines yet."""
+    if base is None or "max_module_lines" in allowed:
+        return []
+    found = []
+    for module, lines in now.items():
+        before = base.get(module)
+        if before is not None and lines > before:
+            found.append(f"{module} grew: {before} -> {lines} lines")
+        elif before is None and lines > MODULE_CEILING:
+            found.append(f"new module {module} has {lines} lines, over the ceiling of {MODULE_CEILING}")
     return found
 
 

@@ -57,7 +57,8 @@ CI measures the pull request and compares it with the base's `quality.json`:
 
 - a measure may stay or get better, never worse; coverage may wobble half a
   point;
-- a new module may have no function more tangled than 15;
+- a new module may have no function more tangled than 15, and no more than
+  400 lines; a module that is already there may not grow (`max_module_lines`);
 - a module imports, when it loads, only from layers below its own: words and
   storage, then what the data means and how the bridge is reached, then
   drawing, then the app, then the start. The layers are `LAYERS` in
