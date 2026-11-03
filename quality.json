@@ -28,6 +28,32 @@
   "duplication": 0.0,
   "layer_violations": 0,
   "lint_errors": 0,
+  "max_module_lines": {
+    "app.ts": 400,
+    "app/actions.ts": 174,
+    "app/context.ts": 29,
+    "app/page.ts": 79,
+    "app/preferences.ts": 28,
+    "app/stream.ts": 116,
+    "app/updating.ts": 85,
+    "bridge.ts": 325,
+    "changes.ts": 31,
+    "git.ts": 66,
+    "i18n.ts": 48,
+    "live.ts": 91,
+    "main.ts": 28,
+    "remember.ts": 33,
+    "states.ts": 129,
+    "update.ts": 51,
+    "usage.ts": 110,
+    "view.ts": 97,
+    "view/detail.ts": 206,
+    "view/dom.ts": 99,
+    "view/health.ts": 82,
+    "view/sessions.ts": 234,
+    "view/top.ts": 237,
+    "view/types.ts": 121
+  },
   "mutation": {
     "killed": 25,
     "total": 25
@@ -36,7 +62,7 @@
     "seconds": 60,
     "tolerance": 0.25
   },
-  "test_seconds": 9.8,
-  "tests": 368,
+  "test_seconds": 10.0,
+  "tests": 370,
   "type_errors": 0
 }
