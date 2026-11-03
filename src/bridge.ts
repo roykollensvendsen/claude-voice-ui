@@ -125,6 +125,24 @@ export interface SessionDetail {
   summary_at: string | null;
 }
 
+/** One measure of a repository's code, as GET /api/v1/health/software gives it. */
+export interface Metric {
+  id: string;
+  label: string;
+  value: number | string;
+  unit: string;
+  text: string;
+  status: "ok" | "warn" | "bad" | "unknown";
+  url: string;
+  /** Up to 30 earlier values, oldest first. */
+  trend: number[];
+}
+
+export interface SoftwareHealth {
+  as_of: string;
+  repos: { name: string; url: string; as_of: string; metrics: Metric[] }[];
+}
+
 /** How the bridge starts new sessions, as GET /api/v1/settings gives it. */
 export interface Settings {
   remote_control: boolean;
@@ -177,6 +195,7 @@ export interface Bridge {
   detail(session: string): Promise<SessionDetail>;
   /** Asks for a new summary in `language`; it arrives on the stream. */
   summarize(session: string, language: string): Promise<void>;
+  health(): Promise<SoftwareHealth>;
   settings(): Promise<Settings>;
   changeSettings(change: Partial<Settings>): Promise<Settings>;
 }
@@ -259,6 +278,9 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
         body: JSON.stringify({ language }),
       });
       if (response.status === 401) throw new SignedOut();
+    },
+    async health() {
+      return read<SoftwareHealth>(await fetch(`${BASE}/health/software`, { cache: "no-store" }));
     },
     async settings() {
       return read<Settings>(await fetch(`${BASE}/settings`, { cache: "no-store" }));
