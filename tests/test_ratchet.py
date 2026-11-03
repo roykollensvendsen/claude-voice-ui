@@ -26,6 +26,7 @@ LEVEL = {
     "complexity": {"app.ts": 12, "view.ts": 9},
     "layer_violations": 0,
     "duplication": 1.5,
+    "max_module_lines": {"app.ts": 400, "view.ts": 100},
     "test_seconds": 20.0,
     "test_budget": {"seconds": 60, "tolerance": 0.25},
 }
@@ -74,6 +75,22 @@ def test_a_new_module_may_have_no_function_more_tangled_than_fifteen():
     assert _problems(_now(complexity={"app.ts": 12, "view.ts": 9, "new.ts": 15})) == []
     (problem,) = _problems(_now(complexity={"app.ts": 12, "view.ts": 9, "new.ts": 16}))
     assert problem == "complexity of new module new.ts is 16, over the ceiling of 15"
+
+
+def test_a_module_may_not_grow_and_a_new_module_stays_within_four_hundred_lines():
+    assert _problems(_now(max_module_lines={"app.ts": 390, "view.ts": 100, "new.ts": 400})) == []
+    problems = _problems(_now(max_module_lines={"app.ts": 401, "view.ts": 100, "new.ts": 401}))
+    assert problems == [
+        "app.ts grew: 400 -> 401 lines",
+        "new module new.ts has 401 lines, over the ceiling of 400",
+    ]
+
+
+def test_module_lines_count_every_line_of_each_module(tmp_path):
+    (tmp_path / "a.ts").write_text("export const a = 1;\n\n// a note\nexport const b = 2;\n")
+    (tmp_path / "view").mkdir()
+    (tmp_path / "view" / "b.ts").write_text("export const c = 3;\n")
+    assert ratchet.module_lines(tmp_path) == {"a.ts": 4, "view/b.ts": 1}
 
 
 def test_a_measure_the_base_does_not_record_yet_has_nothing_to_compare_with():
