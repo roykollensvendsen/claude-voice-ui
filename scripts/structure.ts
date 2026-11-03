@@ -6,7 +6,9 @@
 
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
-import ts from "typescript";
+// TypeScript 7 builds the page but has no stable compiler interface yet, so the source is read with
+// TypeScript 5's, installed under its own name.
+import ts from "typescript5";
 
 const folder = resolve(process.argv[2] ?? "src");
 
