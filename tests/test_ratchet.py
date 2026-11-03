@@ -24,6 +24,8 @@ LEVEL = {
     "type_errors": 0,
     "cycles": 0,
     "complexity": {"app.ts": 12, "view.ts": 9},
+    "layer_violations": 0,
+    "duplication": 1.5,
     "test_seconds": 20.0,
     "test_budget": {"seconds": 60, "tolerance": 0.25},
 }
@@ -50,6 +52,8 @@ def test_nothing_worse_and_everything_recorded_passes():
         {"lint_errors": 1},
         {"type_errors": 2},
         {"cycles": 1},
+        {"layer_violations": 1},
+        {"duplication": 2.0},
     ],
 )
 def test_a_measure_that_gets_worse_fails_the_check(change):
@@ -61,9 +65,20 @@ def test_coverage_may_wobble_half_a_point():
     assert _problems(_now(coverage=89.6)) == []
 
 
-def test_a_module_more_tangled_than_before_fails_but_a_new_module_has_no_baseline():
-    (problem,) = _problems(_now(complexity={"app.ts": 13, "view.ts": 9, "new.ts": 40}))
+def test_a_module_more_tangled_than_before_fails():
+    (problem,) = _problems(_now(complexity={"app.ts": 13, "view.ts": 9}))
     assert problem == "complexity of app.ts got worse: 12 -> 13"
+
+
+def test_a_new_module_may_have_no_function_more_tangled_than_fifteen():
+    assert _problems(_now(complexity={"app.ts": 12, "view.ts": 9, "new.ts": 15})) == []
+    (problem,) = _problems(_now(complexity={"app.ts": 12, "view.ts": 9, "new.ts": 16}))
+    assert problem == "complexity of new module new.ts is 16, over the ceiling of 15"
+
+
+def test_a_measure_the_base_does_not_record_yet_has_nothing_to_compare_with():
+    old = {k: v for k, v in LEVEL.items() if k not in ("layer_violations", "duplication")}
+    assert _problems(_now(duplication=9.0), base=old) == []
 
 
 def test_an_exception_in_the_pull_request_lets_that_measure_slip():
@@ -124,3 +139,34 @@ def test_complexity_counts_each_branch_of_a_function_but_not_the_functions_insid
     )
     # f: 1 + if + && + for + if + ?? = 6; the arrow inside it counts on its own (2); g: 1 + two cases = 3.
     assert ratchet.structure(tmp_path)["complexity"] == {"m.ts": 6}
+
+
+def test_a_module_importing_from_a_layer_above_it_breaks_the_layers(tmp_path):
+    (tmp_path / "i18n.ts").write_text('import { draw } from "./view";\nexport const t = () => draw;\n')
+    (tmp_path / "view.ts").write_text('import { t } from "./i18n";\nexport const draw = () => t;\n')
+    (tmp_path / "states.ts").write_text('import type { V } from "./view";\nexport type S = V;\n')
+    found = ratchet.structure(tmp_path)
+    assert found["layer_violations"] == 1
+    assert found["breaches"] == ["i18n.ts (layer 0) imports view.ts (layer 3)"]
+
+
+def test_a_module_in_no_layer_counts_as_a_breach_until_it_is_given_one(tmp_path):
+    (tmp_path / "stray.ts").write_text("export const x = 1;\n")
+    assert ratchet.structure(tmp_path)["breaches"] == ["stray.ts is in no layer: add it to LAYERS"]
+
+
+def test_duplication_is_the_share_of_lines_in_blocks_of_six_or_more_that_repeat(tmp_path):
+    block = "\n".join(f"  const v{i} = {i};" for i in range(6))
+    (tmp_path / "a.ts").write_text(f"{block}\nexport const a = 1;\n\n")
+    wider = block.replace("  ", "    ")
+    (tmp_path / "b.ts").write_text(f"{wider}\nexport const b = 2;\nexport const c = 3;\n")
+    (tmp_path / "c.ts").write_text("\n".join(f"const w{i} = {i};" for i in range(5)) + "\n")
+    # 12 of the 20 non-blank lines sit in the repeated block; whitespace does not hide a copy.
+    assert ratchet.duplication(tmp_path) == 60.0
+
+
+def test_five_repeated_lines_are_not_yet_a_copy(tmp_path):
+    block = "\n".join(f"const v{i} = {i};" for i in range(5))
+    (tmp_path / "a.ts").write_text(block + "\n")
+    (tmp_path / "b.ts").write_text(block + "\n")
+    assert ratchet.duplication(tmp_path) == 0.0
