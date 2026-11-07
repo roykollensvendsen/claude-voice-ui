@@ -190,5 +190,20 @@
   "session.sending.one": "{count} mensaje en camino",
   "session.sending.other": "{count} mensajes en camino",
   "session.undelivered": "No entregado: {detail}",
-  "bridge.restarted": "El puente se reinició {time}"
+  "bridge.restarted": "El puente se reinició {time}",
+  "machine.none": "No hay sesiones en esta máquina.",
+  "machine.lastSeen": "vista por última vez {when}",
+  "machine.error.noAnswer": "no respondió",
+  "machine.error.notApproved": "no aprobada",
+  "machine.error.otherMachine": "otra máquina está en su dirección",
+  "machine.error.otherTools": "ofrece otras herramientas que las aprobadas",
+  "session.answerInApp": "Esta sesión solo se puede responder en la app de Claude.",
+  "machine.hub": "Hub",
+  "machine.count.one": "{count} sesión",
+  "machine.count.other": "{count} sesiones",
+  "machine.state.online": "En línea",
+  "machine.state.slow": "Lenta",
+  "machine.state.offline": "Desconectada",
+  "machine.state.agentDown": "El agente no está en marcha",
+  "machine.state.notApproved": "No aprobada"
 }

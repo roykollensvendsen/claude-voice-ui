@@ -179,12 +179,13 @@ export function detailScreen(home: Home, d: Detail, act: Actions): HTMLElement {
     "detail",
     back,
     el("h2", undefined, s?.name ?? d.id),
+    ...(s?.answer_in === "claude_app" ? [el("p", "answer-in-app notice", t("session.answerInApp"))] : []),
     // What waits for an answer comes first, so the count at the top lands right on it.
     ...prompts.map((p) => promptBlock(p, home, act)),
     ...(note ? [el("p", "answered", note)] : []),
     ...(s
       ? [
-          el("div", "meta", [s.project, s.kind].filter(Boolean).join(" · ")),
+          el("div", "meta", [s.machine, s.project, s.kind].filter(Boolean).join(" · ")),
           el(
             "p",
             "words",

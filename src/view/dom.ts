@@ -1,7 +1,7 @@
 // Building elements, and the small marks every screen shares.
 import { gitLine } from "../git";
 import { t } from "../i18n";
-import { cardState, LOOK, minutesInState, type Session, timeInState } from "../states";
+import { cardState, LOOK, label, minutesInState, type Session, timeInState } from "../states";
 import { contextTone } from "../usage";
 import { type Home } from "../view/types";
 
@@ -17,8 +17,10 @@ export function el<K extends keyof HTMLElementTagNameMap>(
 }
 
 export function matches(s: Session, key: string | null | undefined): boolean {
+  // RULE: a name the voice used matches the session on this computer, not one of that name on another machine
+  const name = s.machine ? label(s) : s.name;
   // RULE: a focus event matches a session by id as well as by name
-  return key != null && (key === s.id || key === s.name);
+  return key != null && (key === s.id || key === name);
 }
 
 /** A speech bubble, marking the session the voice has just written to. */
@@ -30,7 +32,7 @@ export const kindMark = (s: Session) => (s.kind === "terminal" ? [el("span", "ki
 /** The session's short number, when the bridge gives one. */
 export const number = (s: Session) => (s.number ? [el("span", "number", String(s.number))] : []);
 
-export const numbered = (s: Session) => `${s.number ? `${s.number} ` : ""}${s.name || s.id}`;
+export const numbered = (s: Session) => `${s.number ? `${s.number} ` : ""}${label(s)}`;
 
 /** A fainter mark for a session the voice only looked at, without writing to it. */
 export const peekMark = (s: Session, home: Home) =>

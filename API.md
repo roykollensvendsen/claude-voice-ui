@@ -10,4 +10,8 @@ In short:
 - sign in with the bridge's login secret;
 - read the sessions and the one the owner talks to, and change it;
 - read one session's output, what it waits for, and its pull requests;
-- follow `/api/v1/events` for live `focus`, `active` and `news` events.
+- follow `/api/v1/events` for live `focus`, `active` and `news` events;
+- show sessions on the owner's other computers: each session's `machine`
+  (null for the bridge's own), the `machines` beside the sessions with
+  whether each one answers, and the `machine` event when that changes. Their
+  ids carry the machine's name in front and are used as they are.

@@ -5,7 +5,7 @@ import { recall, remember } from "../remember";
 import { type Session, waitsForOwner } from "../states";
 import { type Actions, hasPrompt, type UpdateActions } from "../view";
 import type { Context } from "./context";
-import { applyLanguage, applyTheme, BUILD, EXPANDED, HIDDEN, LANG, THEME, VIEW } from "./preferences";
+import { applyLanguage, applyTheme, BUILD, EXPANDED, FOLDED, HIDDEN, LANG, THEME, VIEW } from "./preferences";
 
 /** What the actions need from the rest of the app. */
 export interface Means {
@@ -37,6 +37,11 @@ export function tapActions({ home, deps, keep, draw, failed }: Context, means: M
     toggleCard(id) {
       if (!home.expanded.delete(id)) home.expanded.add(id);
       remember(keep, EXPANDED, [...home.expanded]);
+      draw();
+    },
+    toggleGroup(key) {
+      if (!home.folded.delete(key)) home.folded.add(key);
+      remember(keep, FOLDED, [...home.folded]);
       draw();
     },
     showMore(id) {

@@ -30,8 +30,8 @@ replace = '      0 || a.name.localeCompare(b.name),'
 [[rule]]
 name = "a focus event matches a session by id as well as by name"
 file = "src/view/dom.ts"
-find = 'return key != null && \(key === s\.id \|\| key === s\.name\);'
-replace = 'return key != null && key === s.name;'
+find = 'return key != null && \(key === s\.id \|\| key === name\);'
+replace = 'return key != null && key === name;'
 
 [[rule]]
 name = "the sessions are fetched again every minute"
@@ -164,3 +164,15 @@ name = "the language chosen is remembered"
 file = "src/app/home.ts"
 find = 'language: recalledLanguage\(keep\),'
 replace = '    language: "system" as Language | "system",'
+
+[[rule]]
+name = "a name the voice used matches the session on this computer, not one of that name on another machine"
+file = "src/view/dom.ts"
+find = 'const name = s\.machine \? label\(s\) : s\.name;'
+replace = 'const name = s.name;'
+
+[[rule]]
+name = "a machine's folded group stays folded when the page opens again"
+file = "src/app/home.ts"
+find = 'folded: new Set\(recall<string\[\]>\(keep, FOLDED, \[\]\)\),'
+replace = 'folded: new Set<string>(),'

@@ -1188,3 +1188,51 @@ a.open-claude {
   background: transparent;
   color: var(--amber);
 }
+
+/* A group of sessions: the hub's own, or another computer's, under a heading that folds it away. */
+.machine {
+  margin: 16px 0 0;
+}
+
+.machine-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.machine-name {
+  font-weight: 600;
+}
+
+.machine-state.online {
+  color: var(--green);
+}
+
+.machine-state.slow {
+  color: var(--amber);
+}
+
+.machine-state.offline,
+.machine-state.agent_down,
+.machine-state.not_approved {
+  color: var(--red);
+}
+
+.machine.unreachable .machine-name {
+  color: var(--muted);
+}
+
+.machine-empty {
+  margin: 0;
+}

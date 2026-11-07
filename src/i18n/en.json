@@ -190,5 +190,20 @@
   "session.sending.one": "{count} message on the way",
   "session.sending.other": "{count} messages on the way",
   "session.undelivered": "Not delivered: {detail}",
-  "bridge.restarted": "Bridge restarted {time}"
+  "bridge.restarted": "Bridge restarted {time}",
+  "machine.none": "No sessions on this machine.",
+  "machine.lastSeen": "last seen {when}",
+  "machine.error.noAnswer": "did not answer",
+  "machine.error.notApproved": "not approved",
+  "machine.error.otherMachine": "another machine is at its address",
+  "machine.error.otherTools": "offers other tools than approved",
+  "session.answerInApp": "This session can only be answered in the Claude app.",
+  "machine.hub": "Hub",
+  "machine.count.one": "{count} session",
+  "machine.count.other": "{count} sessions",
+  "machine.state.online": "Online",
+  "machine.state.slow": "Slow",
+  "machine.state.offline": "Offline",
+  "machine.state.agentDown": "Agent not running",
+  "machine.state.notApproved": "Not approved"
 }

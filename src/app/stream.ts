@@ -132,6 +132,12 @@ export function streamHandlers(
       home.settings = settings;
       draw();
     },
+    machine(machine) {
+      home.machines = [...home.machines.filter((m) => m.name !== machine.name), machine];
+      draw();
+      // Its sessions come or go with the list, which the bridge has already changed.
+      void reads.refresh();
+    },
     promptClosed(closed) {
       home.prompts = home.prompts.filter((x) => x.id !== closed.id);
       draw();
