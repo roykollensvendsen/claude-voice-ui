@@ -1,7 +1,7 @@
 // Building elements, and the small marks every screen shares.
 import { gitLine } from "../git";
 import { t } from "../i18n";
-import { cardState, LOOK, label, minutesInState, type Session, timeInState } from "../states";
+import { cardState, LOOK, label, minutesInState, type Session, spokenName, timeInState } from "../states";
 import { contextTone } from "../usage";
 import { type Home } from "../view/types";
 
@@ -17,8 +17,7 @@ export function el<K extends keyof HTMLElementTagNameMap>(
 }
 
 export function matches(s: Session, key: string | null | undefined): boolean {
-  // RULE: a name the voice used matches the session on this computer, not one of that name on another machine
-  const name = s.machine ? label(s) : s.name;
+  const name = spokenName(s);
   // RULE: a focus event matches a session by id as well as by name
   return key != null && (key === s.id || key === name);
 }

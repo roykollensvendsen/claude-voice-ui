@@ -35,6 +35,11 @@ export interface Session {
   answer_in?: "claude_app" | null; // not shown
 }
 
+/** The name the voice calls it by: its own name here, with its machine in front elsewhere. */
+export const spokenName = (s: Session) =>
+  // RULE: a name the voice used matches the session on this computer, not one of that name on another machine
+  s.machine ? label(s) : s.name;
+
 /** How the session is called on the page: with its machine in front when it runs on another computer. */
 export const label = (s: Session) => {
   const name = s.name || s.id;
