@@ -29,7 +29,17 @@ export interface Session {
   context?: { used_percentage: number; as_of: string } | null;
   /** Messages the bridge is still handing over to the session, oldest first. */
   sending?: { id: string; text: string; at: string }[];
+  /** The other computer it runs on, by the name the bridge knows it by; null or absent for the bridge's own. */
+  machine?: string | null;
+  /** Set when its questions can be answered only in the Claude app, not from this page. */
+  answer_in?: "claude_app" | null; // not shown
 }
+
+/** How the session is called on the page: with its machine in front when it runs on another computer. */
+export const label = (s: Session) => {
+  const name = s.name || s.id;
+  return s.machine ? `${s.machine}/${name}` : name;
+};
 
 export type CardState = "working" | "idle" | "answer" | "approval" | "input" | "moved" | "stopped";
 

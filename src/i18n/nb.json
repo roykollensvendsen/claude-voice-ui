@@ -190,5 +190,20 @@
   "session.sending.one": "{count} melding på vei",
   "session.sending.other": "{count} meldinger på vei",
   "session.undelivered": "Ikke levert: {detail}",
-  "bridge.restarted": "Broen startet på nytt {time}"
+  "bridge.restarted": "Broen startet på nytt {time}",
+  "machine.none": "Ingen økter på denne maskinen.",
+  "machine.lastSeen": "sist sett {when}",
+  "machine.error.noAnswer": "svarte ikke",
+  "machine.error.notApproved": "ikke godkjent",
+  "machine.error.otherMachine": "en annen maskin er på adressen",
+  "machine.error.otherTools": "tilbyr andre verktøy enn godkjent",
+  "session.answerInApp": "Denne økten kan bare besvares i Claude-appen.",
+  "machine.hub": "Hub",
+  "machine.count.one": "{count} økt",
+  "machine.count.other": "{count} økter",
+  "machine.state.online": "Tilkoblet",
+  "machine.state.slow": "Treg",
+  "machine.state.offline": "Frakoblet",
+  "machine.state.agentDown": "Agenten kjører ikke",
+  "machine.state.notApproved": "Ikke godkjent"
 }

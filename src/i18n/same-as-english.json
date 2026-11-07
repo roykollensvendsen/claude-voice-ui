@@ -11,7 +11,8 @@
     "pending.approval",
     "turn.claude",
     "prompt.send",
-    "timeline.commit"
+    "timeline.commit",
+    "machine.hub"
   ],
   "es": [
     "app.title",
@@ -26,6 +27,7 @@
     "usage.inH",
     "turn.claude",
     "timeline.error",
-    "timeline.commit"
+    "timeline.commit",
+    "machine.hub"
   ]
 }

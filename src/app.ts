@@ -267,6 +267,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
       const snapshot = await deps.bridge.snapshot();
       home.sessions = snapshot.sessions;
       home.active = snapshot.active;
+      home.machines = snapshot.machines ?? [];
       home.problem = null;
       if (!watching) watch();
       draw();

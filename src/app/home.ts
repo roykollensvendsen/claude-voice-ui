@@ -2,12 +2,13 @@
 import { type Keep, recall } from "../remember";
 import { IDLE } from "../update";
 import type { Home, View } from "../view";
-import { EXPANDED, HIDDEN, recalledLanguage, THEME, VIEW } from "./preferences";
+import { EXPANDED, FOLDED, HIDDEN, recalledLanguage, THEME, VIEW } from "./preferences";
 
 export function freshHome(keep: Keep | undefined): Home {
   return {
     sessions: [],
     active: null,
+    machines: [],
     focus: null,
     peeks: [],
     placed: [],
@@ -23,6 +24,8 @@ export function freshHome(keep: Keep | undefined): Home {
     update: { ...IDLE },
     open: null,
     expanded: new Set(recall<string[]>(keep, EXPANDED, [])),
+    // RULE: a machine's folded group stays folded when the page opens again
+    folded: new Set(recall<string[]>(keep, FOLDED, [])),
     hidden: recall<Record<string, string>>(keep, HIDDEN, {}),
     more: new Set(),
     hiddenOpen: false,

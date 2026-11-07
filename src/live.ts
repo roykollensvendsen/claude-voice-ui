@@ -1,5 +1,5 @@
-// The bridge's stream of live events: focus, peek, active, news, status, git, update, output, prompts, settings and summaries.
-import type { Active, Prompt, SessionDetail, Settings, UpdateStep } from "./bridge";
+// The bridge's stream of live events: focus, peek, active, news, status, git, update, output, prompts, settings, summaries and machines.
+import type { Active, Machine, Prompt, SessionDetail, Settings, UpdateStep } from "./bridge";
 import type { Git } from "./git";
 
 /** The part of the browser's EventSource this app uses, so a test can stand in for it. */
@@ -69,6 +69,8 @@ export interface Handlers {
   hello(hello: { started_at: string }): void;
   /** A message on its way was handed over to the session's inbox, or could not be. */
   messageSent(sent: { session: string; id: string; delivered: boolean; detail: string }): void;
+  /** Another computer started or stopped answering; the whole machine. */
+  machine(machine: Machine): void;
 }
 
 export const EVENTS_URL = "/api/v1/events";
@@ -93,5 +95,6 @@ export function follow(open: (url: string) => EventSourceLike, on: Handlers): ()
   source.addEventListener("summary", (e) => on.summary(parse(e)));
   source.addEventListener("hello", (e) => on.hello(parse(e)));
   source.addEventListener("message_sent", (e) => on.messageSent(parse(e)));
+  source.addEventListener("machine", (e) => on.machine(parse(e)));
   return () => source.close();
 }

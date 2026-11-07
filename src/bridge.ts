@@ -12,9 +12,25 @@ export interface Active {
   set_at: string;
 }
 
+/** Another computer the bridge reaches, as GET /api/v1/sessions lists it. The bridge's own is not listed. */
+export interface Machine {
+  name: string;
+  /** Absent from a bridge that gives only `reachable`. */
+  state?: "online" | "slow" | "offline" | "agent_down" | "not_approved"; // not shown
+  reachable: boolean;
+  /** Why it is not reachable, in the bridge's words; null while it is. */
+  error: string | null;
+  checked_at: string | null;
+  last_seen: string | null;
+  /** Whether it offers its Claude Code sessions at all. */
+  sessions: boolean;
+}
+
 export interface Snapshot {
   sessions: Session[];
   active: Active | null;
+  /** Absent from a bridge that reaches no other computer. */
+  machines?: Machine[];
 }
 
 /** One dependency the bridge checks, as GET /api/v1/doctor gives it. */
@@ -305,7 +321,8 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
         body: JSON.stringify(reply),
       });
       if (response.status === 404) return "gone";
-      if (response.status === 409) {
+      // 502: the other computer the prompt belongs to did not take the answer.
+      if (response.status === 409 || response.status === 502) {
         const body = (await response.json().catch(() => ({}))) as { error?: string };
         return { refused: body.error ?? "" };
       }

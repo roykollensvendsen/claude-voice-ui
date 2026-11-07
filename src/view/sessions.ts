@@ -1,6 +1,6 @@
 // The sessions themselves: a tile in the grid, a card in the list, and a long press on either.
 import { plural, t } from "../i18n";
-import { cardState, LOOK, type Look, type Session } from "../states";
+import { cardState, LOOK, type Look, label, type Session } from "../states";
 import {
   button,
   claudeLink,
@@ -181,7 +181,7 @@ export function tile(s: Session, home: Home, act: Actions): HTMLElement {
     ...number(s),
     ...(home.active?.id === s.id ? [el("span", "pin")] : []),
     ...claudeLink(s, "↗").map((a) => {
-      a.setAttribute("aria-label", t("session.openNamedInClaude", { name: s.name || s.id }));
+      a.setAttribute("aria-label", t("session.openNamedInClaude", { name: label(s) }));
       return a;
     }),
     ...kindMark(s),
@@ -238,7 +238,7 @@ export function hiddenBlock(hidden: Session[], home: Home, act: Actions): HTMLEl
             el(
               "li",
               undefined,
-              el("span", undefined, s.name || s.id),
+              el("span", undefined, label(s)),
               button(t("hidden.showAgain"), () => act.unhide(s.id)),
             ),
           ),

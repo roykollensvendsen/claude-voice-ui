@@ -4,6 +4,7 @@ import { type Keep, recall } from "../remember";
 import type { Theme } from "../view";
 
 export const EXPANDED = "cvu.expanded";
+export const FOLDED = "cvu.folded";
 export const HIDDEN = "cvu.hidden";
 export const VIEW = "cvu.view";
 export const THEME = "cvu.theme";

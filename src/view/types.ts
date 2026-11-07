@@ -3,6 +3,7 @@ import {
   type Active,
   type BridgeInfo,
   type Doctor,
+  type Machine,
   type Pending,
   type Pr,
   type Prompt,
@@ -22,6 +23,8 @@ export type Connection = "connecting" | "live" | "reconnecting";
 export interface Home {
   sessions: Session[];
   active: Active | null;
+  /** The other computers the bridge reaches, each with whether it answers. */
+  machines: Machine[];
   /** The session the voice is talking to right now, by name or id, while that is recent. */
   focus: string | null;
   /** Sessions the voice only looked at lately, by id or name as the bridge gave them. */
@@ -32,6 +35,8 @@ export interface Home {
   usage: Usage | null;
   bridge: BridgeInfo | null;
   update: UpdateState;
+  /** Groups of sessions folded away by their heading: a machine's name, or the hub's own. */
+  folded: Set<string>;
   /** Cards opened with their arrow. */
   expanded: Set<string>;
   /** Hidden sessions, each with its state when it was hidden, so a new wait brings it back. */
@@ -99,6 +104,8 @@ export interface Actions {
   hide(id: string): void;
   unhide(id: string): void;
   toggleHidden(): void;
+  /** Fold a machine's group away, or open it again. */
+  toggleGroup(key: string): void;
   setView(view: View): void;
   toggleLegend(): void;
   toggleUsage(): void;
