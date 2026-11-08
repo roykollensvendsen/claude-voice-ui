@@ -71,7 +71,31 @@ export const TIMELINE: Record<string, Key> = {
 };
 
 /** What the transcript tells: context, tools, helpers, the summary, and a timeline. */
-export function sessionInfo(info: SessionDetail, act: Actions): HTMLElement[] {
+/** The summary, with the button that asks for a new one; greyed out on another machine. */
+function summaryBlock(info: SessionDetail, act: Actions, elsewhere: boolean): HTMLElement {
+  const generating = info.summary_state === "generating";
+  const refresh = button("↻", act.summarize, "refresh");
+  refresh.disabled = generating || elsewhere;
+  refresh.setAttribute("aria-label", t("summary.refresh"));
+  return el(
+    "section",
+    "summary",
+    el("div", "summary-head", el("h3", undefined, t("summary.title")), refresh),
+    ...(generating ? [el("p", "muted", t("summary.generating"))] : []),
+    ...(info.summary ? [el("p", undefined, info.summary)] : []),
+    ...(info.summary && info.summary_at && !generating
+      ? [el("div", "muted", t("summary.made", { time: ago(info.summary_at) }))]
+      : []),
+    ...(info.summary_state === "error"
+      ? [el("p", "error", t("summary.failed", { why: info.summary_error ?? "" }))]
+      : []),
+    ...(elsewhere ? [el("p", "muted", t("summary.onlyHub"))] : []),
+    ...(!info.summary && !generating && !elsewhere ? [el("p", "muted", t("summary.none"))] : []),
+  );
+}
+
+/** `elsewhere`: the session runs on another machine, where the bridge makes no summaries. */
+export function sessionInfo(info: SessionDetail, act: Actions, elsewhere = false): HTMLElement[] {
   const facts = [
     ...(info.context ? [t("detail.context", { percent: info.context.used_percentage })] : []),
     plural(info.tool_calls.total, "detail.toolCalls"),
@@ -85,24 +109,7 @@ export function sessionInfo(info: SessionDetail, act: Actions): HTMLElement[] {
     ...tools.slice(0, MOST_USED).map(([name, n]) => `${name} ${n}`),
     ...(rest > 0 ? [plural(rest, "detail.otherTools")] : []),
   ];
-  const generating = info.summary_state === "generating";
-  const refresh = button("↻", act.summarize, "refresh");
-  refresh.disabled = generating;
-  refresh.setAttribute("aria-label", t("summary.refresh"));
-  const summary = el(
-    "section",
-    "summary",
-    el("div", "summary-head", el("h3", undefined, t("summary.title")), refresh),
-    ...(generating ? [el("p", "muted", t("summary.generating"))] : []),
-    ...(info.summary ? [el("p", undefined, info.summary)] : []),
-    ...(info.summary && info.summary_at && !generating
-      ? [el("div", "muted", t("summary.made", { time: ago(info.summary_at) }))]
-      : []),
-    ...(info.summary_state === "error"
-      ? [el("p", "error", t("summary.failed", { why: info.summary_error ?? "" }))]
-      : []),
-    ...(!info.summary && !generating ? [el("p", "muted", t("summary.none"))] : []),
-  );
+  const summary = summaryBlock(info, act, elsewhere);
   const items = info.timeline.map((item) => {
     const key = TIMELINE[item.kind];
     const said = key ? t(key, { text: item.text }) : item.text;
@@ -200,7 +207,7 @@ export function detailScreen(home: Home, d: Detail, act: Actions): HTMLElement {
         ]
       : [el("p", "notice", t("detail.gone"))]),
     ...(prompts.length ? [] : pendingBlock(d.pending)),
-    ...(d.info ? sessionInfo(d.info, act) : []),
+    ...(d.info ? sessionInfo(d.info, act, Boolean(s?.machine)) : []),
     el("div", "turns", ...d.turns.map(turn)),
     ...(prs.length ? [el("h3", undefined, t("detail.prs")), el("ul", "prs", ...prs)] : []),
   );

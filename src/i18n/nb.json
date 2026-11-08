@@ -205,5 +205,6 @@
   "machine.state.slow": "Treg",
   "machine.state.offline": "Frakoblet",
   "machine.state.agentDown": "Agenten kjører ikke",
-  "machine.state.notApproved": "Ikke godkjent"
+  "machine.state.notApproved": "Ikke godkjent",
+  "summary.onlyHub": "Sammendrag lages bare for økter på huben."
 }

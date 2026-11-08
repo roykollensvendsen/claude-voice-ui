@@ -205,5 +205,6 @@
   "machine.state.slow": "Slow",
   "machine.state.offline": "Offline",
   "machine.state.agentDown": "Agent not running",
-  "machine.state.notApproved": "Not approved"
+  "machine.state.notApproved": "Not approved",
+  "summary.onlyHub": "Summaries are made only for sessions on the hub."
 }

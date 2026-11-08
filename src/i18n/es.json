@@ -205,5 +205,6 @@
   "machine.state.slow": "Lenta",
   "machine.state.offline": "Desconectada",
   "machine.state.agentDown": "El agente no está en marcha",
-  "machine.state.notApproved": "No aprobada"
+  "machine.state.notApproved": "No aprobada",
+  "summary.onlyHub": "Los resúmenes solo se hacen para sesiones en el hub."
 }
