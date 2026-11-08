@@ -81,8 +81,11 @@ function group(
     ...state,
     ...(folded ? [el("span", "machine-count muted", plural(count, "machine.count"))] : []),
   );
-  const section = el("section", "machine", top);
+  const heading = el("h2", "machine-heading", top);
+  heading.id = `machine-${key}`;
+  const section = el("section", "machine", heading);
   section.dataset.machine = key;
+  section.setAttribute("aria-labelledby", heading.id);
   if (!folded) section.append(count ? sessionList(home, act, placed, null) : none);
   return section;
 }

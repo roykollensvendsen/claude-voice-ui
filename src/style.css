@@ -1191,7 +1191,15 @@ a.open-claude {
 
 /* A group of sessions: the hub's own, or another computer's, under a heading that folds it away. */
 .machine {
-  margin: 16px 0 0;
+  margin: 14px 0 0;
+  padding: 4px 10px 10px;
+  border: 1px solid var(--muted);
+  border-radius: 12px;
+}
+
+.machine-heading {
+  margin: 0;
+  font-size: 1rem;
 }
 
 .machine-top {
@@ -1206,13 +1214,13 @@ a.open-claude {
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 0.9rem;
   text-align: left;
   cursor: pointer;
 }
 
 .machine-name {
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .machine-state.online {
