@@ -164,7 +164,7 @@ export function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignI
     prompts: vi.fn(async (): Promise<Prompt[]> => []),
     answer: vi.fn(async (_id: string, _reply: Reply): Promise<Answered> => "ok"),
     detail: vi.fn(async (id: string): Promise<SessionDetail> => ({ ...NO_DETAIL, session: id })),
-    summarize: vi.fn(async (_id: string, _language: string): Promise<void> => {}),
+    summarize: vi.fn(async (_id: string, _language: string): Promise<string | null> => null),
     health: vi.fn(async (): Promise<SoftwareHealth> => ({ as_of: "", repos: [] })),
     settings: vi.fn(
       async (): Promise<Settings> => ({ remote_control: true, start_in: "terminal", updated_at: null }),

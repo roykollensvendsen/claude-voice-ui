@@ -191,6 +191,56 @@ describe("a session's page on another machine", () => {
   });
 });
 
+describe("a summary of a session on another machine", () => {
+  const DETAIL = {
+    session: "lukas-laptop/840ab631",
+    number: null,
+    name: "hub-test",
+    context: null,
+    tool_calls: { total: 0, by_tool: {} },
+    subagents: { running: 0, total: 0 },
+    timeline: [],
+    summary: null,
+    summary_state: "none" as const,
+    summary_error: null,
+    summary_at: null,
+  };
+
+  test("a new summary cannot be asked for on another machine, and the page says why", async () => {
+    const b = fakeBridge([{ sessions: [ONE, REMOTE], active: null, machines: [LAPTOP] }]);
+    b.detail.mockResolvedValue(DETAIL);
+    await open(b);
+    await longPress(root, "lukas-laptop/840ab631");
+    expect(root.querySelector<HTMLButtonElement>(".summary .refresh")?.disabled).toBe(true);
+    expect(root.querySelector(".summary")?.textContent).toContain(
+      "Summaries are made only for sessions on the hub.",
+    );
+  });
+
+  test("a summary the bridge refuses shows its reason instead of waiting for ever", async () => {
+    const b = fakeBridge([{ sessions: [ONE], active: null }]);
+    b.summarize.mockResolvedValue("summaries are made only for sessions on this computer");
+    await open(b);
+    await longPress(root, "a1");
+    root.querySelector<HTMLButtonElement>(".summary .refresh")?.click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(root.querySelector(".summary .error")?.textContent).toBe(
+      "Could not make a new summary: summaries are made only for sessions on this computer",
+    );
+    expect(root.querySelector(".summary")?.textContent).not.toContain("Making a summary");
+  });
+
+  test("the bridge's refusal of a summary is passed on", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ error: "only here" }), { status: 404 }))
+      .mockResolvedValueOnce(new Response("{}", { status: 202 }));
+    const api = bridge(fetch);
+    expect(await api.summarize("lukas-laptop/x", "English")).toBe("only here");
+    expect(await api.summarize("a1", "English")).toBeNull();
+  });
+});
+
 describe("each machine set apart", () => {
   test("each machine's heading is a heading of its own, with the fold button inside", async () => {
     await open();
