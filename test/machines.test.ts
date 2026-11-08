@@ -168,6 +168,39 @@ describe("sessions on other machines", () => {
   });
 });
 
+describe("a session's page on another machine", () => {
+  test("a session's page on another machine opens when the bridge sends no transcript facts for it", async () => {
+    const b = fakeBridge([{ sessions: [ONE, REMOTE], active: null, machines: [LAPTOP] }]);
+    // What the bridge answers for another machine's session: its row from the list, not a page.
+    b.detail.mockResolvedValue(REMOTE as never);
+    await open(b);
+    await longPress(root, "lukas-laptop/840ab631");
+    expect(root.querySelector(".detail h2")?.textContent).toBe("hub-test");
+    expect(root.querySelector(".detail .meta")?.textContent).toContain("lukas-laptop");
+  });
+
+  test("the page keeps working after opening a session on another machine", async () => {
+    const b = fakeBridge([{ sessions: [ONE, REMOTE], active: null, machines: [LAPTOP] }]);
+    b.detail.mockResolvedValue(REMOTE as never);
+    await open(b);
+    await longPress(root, "lukas-laptop/840ab631");
+    root.querySelector<HTMLButtonElement>(".detail .back")?.click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(root.querySelector(".detail")).toBeNull();
+    expect(tileOf("a1")).not.toBeNull();
+  });
+});
+
+describe("each machine set apart", () => {
+  test("each machine's heading is a heading of its own, with the fold button inside", async () => {
+    await open();
+    for (const key of ["hub", "lukas-laptop"]) {
+      expect(group(key)?.querySelector("h2 > button.machine-top")).not.toBeNull();
+      expect(group(key)?.getAttribute("aria-labelledby")).toBe(group(key)?.querySelector("h2")?.id);
+    }
+  });
+});
+
 describe("answering sessions on other machines", () => {
   test("an approval from another machine is answered with its own id", async () => {
     const b = await open();
