@@ -210,7 +210,8 @@ export interface Bridge {
   answer(prompt: string, reply: Reply): Promise<Answered>;
   detail(session: string): Promise<SessionDetail>;
   /** Asks for a new summary in `language`; it arrives on the stream. */
-  summarize(session: string, language: string): Promise<void>;
+  /** Ask for a new summary; the bridge's reason when it refuses, otherwise null. */
+  summarize(session: string, language: string): Promise<string | null>;
   health(): Promise<SoftwareHealth>;
   settings(): Promise<Settings>;
   changeSettings(change: Partial<Settings>): Promise<Settings>;
@@ -294,6 +295,10 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
         body: JSON.stringify({ language }),
       });
       if (response.status === 401) throw new SignedOut();
+      if (response.ok) return null;
+      // Refused, as for a session on another machine: the bridge's own reason.
+      const refused = (await response.json().catch(() => ({}))) as { error?: string };
+      return refused.error ?? String(response.status);
     },
     async health() {
       return read<SoftwareHealth>(await fetch(`${BASE}/health/software`, { cache: "no-store" }));

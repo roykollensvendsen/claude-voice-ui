@@ -103,7 +103,14 @@ export function tapActions({ home, deps, keep, draw, failed }: Context, means: M
       open.info.summary_state = "generating";
       draw();
       // The page never makes one by itself: only this tap asks.
-      await deps.bridge.summarize(open.id, t("summary.language")).catch(failed);
+      const refused = await deps.bridge.summarize(open.id, t("summary.language")).catch((error) => {
+        failed(error);
+        return null;
+      });
+      if (refused === null || !open.info) return;
+      open.info.summary_state = "error";
+      open.info.summary_error = refused;
+      draw();
     },
     async openHealth() {
       home.menuOpen = false;
