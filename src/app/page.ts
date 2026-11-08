@@ -60,7 +60,8 @@ export function sessionPage({ home, deps, draw, failed }: Context): SessionPage 
       id,
       () => deps.bridge.detail(id),
       (d) => {
-        if (home.open) home.open.info = d;
+        // Another machine's session comes back as its plain row, with no transcript facts to show.
+        if (home.open) home.open.info = d?.tool_calls ? d : null;
       },
     );
   }
