@@ -19,6 +19,7 @@ import {
   type SoftwareHealth,
   type UpdateRun,
   type UpdateStart,
+  type Work,
 } from "../src/bridge";
 import type { EventSourceLike } from "../src/live";
 import type { Session } from "../src/states";
@@ -177,6 +178,7 @@ export function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignI
         ...change,
       }),
     ),
+    work: vi.fn(async (): Promise<Work | null> => null),
   } satisfies Bridge & { snapshotCalls: () => number };
 }
 
