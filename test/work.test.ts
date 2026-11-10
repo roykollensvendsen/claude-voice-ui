@@ -100,6 +100,47 @@ describe("what waits on the owner", () => {
     expect(waiting()?.querySelector("button.copy")?.textContent).toBe("Copy");
   });
 
+  test("without the clipboard, as over plain http, the command is copied from a selected text box", async () => {
+    Object.defineProperty(navigator, "clipboard", { value: undefined, configurable: true });
+    const copied: string[] = [];
+    const execCommand = vi.fn((name: string) => {
+      const box = document.activeElement as HTMLTextAreaElement | null;
+      if (name === "copy" && box?.readOnly)
+        copied.push(box.value.slice(box.selectionStart, box.selectionEnd));
+      return true;
+    });
+    Object.defineProperty(document, "execCommand", { value: execCommand, configurable: true });
+    await open();
+    waiting()?.querySelector<HTMLButtonElement>("button.copy")?.click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(copied).toEqual(["systemctl --user restart claude-voice"]);
+    expect(waiting()?.querySelector("button.copy")?.textContent).toBe("Copied");
+    expect(document.querySelector("textarea")).toBeNull();
+  });
+
+  test("when the clipboard refuses, the command is still copied from a selected text box", async () => {
+    const writeText = vi.fn(async (_text: string) => {
+      throw new DOMException("not allowed", "NotAllowedError");
+    });
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    const execCommand = vi.fn(() => true);
+    Object.defineProperty(document, "execCommand", { value: execCommand, configurable: true });
+    await open();
+    waiting()?.querySelector<HTMLButtonElement>("button.copy")?.click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(execCommand).toHaveBeenCalledWith("copy");
+    expect(waiting()?.querySelector("button.copy")?.textContent).toBe("Copied");
+  });
+
+  test("when nothing can copy, the button does not claim it did", async () => {
+    Object.defineProperty(navigator, "clipboard", { value: undefined, configurable: true });
+    Object.defineProperty(document, "execCommand", { value: () => false, configurable: true });
+    await open();
+    waiting()?.querySelector<HTMLButtonElement>("button.copy")?.click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(waiting()?.querySelector("button.copy")?.textContent).toBe("Copy");
+  });
+
   test("an item about a session leads to that session's page", async () => {
     await open();
     waiting()?.querySelector<HTMLButtonElement>("button.to-session")?.click();
