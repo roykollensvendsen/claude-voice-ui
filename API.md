@@ -15,3 +15,6 @@ In short:
   (null for the bridge's own), the `machines` beside the sessions with
   whether each one answers, and the `machine` event when that changes. Their
   ids carry the machine's name in front and are used as they are.
+- show the team's work: `/api/v1/work` gives what waits on the owner and the
+  open pull requests across the repositories, and the `work` event carries
+  the same whenever it changes.

@@ -1244,3 +1244,76 @@ a.open-claude {
 .machine-empty {
   margin: 0;
 }
+
+/* The team's work: what waits on the owner first, the open pull requests last. */
+.work-waiting,
+.work-prs {
+  margin: 14px 0 0;
+  padding: 4px 12px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+}
+.work-waiting {
+  border-color: var(--amber);
+}
+.work-waiting h2,
+.work-prs h2 {
+  margin: 6px 0;
+  font-size: 1rem;
+}
+.work-prs h3 {
+  margin: 10px 0 4px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.work-waiting ul,
+.work-prs ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.work-waiting li,
+.work-prs li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+}
+.work-waiting .text {
+  flex: 1 1 100%;
+}
+.work-waiting .command {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.work-waiting code {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px;
+  overflow-x: auto;
+  white-space: nowrap;
+  border-radius: 6px;
+  background: var(--bg);
+  user-select: all;
+}
+.work-prs a {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.work-prs .checks.pass {
+  color: var(--green);
+}
+.work-prs .checks.fail {
+  color: var(--red);
+}
+.work-prs .checks.pending {
+  color: var(--amber);
+}

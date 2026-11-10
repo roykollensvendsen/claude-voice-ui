@@ -206,5 +206,14 @@
   "machine.state.offline": "Frakoblet",
   "machine.state.agentDown": "Agenten kjører ikke",
   "machine.state.notApproved": "Ikke godkjent",
-  "summary.onlyHub": "Sammendrag lages bare for økter på huben."
+  "summary.onlyHub": "Sammendrag lages bare for økter på huben.",
+  "work.waiting": "Venter på deg",
+  "work.prs": "Åpne pull requests",
+  "work.copy": "Kopier",
+  "work.copied": "Kopiert",
+  "work.checksPass": "Sjekkene er grønne",
+  "work.checksFail": "Sjekkene feiler",
+  "work.checksRunning": "Sjekkene kjører",
+  "work.draft": "Utkast",
+  "work.unreadable": "Kunne ikke lese: {repos}"
 }

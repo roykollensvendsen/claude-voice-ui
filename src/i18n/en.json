@@ -206,5 +206,14 @@
   "machine.state.offline": "Offline",
   "machine.state.agentDown": "Agent not running",
   "machine.state.notApproved": "Not approved",
-  "summary.onlyHub": "Summaries are made only for sessions on the hub."
+  "summary.onlyHub": "Summaries are made only for sessions on the hub.",
+  "work.waiting": "Waiting on you",
+  "work.prs": "Open pull requests",
+  "work.copy": "Copy",
+  "work.copied": "Copied",
+  "work.checksPass": "Checks pass",
+  "work.checksFail": "Checks fail",
+  "work.checksRunning": "Checks running",
+  "work.draft": "Draft",
+  "work.unreadable": "Could not read: {repos}"
 }

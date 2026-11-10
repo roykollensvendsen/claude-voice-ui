@@ -12,6 +12,7 @@ export interface Reads {
   refresh(): Promise<void>;
   readPrompts(): Promise<void>;
   readSettings(): Promise<void>;
+  readWork(): Promise<void>;
 }
 
 /** The handlers for `follow`, and `stop` to clear the timers they leave running. */
@@ -33,6 +34,7 @@ export function streamHandlers(
     if (!afterDrop) return;
     void reads.refresh();
     void reads.readSettings();
+    void reads.readWork();
     const open = home.open?.id;
     if (!open) return;
     void page.readDetail(open);
@@ -130,6 +132,10 @@ export function streamHandlers(
     },
     settings(settings) {
       home.settings = settings;
+      draw();
+    },
+    work(work) {
+      home.work = work;
       draw();
     },
     machine(machine) {

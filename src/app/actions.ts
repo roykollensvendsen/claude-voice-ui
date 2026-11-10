@@ -8,6 +8,9 @@ import type { Context } from "./context";
 import { applyLanguage, applyTheme, BUILD, EXPANDED, FOLDED, HIDDEN, LANG, THEME, VIEW } from "./preferences";
 
 /** What the actions need from the rest of the app. */
+/** How long a copy button says it copied. */
+const COPIED_MS = 1500;
+
 export interface Means {
   /** Whether a tap on `id` began there, and not just after the sessions moved. */
   steadyTap(id: string): boolean;
@@ -127,6 +130,17 @@ export function tapActions({ home, deps, keep, draw, failed }: Context, means: M
     dismissRestart() {
       home.restarted = null;
       draw();
+    },
+    copy(id, command) {
+      void navigator.clipboard?.writeText(command).then(() => {
+        home.copied = id;
+        draw();
+        setTimeout(() => {
+          if (home.copied !== id) return;
+          home.copied = null;
+          draw();
+        }, COPIED_MS);
+      });
     },
     closeHealth() {
       home.health = null;

@@ -206,5 +206,14 @@
   "machine.state.offline": "Desconectada",
   "machine.state.agentDown": "El agente no está en marcha",
   "machine.state.notApproved": "No aprobada",
-  "summary.onlyHub": "Los resúmenes solo se hacen para sesiones en el hub."
+  "summary.onlyHub": "Los resúmenes solo se hacen para sesiones en el hub.",
+  "work.waiting": "Te espera a ti",
+  "work.prs": "Pull requests abiertas",
+  "work.copy": "Copiar",
+  "work.copied": "Copiado",
+  "work.checksPass": "Las comprobaciones pasan",
+  "work.checksFail": "Las comprobaciones fallan",
+  "work.checksRunning": "Comprobaciones en curso",
+  "work.draft": "Borrador",
+  "work.unreadable": "No se pudo leer: {repos}"
 }
