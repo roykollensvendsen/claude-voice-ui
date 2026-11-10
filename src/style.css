@@ -891,6 +891,17 @@ a.open-claude {
   color: var(--text);
   text-decoration: none;
 }
+/* Bringing a session's terminal forward on this computer sits beside the Claude link. */
+button.open-terminal {
+  min-height: 36px;
+  margin: 8px 0 0 8px;
+}
+.detail button.open-terminal:first-of-type {
+  margin-left: 0;
+}
+.opened {
+  margin: 4px 0 0;
+}
 .card-actions {
   gap: 8px;
   flex-wrap: wrap;

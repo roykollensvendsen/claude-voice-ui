@@ -3,6 +3,7 @@ import { type Pending, type Prompt, type SessionDetail, type Turn } from "../bri
 import { type Key, plural, t } from "../i18n";
 import { cardState, LOOK, minutesInState, timeInWords } from "../states";
 import { ago, button, claudeLink, el, gitRow, matches, stateLine } from "../view/dom";
+import { terminalRow } from "../view/terminal";
 import { type Actions, type Detail, type Home } from "../view/types";
 
 /** A question to answer with a tap, ticks or words of one's own, or an approval to allow or deny. */
@@ -204,6 +205,7 @@ export function detailScreen(home: Home, d: Detail, act: Actions): HTMLElement {
           stateLine(s),
           ...gitRow(s),
           ...claudeLink(s, t("session.openInClaude")),
+          ...terminalRow(home, s, act),
         ]
       : [el("p", "notice", t("detail.gone"))]),
     ...(prompts.length ? [] : pendingBlock(d.pending)),

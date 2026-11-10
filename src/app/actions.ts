@@ -172,6 +172,14 @@ export function tapActions({ home, deps, keep, draw, failed }: Context, means: M
         }, COPIED_MS);
       });
     },
+    async openTerminal(session) {
+      try {
+        home.opened = { session, answer: await deps.bridge.focus(session) };
+        draw();
+      } catch (error) {
+        failed(error);
+      }
+    },
     closeHealth() {
       home.health = null;
       draw();

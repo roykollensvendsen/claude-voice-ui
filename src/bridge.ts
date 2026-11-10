@@ -184,6 +184,14 @@ export interface Prs {
   prs: Pr[];
 }
 
+/** Whether the page was opened on the bridge's own computer, and not through Tailscale or another site. */
+export type Whoami = { here: boolean };
+
+/** What the bridge did when asked to open a session's terminal, or (403, 409, 501) why it would not. */
+export type Focused =
+  | { done: "raised" | "attached" } // not shown
+  | { reason: "not_here" | "not_local" | "no_window" | "not_running" | "no_window_list" }; // not shown
+
 /** What the team's sessions wait on the owner for, and the open pull requests, as GET /api/v1/work gives them. */
 export interface Work {
   as_of: string;
@@ -242,6 +250,9 @@ export interface Bridge {
   changeSettings(change: Partial<Settings>): Promise<Settings>;
   /** The team's work; null from a bridge that has none. */
   work(): Promise<Work | null>;
+  /** Where the page was opened (an older bridge means not here), and bringing a terminal forward there. */
+  whoami(): Promise<Whoami>;
+  focus(session: string): Promise<Focused>;
 }
 
 /** The API is always at /api/v1 on the page's own origin, wherever the page itself is served. */
@@ -365,6 +376,16 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
       const response = await fetch(`${BASE}/work`, { cache: "no-store" });
       if (response.status === 404) return null;
       return read<Work>(response);
+    },
+    async whoami() {
+      const response = await fetch(`${BASE}/whoami`, { cache: "no-store" });
+      if (response.status === 404) return { here: false };
+      return read<Whoami>(response);
+    },
+    async focus(session) {
+      const response = await fetch(`${one(session)}/focus`, { method: "POST" });
+      if ([403, 409, 501].includes(response.status)) return (await response.json()) as Focused;
+      return read<Focused>(response);
     },
     async choose(session) {
       return read<Active>(

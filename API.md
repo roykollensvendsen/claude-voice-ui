@@ -18,3 +18,8 @@ In short:
 - show the team's work: `/api/v1/work` gives what waits on the owner and the
   open pull requests across the repositories, and the `work` event carries
   the same whenever it changes.
+- open a session where the owner is: `GET /api/v1/whoami` says whether the
+  page was opened on the bridge's own computer, and only then does the page
+  offer `POST /api/v1/sessions/{id}/focus` for a session that runs there. The
+  bridge's answer is a code (`raised`, `attached`, or a reason), which the page
+  says in words.

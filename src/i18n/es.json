@@ -215,5 +215,13 @@
   "work.checksFail": "Las comprobaciones fallan",
   "work.checksRunning": "Comprobaciones en curso",
   "work.draft": "Borrador",
-  "work.unreadable": "No se pudo leer: {repos}"
+  "work.unreadable": "No se pudo leer: {repos}",
+  "terminal.open": "Abrir en terminal",
+  "terminal.raised": "Su ventana de terminal está delante.",
+  "terminal.attached": "Abierta en una ventana de terminal nueva.",
+  "terminal.no_window": "No se encontró su ventana. Si está en una pestaña de fondo, cambia a esa pestaña.",
+  "terminal.not_running": "No está en marcha.",
+  "terminal.not_local": "Se ejecuta en otro ordenador.",
+  "terminal.not_here": "Una terminal solo se puede abrir desde este ordenador.",
+  "terminal.no_window_list": "Este ordenador no puede listar sus ventanas."
 }

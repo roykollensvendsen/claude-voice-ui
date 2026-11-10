@@ -176,3 +176,9 @@ name = "a machine's folded group stays folded when the page opens again"
 file = "src/app/home.ts"
 find = 'folded: new Set\(recall<string\[\]>\(keep, FOLDED, \[\]\)\),'
 replace = 'folded: new Set<string>(),'
+
+[[rule]]
+name = "a terminal is offered only on this computer, and only for a session that runs on it"
+file = "src/view/terminal.ts"
+find = 'if \(!home.here \|\| !s \|\| s.machine\) return \[\];'
+replace = 'if (!s) return [];'

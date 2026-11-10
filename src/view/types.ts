@@ -3,6 +3,7 @@ import {
   type Active,
   type BridgeInfo,
   type Doctor,
+  type Focused,
   type Machine,
   type Pending,
   type Pr,
@@ -80,6 +81,10 @@ export interface Home {
   work: Work | null;
   /** The waiting item whose command was just copied, for a moment. */
   copied: string | null;
+  /** Whether the page was opened on the bridge's own computer, where a terminal can be brought forward. */
+  here: boolean;
+  /** What the bridge said when last asked to open a session's terminal. */
+  opened: { session: string; answer: Focused } | null;
 }
 
 export interface Detail {
@@ -122,6 +127,8 @@ export interface Actions {
   dismissRestart(): void;
   /** Copy a waiting item's command, so the owner can paste it. */
   copy(id: string, command: string): void;
+  /** Bring a session's terminal window forward on this computer. */
+  openTerminal(session: string): void;
   /** Ask for a new summary of the open session. */
   summarize(): void;
   /** `said` is the answer in words, for the note shown once it is sent. */
