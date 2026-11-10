@@ -215,5 +215,13 @@
   "work.checksFail": "Checks fail",
   "work.checksRunning": "Checks running",
   "work.draft": "Draft",
-  "work.unreadable": "Could not read: {repos}"
+  "work.unreadable": "Could not read: {repos}",
+  "terminal.open": "Open in terminal",
+  "terminal.raised": "Its terminal window is in front.",
+  "terminal.attached": "Opened in a new terminal window.",
+  "terminal.no_window": "Its window could not be found. If it is in a background tab, switch to that tab.",
+  "terminal.not_running": "It is not running.",
+  "terminal.not_local": "It runs on another computer.",
+  "terminal.not_here": "A terminal can only be opened from this computer.",
+  "terminal.no_window_list": "This computer cannot list its windows."
 }

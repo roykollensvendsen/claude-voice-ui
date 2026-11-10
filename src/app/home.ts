@@ -46,5 +46,7 @@ export function freshHome(keep: Keep | undefined): Home {
     restarted: null,
     work: null,
     copied: null,
+    here: false,
+    opened: null,
   };
 }

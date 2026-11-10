@@ -262,6 +262,12 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     draw();
   }
 
+  async function readWhoami() {
+    // Unreachable or refused: the page offers nothing that only works on the bridge's own computer.
+    home.here = (await deps.bridge.whoami().catch(() => ({ here: false }))).here;
+    draw();
+  }
+
   async function readPrompts() {
     try {
       home.prompts = await deps.bridge.prompts();
@@ -293,6 +299,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     void readPrompts();
     void readSettings();
     void readWork();
+    void readWhoami();
     poll = setInterval(() => {
       void refresh();
       void readWork();

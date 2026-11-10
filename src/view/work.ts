@@ -2,6 +2,7 @@
 import { type Work } from "../bridge";
 import { type Key, t } from "../i18n";
 import { ago, button, el, matches } from "../view/dom";
+import { terminalRow } from "../view/terminal";
 import { type Actions, type Home } from "../view/types";
 
 const CHECKS: Record<Work["open_prs"][number]["checks"], Key> = {
@@ -46,6 +47,7 @@ export function waitingBlock(home: Home, act: Actions): HTMLElement[] {
             el("span", "since muted", ago(w.since)),
             ...command,
             ...to,
+            ...terminalRow(home, s, act),
           );
         }),
       ),
