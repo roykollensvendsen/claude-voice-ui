@@ -185,6 +185,30 @@ describe("keeping it current", () => {
     expect(prs()).not.toBeNull();
   });
 
+  test("an item that is gone from the list on the stream is gone from the page", async () => {
+    await open();
+    FakeSource.last?.emit("work", { ...WORK, waiting_on_owner: [WORK.waiting_on_owner[1]!] });
+    const items = [...(waiting()?.querySelectorAll("li .text") ?? [])].map((x) => x.textContent);
+    expect(items).toEqual(["Say yes to the TV plugin"]);
+  });
+
+  test("a phone that comes back to the page reads the list again, as its stream may have died asleep", async () => {
+    const b = await open();
+    b.work.mockResolvedValue({ ...WORK, waiting_on_owner: [WORK.waiting_on_owner[1]!] });
+    Object.defineProperty(document, "hidden", { value: false, configurable: true });
+    document.dispatchEvent(new Event("visibilitychange"));
+    await vi.advanceTimersByTimeAsync(0);
+    const items = [...(waiting()?.querySelectorAll("li .text") ?? [])].map((x) => x.textContent);
+    expect(items).toEqual(["Say yes to the TV plugin"]);
+  });
+
+  test("the list is read again with the sessions every minute, in case the stream went quiet", async () => {
+    const b = await open();
+    b.work.mockResolvedValue({ ...WORK, waiting_on_owner: [] });
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(waiting()).toBeNull();
+  });
+
   test("with nothing waiting and no pull requests, nothing is shown", async () => {
     await open({ as_of: "", waiting_on_owner: [], open_prs: [] });
     expect(waiting()).toBeNull();
