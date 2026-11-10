@@ -184,6 +184,31 @@ export interface Prs {
   prs: Pr[];
 }
 
+/** What the team's sessions wait on the owner for, and the open pull requests, as GET /api/v1/work gives them. */
+export interface Work {
+  as_of: string;
+  waiting_on_owner: {
+    id: string;
+    text: string;
+    /** An exact command for the owner to run, when there is one. */
+    command: string | null;
+    since: string;
+    repo: string | null;
+    /** The session it is about, by the name on its page. */
+    session: string | null;
+  }[];
+  open_prs: {
+    repo: string;
+    number: number;
+    title: string;
+    url: string;
+    checks: "pass" | "fail" | "pending"; // not shown
+    draft: boolean;
+  }[];
+  /** Repositories whose pull requests could not be read just now. */
+  unreadable?: string[];
+}
+
 export type SignIn = "ok" | "wrong" | "too-many" | "unreachable";
 
 /** The bridge answered 401: the sign-in cookie is missing or has run out. */
@@ -215,6 +240,8 @@ export interface Bridge {
   health(): Promise<SoftwareHealth>;
   settings(): Promise<Settings>;
   changeSettings(change: Partial<Settings>): Promise<Settings>;
+  /** The team's work; null from a bridge that has none. */
+  work(): Promise<Work | null>;
 }
 
 /** The API is always at /api/v1 on the page's own origin, wherever the page itself is served. */
@@ -333,6 +360,11 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
       }
       await read<unknown>(response);
       return "ok";
+    },
+    async work() {
+      const response = await fetch(`${BASE}/work`, { cache: "no-store" });
+      if (response.status === 404) return null;
+      return read<Work>(response);
     },
     async choose(session) {
       return read<Active>(

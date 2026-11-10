@@ -18,6 +18,7 @@ import {
   waitingCount,
 } from "./view/top";
 import { type Actions, type Home } from "./view/types";
+import { prsBlock, waitingBlock } from "./view/work";
 
 // What the rest of the app reaches through this module.
 export { hasPrompt, matches } from "./view/dom";
@@ -87,9 +88,11 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
     ...missing(home, act.toggleDoctor),
     ...updatePanel(home, act.update),
     ...problem,
+    ...waitingBlock(home, act),
     viewSwitch(home, act),
     ...(home.legendOpen ? [legend()] : []),
     ...lists,
     ...hiddenBlock(hidden, home, act),
+    ...prsBlock(home),
   );
 }

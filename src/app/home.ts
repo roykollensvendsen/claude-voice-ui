@@ -44,5 +44,7 @@ export function freshHome(keep: Keep | undefined): Home {
     doctorOpen: false,
     undelivered: {},
     restarted: null,
+    work: null,
+    copied: null,
   };
 }

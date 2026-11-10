@@ -12,6 +12,7 @@ import {
   type Settings,
   type SoftwareHealth,
   type Turn,
+  type Work,
 } from "../bridge";
 import { type Language } from "../i18n";
 import { type Session } from "../states";
@@ -75,6 +76,10 @@ export interface Home {
   undelivered: Record<string, string>;
   /** When the bridge started again while the page watched, until the note is put away. */
   restarted: string | null;
+  /** The team's work: what waits on the owner, and the open pull requests; null from a bridge without it. */
+  work: Work | null;
+  /** The waiting item whose command was just copied, for a moment. */
+  copied: string | null;
 }
 
 export interface Detail {
@@ -115,6 +120,8 @@ export interface Actions {
   openHealth(): void;
   closeHealth(): void;
   dismissRestart(): void;
+  /** Copy a waiting item's command, so the owner can paste it. */
+  copy(id: string, command: string): void;
   /** Ask for a new summary of the open session. */
   summarize(): void;
   /** `said` is the answer in words, for the note shown once it is sent. */

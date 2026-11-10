@@ -180,7 +180,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   };
   const page = sessionPage(ctx);
   const update = updating(ctx);
-  const stream = streamHandlers(ctx, page, update, { refresh, readPrompts, readSettings });
+  const stream = streamHandlers(ctx, page, update, { refresh, readPrompts, readSettings, readWork });
 
   applyTheme(home.theme);
   applyLanguage(home.language);
@@ -253,6 +253,12 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     draw();
   }
 
+  async function readWork() {
+    // A bridge from before the team's work answers 404; the page then shows none.
+    home.work = await deps.bridge.work().catch(() => null);
+    draw();
+  }
+
   async function readPrompts() {
     try {
       home.prompts = await deps.bridge.prompts();
@@ -283,6 +289,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     unfollow = follow(deps.openEvents, stream.handlers);
     void readPrompts();
     void readSettings();
+    void readWork();
     poll = setInterval(() => void refresh(), POLL_MS);
     doctorTimer = setInterval(() => {
       void checkDoctor();
