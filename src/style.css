@@ -1300,7 +1300,17 @@ a.open-claude {
   white-space: nowrap;
   border-radius: 6px;
   background: var(--bg);
-  user-select: all;
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
+}
+/* The box a command is copied from where the clipboard is hidden: there, but out of sight. */
+.copy-source {
+  position: fixed;
+  top: 0;
+  left: -9999px;
+  font-size: 16px;
+  opacity: 0;
 }
 .work-prs a {
   flex: 1 1 auto;

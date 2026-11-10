@@ -26,14 +26,14 @@
     "view/top.ts": 12,
     "view/work.ts": 6
   },
-  "coverage": 95.44,
+  "coverage": 95.41,
   "cycles": 0,
   "duplication": 0.0,
   "layer_violations": 0,
   "lint_errors": 0,
   "max_module_lines": {
     "app.ts": 365,
-    "app/actions.ts": 204,
+    "app/actions.ts": 234,
     "app/context.ts": 29,
     "app/home.ts": 50,
     "app/page.ts": 80,
@@ -68,7 +68,7 @@
     "seconds": 60,
     "tolerance": 0.25
   },
-  "test_seconds": 9.0,
-  "tests": 419,
+  "test_seconds": 10.2,
+  "tests": 422,
   "type_errors": 0
 }
