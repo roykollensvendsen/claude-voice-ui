@@ -6,6 +6,7 @@ import {
   type Bridge,
   type BridgeInfo,
   type Doctor,
+  type Focused,
   type Output,
   type Pending,
   type Prompt,
@@ -19,6 +20,7 @@ import {
   type SoftwareHealth,
   type UpdateRun,
   type UpdateStart,
+  type Whoami,
   type Work,
 } from "../src/bridge";
 import type { EventSourceLike } from "../src/live";
@@ -179,6 +181,8 @@ export function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignI
       }),
     ),
     work: vi.fn(async (): Promise<Work | null> => null),
+    whoami: vi.fn(async (): Promise<Whoami> => ({ here: false })),
+    focus: vi.fn(async (_id: string): Promise<Focused> => ({ done: "raised" })),
   } satisfies Bridge & { snapshotCalls: () => number };
 }
 
