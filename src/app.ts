@@ -255,7 +255,10 @@ export function start(root: HTMLElement, deps: Deps): () => void {
 
   async function readWork() {
     // A bridge from before the team's work answers 404; the page then shows none.
-    home.work = await deps.bridge.work().catch(() => null);
+    const work = await deps.bridge.work().catch(() => null);
+    // Signed out meanwhile: the sign-in page stays.
+    if (!watching) return;
+    home.work = work;
     draw();
   }
 
@@ -290,7 +293,10 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     void readPrompts();
     void readSettings();
     void readWork();
-    poll = setInterval(() => void refresh(), POLL_MS);
+    poll = setInterval(() => {
+      void refresh();
+      void readWork();
+    }, POLL_MS);
     doctorTimer = setInterval(() => {
       void checkDoctor();
       void update.checkBridge();
@@ -341,6 +347,8 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   const onVisible = () => {
     if (watching && !document.hidden) {
       void refresh();
+      // A stream can die quietly while the phone sleeps, so what waits on the owner is read again too.
+      void readWork();
       // A phone that slept through a deploy hears of it as soon as the page is looked at again.
       void checkVersion();
     }
