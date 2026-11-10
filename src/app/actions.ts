@@ -11,6 +11,35 @@ import { applyLanguage, applyTheme, BUILD, EXPANDED, FOLDED, HIDDEN, LANG, THEME
 /** How long a copy button says it copied. */
 const COPIED_MS = 1500;
 
+/**
+ * Copy text, and say whether it worked. The clipboard is hidden on a page opened over plain http,
+ * and may refuse; then the text is selected in a hidden read-only box and copied from there.
+ */
+async function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Refused; try the selection below.
+  }
+  const box = document.createElement("textarea");
+  box.value = text;
+  box.readOnly = true;
+  box.className = "copy-source";
+  document.body.append(box);
+  box.focus();
+  box.select();
+  try {
+    return document.execCommand("copy");
+  } catch {
+    return false;
+  } finally {
+    box.remove();
+  }
+}
+
 export interface Means {
   /** Whether a tap on `id` began there, and not just after the sessions moved. */
   steadyTap(id: string): boolean;
@@ -132,7 +161,8 @@ export function tapActions({ home, deps, keep, draw, failed }: Context, means: M
       draw();
     },
     copy(id, command) {
-      void navigator.clipboard?.writeText(command).then(() => {
+      void copyText(command).then((done) => {
+        if (!done) return;
         home.copied = id;
         draw();
         setTimeout(() => {
