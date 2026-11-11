@@ -2,9 +2,10 @@
 
 import { tapActions } from "./app/actions";
 import type { Context, Deps } from "./app/context";
-import { freshHome } from "./app/home";
+import { freshHome, takeSnapshot } from "./app/home";
 import { sessionPage } from "./app/page";
 import { applyLanguage, applyTheme, BUILD, HIDDEN } from "./app/preferences";
+import { settleSections } from "./app/sections";
 import { streamHandlers } from "./app/stream";
 import { updating } from "./app/updating";
 import { SignedOut, type SignIn } from "./bridge";
@@ -115,6 +116,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     waitingDraw = false;
     bringBackWaiting();
     place();
+    settleSections(home);
     root.replaceChildren(homeScreen(home, actions));
     hideJumpWhileInView();
     const order = [...root.querySelectorAll<HTMLElement>("[data-session]")].map(
@@ -280,9 +282,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   async function refresh() {
     try {
       const snapshot = await deps.bridge.snapshot();
-      home.sessions = snapshot.sessions;
-      home.active = snapshot.active;
-      home.machines = snapshot.machines ?? [];
+      takeSnapshot(home, snapshot);
       home.problem = null;
       if (!watching) watch();
       draw();

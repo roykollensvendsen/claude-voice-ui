@@ -138,6 +138,10 @@ export function streamHandlers(
       home.work = work;
       draw();
     },
+    programmes(change) {
+      home.programmes = change.programmes;
+      draw();
+    },
     machine(machine) {
       home.machines = [...home.machines.filter((m) => m.name !== machine.name), machine];
       draw();

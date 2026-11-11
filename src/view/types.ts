@@ -5,8 +5,10 @@ import {
   type Doctor,
   type Focused,
   type Machine,
+  type OrgProgramme,
   type Pending,
   type Pr,
+  type Programme,
   type Prompt,
   type Reply,
   type SessionDetail,
@@ -85,7 +87,20 @@ export interface Home {
   here: boolean;
   /** What the bridge said when last asked to open a session's terminal. */
   opened: { session: string; answer: Focused } | null;
+  /** The programmes the sessions belong to, in the bridge's order; empty from a bridge without them. */
+  programmes: Programme[];
+  /** Whether the sessions are grouped by programme or by the computer they run on. */
+  groupBy: GroupBy;
+  /**
+   * Each programme's section: whether it is open, and which of its sessions waited or failed when
+   * last drawn, so that only something new opens a section the owner folded.
+   */
+  sections: Record<string, { open: boolean; alarms: string[] }>;
+  /** A programme's Organisation view, while open: no data until read, and null for an unknown programme. */
+  org: { programme: string; data?: OrgProgramme | null } | null;
 }
+
+export type GroupBy = "programme" | "machine";
 
 export interface Detail {
   id: string;
@@ -129,6 +144,11 @@ export interface Actions {
   copy(id: string, command: string): void;
   /** Bring a session's terminal window forward on this computer. */
   openTerminal(session: string): void;
+  setGroupBy(by: GroupBy): void;
+  /** Fold or open a programme's section. */
+  toggleSection(key: string): void;
+  openOrg(programme: string): void;
+  closeOrg(): void;
   /** Ask for a new summary of the open session. */
   summarize(): void;
   /** `said` is the answer in words, for the note shown once it is sent. */

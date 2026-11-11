@@ -7,6 +7,7 @@ import {
   el,
   gitRow,
   kindMark,
+  machineTag,
   matches,
   mic,
   number,
@@ -42,6 +43,7 @@ export function card(s: Session, home: Home, act: Actions): HTMLElement {
       "card-top",
       ...number(s),
       el("span", "name", s.name || s.id),
+      ...machineTag(s, home),
       ...(focused ? [mic()] : []),
       ...peekMark(s, home),
       ...kindMark(s),
@@ -178,6 +180,7 @@ export function tile(s: Session, home: Home, act: Actions): HTMLElement {
     ...(matches(s, home.focus) ? [mic()] : []),
     ...peekMark(s, home),
     el("span", "name", s.name || s.id),
+    ...machineTag(s, home),
     ...number(s),
     ...(home.active?.id === s.id ? [el("span", "pin")] : []),
     ...claudeLink(s, "↗").map((a) => {

@@ -5,7 +5,18 @@ import { recall, remember } from "../remember";
 import { type Session, waitsForOwner } from "../states";
 import { type Actions, hasPrompt, type UpdateActions } from "../view";
 import type { Context } from "./context";
-import { applyLanguage, applyTheme, BUILD, EXPANDED, FOLDED, HIDDEN, LANG, THEME, VIEW } from "./preferences";
+import {
+  applyLanguage,
+  applyTheme,
+  BUILD,
+  EXPANDED,
+  FOLDED,
+  GROUP_BY,
+  HIDDEN,
+  LANG,
+  THEME,
+  VIEW,
+} from "./preferences";
 
 /** What the actions need from the rest of the app. */
 /** How long a copy button says it copied. */
@@ -179,6 +190,31 @@ export function tapActions({ home, deps, keep, draw, failed }: Context, means: M
       } catch (error) {
         failed(error);
       }
+    },
+    setGroupBy(by) {
+      home.groupBy = by;
+      remember(keep, GROUP_BY, by);
+      draw();
+    },
+    toggleSection(key) {
+      const section = home.sections[key];
+      if (section) section.open = !section.open;
+      draw();
+    },
+    async openOrg(programme) {
+      home.org = { programme };
+      draw();
+      try {
+        const data = await deps.bridge.org(programme);
+        if (home.org?.programme === programme) home.org = { programme, data };
+      } catch (error) {
+        failed(error);
+      }
+      draw();
+    },
+    closeOrg() {
+      home.org = null;
+      draw();
     },
     closeHealth() {
       home.health = null;

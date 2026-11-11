@@ -33,6 +33,19 @@ export interface Session {
   machine?: string | null;
   /** Set when its questions can be answered only in the Claude app, not from this page. */
   answer_in?: "claude_app" | null; // not shown
+  /** Where it belongs; all absent from a bridge from before programmes, and null outside any. */
+  programme?: Named | null;
+  /** The part of the programme it works on; null for a role across the whole programme. */
+  component?: Named | null;
+  role?: Named | null;
+  programme_wide?: boolean;
+  address?: string | null;
+}
+
+/** Something the bridge names by a short id and shows by a full name. */
+export interface Named {
+  id: string;
+  name: string;
 }
 
 /** The name the voice calls it by: its own name here, with its machine in front elsewhere. */

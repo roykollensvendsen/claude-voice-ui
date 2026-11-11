@@ -10,12 +10,12 @@ Where a rule already exists, this is the substitute. Each rule is disabled in
 turn, by replacing its one line with something that can never hold, and the
 suite is run. A rule whose removal breaks no test is a rule nothing protects.
 
-**Result: 29 of 29 rules turned off the test that names them.** None survived.
+**Result: 32 of 32 rules turned off the test that names them.** None survived.
 
 | Rule turned off | Tests that went red | The test that names it | Did that one go red? |
 |---|---|---|---|
 | a session with a question waits for an answer | 1 | `test_a_session_with_a_question_waits_for_an_answer` | yes |
-| sessions keep the order of their numbers, whatever their state | 212 | `test_sessions_keep_the_order_of_their_numbers_whatever_their_state` | yes |
+| sessions keep the order of their numbers, whatever their state | 225 | `test_sessions_keep_the_order_of_their_numbers_whatever_their_state` | yes |
 | a focus event matches a session by id as well as by name | 19 | `test_a_focus_event_matches_a_session_by_id_as_well_as_by_name` | yes |
 | the sessions are fetched again every minute | 7 | `test_the_sessions_are_fetched_again_every_minute` | yes |
 | after two quiet minutes the speech bubble goes away | 3 | `test_after_two_quiet_minutes_the_speech_bubble_goes_away` | yes |
@@ -43,6 +43,9 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | a machine's folded group stays folded when the page opens again | 1 | `test_a_machine_s_folded_group_stays_folded_when_the_page_opens_again` | yes |
 | a terminal is offered only on this computer, and only for a session that runs on it | 1 | `test_a_terminal_is_offered_only_on_this_computer_and_only_for_a_session_that_runs_on_it` | yes |
 | an exempt measure shows its reason and is never marked green | 1 | `test_an_exempt_measure_shows_its_reason_and_is_never_marked_green` | yes |
+| a section folded by hand stays folded until something new waits in it | 1 | `test_a_section_folded_by_hand_stays_folded_until_something_new_waits_in_it` | yes |
+| a switch groups the sessions by machine instead, and the phone remembers it | 1 | `test_a_switch_groups_the_sessions_by_machine_instead_and_the_phone_remembers_it` | yes |
+| each role shows its purpose, who fills it, its limits and routing, and an unfilled one is marked | 1 | `test_each_role_shows_its_purpose_who_fills_it_its_limits_and_routing_and_an_unfilled_one_is_marked` | yes |
 
 ## What this does not prove
 

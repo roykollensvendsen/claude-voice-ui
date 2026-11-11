@@ -646,13 +646,15 @@ button {
   overflow-wrap: anywhere;
 }
 
-.view-switch {
+.view-switch,
+.group-switch {
   display: flex;
   justify-content: flex-end;
   gap: 4px;
   margin: 0 0 8px;
 }
-.view-switch button {
+.view-switch button,
+.group-switch button {
   min-height: 36px;
   padding: 0 12px;
   border-radius: 8px;
@@ -661,7 +663,8 @@ button {
   color: var(--muted);
   cursor: pointer;
 }
-.view-switch button[aria-pressed="true"] {
+.view-switch button[aria-pressed="true"],
+.group-switch button[aria-pressed="true"] {
   background: var(--card);
   color: var(--text);
   border-color: var(--muted);
@@ -1210,19 +1213,22 @@ button.open-terminal {
 }
 
 /* A group of sessions: the hub's own, or another computer's, under a heading that folds it away. */
-.machine {
+.machine,
+.programme {
   margin: 14px 0 0;
   padding: 4px 10px 10px;
   border: 1px solid var(--muted);
   border-radius: 12px;
 }
 
-.machine-heading {
+.machine-heading,
+.programme-heading {
   margin: 0;
   font-size: 1rem;
 }
 
-.machine-top {
+.machine-top,
+.programme-top {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -1238,7 +1244,8 @@ button.open-terminal {
   cursor: pointer;
 }
 
-.machine-name {
+.machine-name,
+.programme-name {
   font-size: 1.05rem;
   font-weight: 700;
 }
@@ -1346,4 +1353,48 @@ button.open-terminal {
 }
 .work-prs .checks.pending {
   color: var(--amber);
+}
+
+/* A programme's parts with more than one session, and the computer a session runs on. */
+.programme h3.component {
+  margin: 10px 0 6px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.machine-tag {
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+button.org-open {
+  min-height: 32px;
+  margin: 0 0 8px;
+}
+
+/* A programme's Organisation view: one block per role, an unfilled one marked. */
+.org .roles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.org .role {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.org .role.unfilled {
+  border-color: var(--red);
+}
+.org .role.unfilled .role-sessions {
+  color: var(--red);
+}
+.org .role-name {
+  font-weight: 700;
+  margin-right: 8px;
+}
+.org .role p {
+  margin: 4px 0 0;
 }
