@@ -126,6 +126,23 @@ describe("how both programs' code is doing", () => {
     expect(rows(0)[0]?.querySelector(".name")?.textContent).toBe("Something new");
   });
 
+  test("an exempt measure shows its reason and is never marked green", async () => {
+    const text = "22, in tools.py; exempt: the tool table is one long match";
+    await openHealth({
+      ...HEALTH,
+      repos: [
+        { ...HEALTH.repos[0]!, metrics: [metric({ id: "complexity", value: 22, text, status: "exempt" })] },
+      ],
+    });
+    const [row] = rows(0);
+    expect(row?.classList.contains("status-exempt")).toBe(true);
+    expect(row?.classList.contains("status-ok")).toBe(false);
+    expect(row?.querySelector(".reason")?.textContent).toBe(text);
+    stop?.();
+    await openHealth();
+    expect(rows(0)[0]?.querySelector(".reason")).toBeNull();
+  });
+
   test("back returns to the sessions", async () => {
     await openHealth();
     root.querySelector<HTMLButtonElement>(".health .back")?.click();

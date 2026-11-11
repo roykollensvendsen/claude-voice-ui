@@ -44,6 +44,12 @@ export function trendLine(values: number[]): Element[] {
   return [svg];
 }
 
+/** Why a measure the owner agreed to leave outside its limit is left there, in the bridge's words. */
+function reason(m: Metric): HTMLElement[] {
+  // RULE: an exempt measure shows its reason and is never marked green
+  return m.status === "exempt" ? [el("span", "reason", m.text)] : [];
+}
+
 export function measureRow(m: Metric): HTMLElement {
   const key = MEASURES[m.id];
   const said = CHECKS[String(m.value)];
@@ -59,6 +65,7 @@ export function measureRow(m: Metric): HTMLElement {
     el("span", "name", key ? t(key) : m.label),
     ...trendLine(m.trend),
     link,
+    ...reason(m),
   );
 }
 

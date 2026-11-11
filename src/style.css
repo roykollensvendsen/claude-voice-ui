@@ -1147,6 +1147,15 @@ button.open-terminal {
 .health .status-bad {
   border-left-color: var(--red);
 }
+.health .status-exempt {
+  border-left-style: dashed;
+  border-left-color: var(--muted);
+}
+.health .reason {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 0.85em;
+}
 .health .value {
   color: var(--text);
   font-variant-numeric: tabular-nums;

@@ -148,7 +148,7 @@ export interface Metric {
   value: number | string;
   unit: string;
   text: string;
-  status: "ok" | "warn" | "bad" | "unknown";
+  status: "ok" | "warn" | "bad" | "exempt" | "unknown";
   url: string;
   /** Up to 30 earlier values, oldest first. */
   trend: number[];

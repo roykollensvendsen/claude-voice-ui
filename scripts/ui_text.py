@@ -30,7 +30,7 @@ _NAMES = """
     submit role title true false aria expanded pressed label hidden password secret current
     Enter ContextMenu object focusout gone prompt_closed tool checkbox hello message_sent
     settings background terminal start-in remote-control generating ready summary_state
-    bad class points polyline repo svg unknown viewBox success failure running
+    bad class points polyline repo svg unknown exempt viewBox success failure running
     blank noopener no store none center undefined feat fix kind
     grid cards system light dark ok warn full stop required optional
     connecting live reconnecting page voice terminal
