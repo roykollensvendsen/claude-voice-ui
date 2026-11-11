@@ -1398,9 +1398,23 @@ button.open-terminal {
   font-size: 0.75rem;
   color: var(--muted);
 }
+/* Styled like the switches above the sessions, so it reads as a button, with room for a finger. */
 button.org-open {
-  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
   margin: 0 0 8px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--muted);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+}
+button.org-open .chevron {
+  font-size: 1.2em;
+  line-height: 1;
 }
 
 /* A programme's Organisation view: one block per role, an unfilled one marked. */
