@@ -1,10 +1,10 @@
 // The bridge's event API, as this app uses it. The specification is API.md.
 import type { Git } from "./git";
 import type { Session } from "./states";
-import type { Focused, OrgProgramme, Programme, Whoami, Work } from "./team";
+import type { Focused, OrgProgramme, Programme, ProgrammeHint, Whoami, Work } from "./team";
 import type { Usage } from "./usage";
 
-export type { Focused, OrgProgramme, OrgRole, Programme, Whoami, Work } from "./team";
+export type { Focused, OrgProgramme, OrgRole, Programme, ProgrammeHint, Whoami, Work } from "./team";
 
 /** The session the voice sends to by default. */
 export interface Active {
@@ -36,6 +36,8 @@ export interface Snapshot {
   machines?: Machine[];
   /** Absent from a bridge from before programmes. */
   programmes?: Programme[];
+  /** Absent from a bridge from before programme hints. */
+  programme_hints?: ProgrammeHint[];
 }
 
 /** One dependency the bridge checks, as GET /api/v1/doctor gives it. */

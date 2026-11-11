@@ -63,3 +63,15 @@ export interface OrgProgramme extends Named {
   /** The roles no session fills, by id. */
   unfilled: string[];
 }
+
+/** Sessions in no programme that clearly work together, as the bridge sees it; strongest reason first. */
+export interface ProgrammeHint {
+  /** The same for the same set of sessions; a new id when the group changes. */
+  id: string;
+  sessions: string[];
+  reason: "messages" | "folder" | "prefix"; // not shown
+  /** The folder's name for "folder", the shared start of the names for "prefix", else null. */
+  detail: string | null;
+  /** The messages between them in the last 7 days, for "messages". */
+  messages: number | null;
+}
