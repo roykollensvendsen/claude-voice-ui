@@ -4,7 +4,16 @@ import type { Snapshot } from "../bridge";
 import { type Keep, recall } from "../remember";
 import { IDLE } from "../update";
 import type { Home, View } from "../view";
-import { EXPANDED, FOLDED, HIDDEN, recalledGroupBy, recalledLanguage, THEME, VIEW } from "./preferences";
+import {
+  EXPANDED,
+  FOLDED,
+  HIDDEN,
+  HINTS,
+  recalledGroupBy,
+  recalledLanguage,
+  THEME,
+  VIEW,
+} from "./preferences";
 
 export function freshHome(keep: Keep | undefined): Home {
   return {
@@ -54,6 +63,9 @@ export function freshHome(keep: Keep | undefined): Home {
     groupBy: recalledGroupBy(keep),
     sections: {},
     org: null,
+    hints: [],
+    // RULE: a hint put away stays away for that same group
+    dismissedHints: recall<string[]>(keep, HINTS, []),
   };
 }
 
@@ -62,5 +74,11 @@ export function takeSnapshot(home: Home, snapshot: Snapshot) {
   home.sessions = snapshot.sessions;
   home.active = snapshot.active;
   home.machines = snapshot.machines ?? [];
+  takeProgrammes(home, snapshot);
+}
+
+/** The programmes and the hints at new ones; a bridge from before them has none. */
+function takeProgrammes(home: Home, snapshot: Snapshot) {
   home.programmes = snapshot.programmes ?? [];
+  home.hints = snapshot.programme_hints ?? [];
 }

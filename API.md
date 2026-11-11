@@ -32,3 +32,8 @@ In short:
   the report the bridge keeps, with `measured_at` (null before the first
   measure) and `refreshing`. While `refreshing` is true and the page is open,
   the page reads it again every 30 seconds.
+- hint at new programmes: the `programme_hints` beside the sessions, and the
+  `programme_hints` event when they change, name groups of sessions in no
+  programme that message each other or share a folder or a name. Under Other,
+  the page shows each group together with a note, a link to how a programme is
+  written down, and a way to put the hint away. It never writes anything.

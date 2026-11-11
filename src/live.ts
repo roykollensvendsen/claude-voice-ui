@@ -1,5 +1,15 @@
 // The bridge's stream of live events: focus, peek, active, news, status, git, update, output, prompts, settings, summaries and machines.
-import type { Active, Machine, Programme, Prompt, SessionDetail, Settings, UpdateStep, Work } from "./bridge";
+import type {
+  Active,
+  Machine,
+  Programme,
+  ProgrammeHint,
+  Prompt,
+  SessionDetail,
+  Settings,
+  UpdateStep,
+  Work,
+} from "./bridge";
 import type { Git } from "./git";
 
 /** The part of the browser's EventSource this app uses, so a test can stand in for it. */
@@ -75,6 +85,8 @@ export interface Handlers {
   machine(machine: Machine): void;
   /** The programmes were renamed, reordered, added or removed; the whole list. */
   programmes(change: { programmes: Programme[] }): void;
+  /** The groups under Other that could be a programme changed; the whole list. */
+  programmeHints(change: { programme_hints: ProgrammeHint[] }): void;
 }
 
 export const EVENTS_URL = "/api/v1/events";
@@ -102,5 +114,6 @@ export function follow(open: (url: string) => EventSourceLike, on: Handlers): ()
   source.addEventListener("machine", (e) => on.machine(parse(e)));
   source.addEventListener("work", (e) => on.work(parse(e))); // not shown
   source.addEventListener("programmes", (e) => on.programmes(parse(e))); // not shown
+  source.addEventListener("programme_hints", (e) => on.programmeHints(parse(e))); // not shown
   return () => source.close();
 }

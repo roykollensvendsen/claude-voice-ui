@@ -13,6 +13,7 @@ import {
   FOLDED,
   GROUP_BY,
   HIDDEN,
+  HINTS,
   LANG,
   THEME,
   VIEW,
@@ -225,6 +226,11 @@ export function tapActions({ home, deps, keep, draw, failed }: Context, means: M
       } catch (error) {
         failed(error);
       }
+      draw();
+    },
+    dismissHint(id) {
+      home.dismissedHints = [...home.dismissedHints, id];
+      remember(keep, HINTS, home.dismissedHints);
       draw();
     },
     closeOrg() {
