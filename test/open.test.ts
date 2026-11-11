@@ -81,6 +81,17 @@ describe("on this computer", () => {
     expect(root.querySelector(".opened")?.textContent).toBe(words);
   });
 
+  test("an answer the page does not know is said plainly, not as a code", async () => {
+    const b = await open(true);
+    b.focus.mockResolvedValue({
+      error: "only reachable from this computer or the tailnet",
+    } as unknown as Focused);
+    await longPress(root, "a1");
+    terminalButton()?.click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(root.querySelector(".opened")?.textContent).toBe("Could not open its terminal.");
+  });
+
   test("the answer is said in the owner's language", async () => {
     localStorage.setItem("cvu.lang", JSON.stringify("nb"));
     const b = await open(true);
