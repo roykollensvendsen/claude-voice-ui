@@ -7,6 +7,7 @@ import {
   type BridgeInfo,
   type Doctor,
   type Focused,
+  type OrgProgramme,
   type Output,
   type Pending,
   type Prompt,
@@ -181,6 +182,7 @@ export function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignI
       }),
     ),
     work: vi.fn(async (): Promise<Work | null> => null),
+    org: vi.fn(async (_programme: string): Promise<OrgProgramme | null> => null),
     whoami: vi.fn(async (): Promise<Whoami> => ({ here: false })),
     focus: vi.fn(async (_id: string): Promise<Focused> => ({ done: "raised" })),
   } satisfies Bridge & { snapshotCalls: () => number };
