@@ -182,3 +182,9 @@ name = "a terminal is offered only on this computer, and only for a session that
 file = "src/view/terminal.ts"
 find = 'if \(!home.here \|\| !s \|\| s.machine\) return \[\];'
 replace = 'if (!s) return [];'
+
+[[rule]]
+name = "an exempt measure shows its reason and is never marked green"
+file = "src/view/health.ts"
+find = 'return m\.status === "exempt" \? \[el\("span", "reason", m\.text\)\] : \[\];'
+replace = 'return [];'
