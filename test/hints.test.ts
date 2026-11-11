@@ -103,7 +103,7 @@ describe("a hint that sessions under Other could be a programme", () => {
     expect(other()?.querySelector("h3")).toBeNull();
   });
 
-  test("a hint put away stays away for that same group, and its sessions stay under Other", async () => {
+  test("a hint put away stays away for that same group", async () => {
     await open();
     hints()[0]?.querySelector<HTMLButtonElement>("button.hint-dismiss")?.click();
     expect(hints().map((h) => h.dataset.hint)).toEqual(["h-0000000002"]);

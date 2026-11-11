@@ -39,6 +39,7 @@ const LAYERS: Record<string, number> = {
   "view/work.ts": 4,
   "view/terminal.ts": 4,
   "view/programmes.ts": 4,
+  "view/hints.ts": 4,
   "view/org.ts": 4,
   "view.ts": 5,
   "app/context.ts": 6,

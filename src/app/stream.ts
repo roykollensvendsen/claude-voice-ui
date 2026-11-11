@@ -142,6 +142,10 @@ export function streamHandlers(
       home.programmes = change.programmes;
       draw();
     },
+    programmeHints(change) {
+      home.hints = change.programme_hints;
+      draw();
+    },
     machine(machine) {
       home.machines = [...home.machines.filter((m) => m.name !== machine.name), machine];
       draw();

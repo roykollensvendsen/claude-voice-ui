@@ -2,6 +2,7 @@
 import { type Key, plural, t } from "../i18n";
 import { cardState, type Session } from "../states";
 import { button, byProgramme, el, knowsProgrammes } from "../view/dom";
+import { otherInside } from "../view/hints";
 import { groups, sessionList } from "../view/machines";
 import type { Actions, GroupBy, Home } from "../view/types";
 
@@ -81,6 +82,12 @@ function inside(home: Home, act: Actions, list: Session[]): HTMLElement[] {
   ];
 }
 
+/** What a section holds: its parts by name, or under Other the hinted groups and the rest. */
+function body(home: Home, act: Actions, key: string, shown: Session[]): HTMLElement[] {
+  if (!shown.length) return [el("p", "muted", t("sessions.allHidden"))];
+  return key === OTHER ? otherInside(home, act, shown) : inside(home, act, shown);
+}
+
 /** One section a programme: a heading that folds it, with its counts, then its sessions. */
 function section(home: Home, act: Actions, key: string, list: Session[]): HTMLElement {
   const shown = list.filter((s) => !(s.id in home.hidden));
@@ -104,7 +111,7 @@ function section(home: Home, act: Actions, key: string, list: Session[]): HTMLEl
     org.append(el("span", "label", t("programme.org")), el("span", "chevron", "›"));
     box.append(org);
   }
-  box.append(...(shown.length ? inside(home, act, shown) : [el("p", "muted", t("sessions.allHidden"))]));
+  box.append(...body(home, act, key, shown));
   return box;
 }
 

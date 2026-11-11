@@ -9,6 +9,7 @@ import {
   type Pending,
   type Pr,
   type Programme,
+  type ProgrammeHint,
   type Prompt,
   type Reply,
   type SessionDetail,
@@ -98,6 +99,10 @@ export interface Home {
   sections: Record<string, { open: boolean; alarms: string[] }>;
   /** A programme's Organisation view, while open: no data until read, and null for an unknown programme. */
   org: { programme: string; data?: OrgProgramme | null } | null;
+  /** Groups under Other that could be a programme; empty from a bridge without them. */
+  hints: ProgrammeHint[];
+  /** The hints this phone put away, by id. */
+  dismissedHints: string[];
 }
 
 export type GroupBy = "programme" | "machine";
@@ -149,6 +154,7 @@ export interface Actions {
   toggleSection(key: string): void;
   openOrg(programme: string): void;
   closeOrg(): void;
+  dismissHint(id: string): void;
   /** Ask for a new summary of the open session. */
   summarize(): void;
   /** `said` is the answer in words, for the note shown once it is sent. */

@@ -224,3 +224,15 @@ name = "two sessions with the same name each say what tells them apart"
 file = "src/view/dom.ts"
 find = 'if \(!home\.sessions\.some\(\(o\) => o\.id !== s\.id && o\.name === s\.name\)\) return \[\];'
 replace = '  return [];'
+
+[[rule]]
+name = "a hint put away stays away for that same group"
+file = "src/app/home.ts"
+find = 'dismissedHints: recall<string\[\]>\(keep, HINTS, \[\]\),'
+replace = '    dismissedHints: [],'
+
+[[rule]]
+name = "a hint with fewer than two of its sessions on the page is not shown"
+file = "src/view/hints.ts"
+find = 'if \(members\.length < 2 \|\| home\.dismissedHints\.includes\(hint\.id\)\) return \[\];'
+replace = '    if (home.dismissedHints.includes(hint.id)) return [];'

@@ -1442,3 +1442,42 @@ button.org-open .chevron {
 .org .role p {
   margin: 4px 0 0;
 }
+
+/* Under Other, a group that could be a programme: framed together, with its note on top. */
+.hint {
+  margin: 0 0 12px;
+  padding: 8px 10px 10px;
+  border: 1px dashed var(--muted);
+  border-radius: 10px;
+}
+.hint-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.hint-note {
+  flex: 1 1 auto;
+  font-size: 0.9rem;
+}
+.hint-count {
+  display: block;
+  font-size: 0.8rem;
+}
+button.hint-dismiss {
+  min-width: 44px;
+  min-height: 44px;
+  margin: -10px -10px 0 0;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+a.hint-how {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin: 0 0 4px;
+  color: var(--text);
+  font-weight: 600;
+}

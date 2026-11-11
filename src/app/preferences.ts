@@ -8,6 +8,7 @@ export const FOLDED = "cvu.folded";
 export const HIDDEN = "cvu.hidden";
 export const VIEW = "cvu.view";
 export const GROUP_BY = "cvu.groupby";
+export const HINTS = "cvu.hints";
 export const THEME = "cvu.theme";
 export const LANG = "cvu.lang";
 /** The build this phone last loaded, where What's new starts. */
