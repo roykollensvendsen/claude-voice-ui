@@ -30,14 +30,14 @@
     "view/top.ts": 12,
     "view/work.ts": 6
   },
-  "coverage": 95.94,
+  "coverage": 95.99,
   "cycles": 0,
   "duplication": 0.0,
   "layer_violations": 0,
   "lint_errors": 0,
   "max_module_lines": {
     "app.ts": 380,
-    "app/actions.ts": 278,
+    "app/actions.ts": 293,
     "app/context.ts": 29,
     "app/home.ts": 66,
     "app/page.ts": 80,
@@ -45,7 +45,7 @@
     "app/sections.ts": 20,
     "app/stream.ts": 164,
     "app/updating.ts": 85,
-    "bridge.ts": 378,
+    "bridge.ts": 382,
     "changes.ts": 31,
     "git.ts": 66,
     "i18n.ts": 48,
@@ -59,7 +59,7 @@
     "view.ts": 108,
     "view/detail.ts": 216,
     "view/dom.ts": 110,
-    "view/health.ts": 89,
+    "view/health.ts": 104,
     "view/machines.ts": 125,
     "view/org.ts": 51,
     "view/programmes.ts": 117,
@@ -70,14 +70,14 @@
     "view/work.ts": 85
   },
   "mutation": {
-    "killed": 32,
-    "total": 32
+    "killed": 33,
+    "total": 33
   },
   "test_budget": {
     "seconds": 60,
     "tolerance": 0.25
   },
-  "test_seconds": 14.5,
-  "tests": 453,
+  "test_seconds": 22.3,
+  "tests": 459,
   "type_errors": 0
 }

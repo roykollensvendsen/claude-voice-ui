@@ -10,12 +10,12 @@ Where a rule already exists, this is the substitute. Each rule is disabled in
 turn, by replacing its one line with something that can never hold, and the
 suite is run. A rule whose removal breaks no test is a rule nothing protects.
 
-**Result: 32 of 32 rules turned off the test that names them.** None survived.
+**Result: 33 of 33 rules turned off the test that names them.** None survived.
 
 | Rule turned off | Tests that went red | The test that names it | Did that one go red? |
 |---|---|---|---|
 | a session with a question waits for an answer | 1 | `test_a_session_with_a_question_waits_for_an_answer` | yes |
-| sessions keep the order of their numbers, whatever their state | 225 | `test_sessions_keep_the_order_of_their_numbers_whatever_their_state` | yes |
+| sessions keep the order of their numbers, whatever their state | 231 | `test_sessions_keep_the_order_of_their_numbers_whatever_their_state` | yes |
 | a focus event matches a session by id as well as by name | 19 | `test_a_focus_event_matches_a_session_by_id_as_well_as_by_name` | yes |
 | the sessions are fetched again every minute | 7 | `test_the_sessions_are_fetched_again_every_minute` | yes |
 | after two quiet minutes the speech bubble goes away | 3 | `test_after_two_quiet_minutes_the_speech_bubble_goes_away` | yes |
@@ -46,6 +46,7 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | a section folded by hand stays folded until something new waits in it | 1 | `test_a_section_folded_by_hand_stays_folded_until_something_new_waits_in_it` | yes |
 | a switch groups the sessions by machine instead, and the phone remembers it | 1 | `test_a_switch_groups_the_sessions_by_machine_instead_and_the_phone_remembers_it` | yes |
 | each role shows its purpose, who fills it, its limits and routing, and an unfilled one is marked | 1 | `test_each_role_shows_its_purpose_who_fills_it_its_limits_and_routing_and_an_unfilled_one_is_marked` | yes |
+| the code-health page looks again only while it is open and the bridge is measuring | 1 | `test_the_code_health_page_looks_again_only_while_it_is_open_and_the_bridge_is_measuring` | yes |
 
 ## What this does not prove
 

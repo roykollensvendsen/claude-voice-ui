@@ -21,6 +21,8 @@ import {
 /** What the actions need from the rest of the app. */
 /** How long a copy button says it copied. */
 const COPIED_MS = 1500;
+/** How often an open code-health page looks again while the bridge measures. */
+const HEALTH_POLL_MS = 30_000;
 
 /**
  * Copy text, and say whether it worked. The clipboard is hidden on a page opened over plain http,
@@ -66,6 +68,25 @@ export interface Means {
 }
 
 export function tapActions({ home, deps, keep, draw, failed }: Context, means: Means): Actions {
+  /** Read the measures into the open page, and look again while the bridge measures. */
+  async function readHealth() {
+    const shown = home.health;
+    try {
+      const data = await deps.bridge.health();
+      if (home.health !== shown) return;
+      const next = { data };
+      home.health = next;
+      // RULE: the code-health page looks again only while it is open and the bridge is measuring
+      if (data.refreshing)
+        setTimeout(() => {
+          if (home.health === next) void readHealth();
+        }, HEALTH_POLL_MS);
+    } catch (error) {
+      failed(error);
+    }
+    draw();
+  }
+
   return {
     pick: (id) => {
       if (means.steadyTap(id)) means.pick(id);
@@ -159,13 +180,7 @@ export function tapActions({ home, deps, keep, draw, failed }: Context, means: M
       home.menuOpen = false;
       home.health = { data: null };
       draw();
-      try {
-        const data = await deps.bridge.health();
-        if (home.health) home.health = { data };
-      } catch (error) {
-        failed(error);
-      }
-      draw();
+      await readHealth();
     },
     dismissRestart() {
       home.restarted = null;

@@ -206,3 +206,9 @@ name = "each role shows its purpose, who fills it, its limits and routing, and a
 file = "src/view/org.ts"
 find = 'const unfilled = org.unfilled.includes\(r.id\) \|\| !r.sessions.length;'
 replace = '  const unfilled = false;'
+
+[[rule]]
+name = "the code-health page looks again only while it is open and the bridge is measuring"
+file = "src/app/actions.ts"
+find = 'if \(home\.health === next\) void readHealth\(\);'
+replace = '          void readHealth();'

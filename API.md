@@ -28,3 +28,7 @@ In short:
   `order`, and the `programmes` event when that list changes. Each
   programme's Organisation view is read from `/api/v1/org/{programme}` when it
   is opened.
+- show how the code is doing: `/api/v1/health/software` answers at once from
+  the report the bridge keeps, with `measured_at` (null before the first
+  measure) and `refreshing`. While `refreshing` is true and the page is open,
+  the page reads it again every 30 seconds.
