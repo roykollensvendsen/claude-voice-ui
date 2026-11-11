@@ -150,3 +150,59 @@ describe("how both programs' code is doing", () => {
     expect(root.querySelector(".grid")).not.toBeNull();
   });
 });
+
+describe("the measures the bridge keeps", () => {
+  const NOW = Date.parse("2026-11-10T12:00:00Z");
+  const kept = (over: Partial<SoftwareHealth>): SoftwareHealth => ({
+    ...HEALTH,
+    measured_at: "2026-11-10T11:50:00Z",
+    refreshing: false,
+    ...over,
+  });
+
+  beforeEach(() => vi.setSystemTime(NOW));
+
+  test("the measures show at once with how long ago they were measured", async () => {
+    await openHealth(kept({}));
+    expect(root.querySelector(".health .measured")?.textContent).toBe("Measured 10 min ago");
+    expect(rows(0).length).toBe(3);
+    expect(root.querySelector(".health .refreshing")).toBeNull();
+  });
+
+  test("while the bridge measures again, a quiet sign says so and the page looks again", async () => {
+    const b = await openHealth(kept({ refreshing: true }));
+    expect(root.querySelector(".health .refreshing")?.textContent).toBe("Measuring again…");
+    b.health.mockResolvedValue(kept({ measured_at: "2026-11-10T12:00:00Z", refreshing: false }));
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(b.health).toHaveBeenCalledTimes(2);
+    expect(root.querySelector(".health .measured")?.textContent).toBe("Measured just now");
+    expect(root.querySelector(".health .refreshing")).toBeNull();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(b.health).toHaveBeenCalledTimes(2);
+  });
+
+  test("before anything is measured, the page says it is measuring for the first time", async () => {
+    await openHealth({ as_of: "", repos: [], measured_at: null, refreshing: true });
+    expect(root.querySelector(".health .first")?.textContent).toBe("Measuring for the first time…");
+  });
+
+  test("with nothing measured and nothing under way, the page says there are no measures yet", async () => {
+    const b = await openHealth({ as_of: "", repos: [], measured_at: null, refreshing: false });
+    expect(root.querySelector(".health .first")?.textContent).toBe("No measures yet");
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(b.health).toHaveBeenCalledOnce();
+  });
+
+  test("closing the page stops looking again", async () => {
+    const b = await openHealth(kept({ refreshing: true }));
+    root.querySelector<HTMLButtonElement>(".health .back")?.click();
+    await vi.advanceTimersByTimeAsync(90_000);
+    expect(b.health).toHaveBeenCalledOnce();
+  });
+
+  test("a bridge that does not say when it measured shows the measures as before", async () => {
+    await openHealth();
+    expect(root.querySelector(".health .measured")).toBeNull();
+    expect(rows(0).length).toBe(3);
+  });
+});

@@ -161,6 +161,10 @@ export interface Metric {
 
 export interface SoftwareHealth {
   as_of: string;
+  /** When the bridge last measured; null before its first measure. An older bridge leaves it out. */
+  measured_at?: string | null;
+  /** The bridge is measuring again in the background. */
+  refreshing?: boolean;
   repos: { name: string; url: string; as_of: string; metrics: Metric[] }[];
 }
 
