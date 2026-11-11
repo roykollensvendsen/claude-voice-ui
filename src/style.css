@@ -1355,12 +1355,42 @@ button.open-terminal {
   color: var(--amber);
 }
 
-/* A programme's parts with more than one session, and the computer a session runs on. */
+/* A programme's parts, each under its name. In the grid, a part of one session is one tile wide,
+   so several sit on one line; in the list it takes the whole line like the rest. */
+.parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+}
+.part {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.part.small:has(> .grid) {
+  flex: 1 1 110px;
+}
+.part.small > .grid {
+  grid-template-columns: 1fr;
+}
 .programme h3.component {
   margin: 10px 0 6px;
   font-size: 0.9rem;
   color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+/* What tells two sessions with the same name apart. */
+.twin {
+  font-size: 0.8rem;
+}
+.tile .twin {
+  font-size: 0.7rem;
+  line-height: 1.2;
+  color: var(--muted);
+}
+
+/* The computer a session runs on. */
 .machine-tag {
   padding: 0 6px;
   border: 1px solid var(--line);

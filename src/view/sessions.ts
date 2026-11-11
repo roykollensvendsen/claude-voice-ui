@@ -14,6 +14,7 @@ import {
   numbered,
   peekMark,
   stateLine,
+  twinLine,
 } from "../view/dom";
 import { type Actions, type Home, type View } from "../view/types";
 
@@ -49,6 +50,7 @@ export function card(s: Session, home: Home, act: Actions): HTMLElement {
       ...kindMark(s),
       arrow,
     ),
+    ...twinLine(s, home),
     stateLine(s),
     ...onTheWay(s, home, true),
   );
@@ -181,6 +183,7 @@ export function tile(s: Session, home: Home, act: Actions): HTMLElement {
     ...peekMark(s, home),
     el("span", "name", s.name || s.id),
     ...machineTag(s, home),
+    ...twinLine(s, home),
     ...number(s),
     ...(home.active?.id === s.id ? [el("span", "pin")] : []),
     ...claudeLink(s, "↗").map((a) => {

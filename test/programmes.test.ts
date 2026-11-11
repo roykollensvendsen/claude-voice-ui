@@ -153,7 +153,7 @@ describe("a section for each programme", () => {
     expect(shown(acme)).toEqual(["m1", "a1", "a2", "v1", "lab-pc/v2", "d1"]);
   });
 
-  test("a component with one session keeps its name, in a small group beside the others", async () => {
+  test("every component in a programme keeps its name, however few sessions it has", async () => {
     await open();
     const docs = [...(section("acme")?.querySelectorAll<HTMLElement>(".part") ?? [])].at(-1);
     expect(docs?.querySelector("h3")?.textContent).toBe("Handbook");

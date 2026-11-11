@@ -26,6 +26,15 @@ export function matches(s: Session, key: string | null | undefined): boolean {
 export const mic = () => el("span", "mic", "💬");
 
 /** A terminal session's mark; a background session carries none. */
+/** For a session whose name another one shares: how it runs and when it was last heard from. */
+export function twinLine(s: Session, home: Home): HTMLElement[] {
+  // RULE: two sessions with the same name each say what tells them apart
+  if (!home.sessions.some((o) => o.id !== s.id && o.name === s.name)) return [];
+  const how = t(s.kind === "terminal" ? "session.twinTerminal" : "session.twinBridge");
+  const heard = t("session.twinHeard", { ago: t("time.ago", { time: timeInState(s.minutes_since_update) }) });
+  return [el("div", "twin muted", `${how} · ${heard}`)];
+}
+
 export const kindMark = (s: Session) => (s.kind === "terminal" ? [el("span", "kind", ">_")] : []);
 
 /** The session's short number, when the bridge gives one. */

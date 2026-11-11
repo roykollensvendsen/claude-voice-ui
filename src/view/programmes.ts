@@ -48,24 +48,36 @@ function counts(list: Session[], hidden: number): string {
   return parts.flatMap(([n, key]) => (n ? [plural(n, key)] : [])).join(" · ");
 }
 
-/** The programme-wide roles first, the manager before them all; then each part with more than one session. */
+/** One headed group of a programme's sessions; a group of one is small, to sit beside others. */
+function part(home: Home, act: Actions, name: string, members: Session[]): HTMLElement {
+  return el(
+    "div",
+    members.length > 1 ? "part" : "part small",
+    el("h3", "component", name),
+    sessionList(home, act, members, null),
+  );
+}
+
+/** The programme-wide roles first, the manager before them all; then each component, every one by name. */
 function inside(home: Home, act: Actions, list: Session[]): HTMLElement[] {
   const wide = list.filter((s) => s.programme_wide);
   wide.sort((a, b) => Number(b.role?.id === "manager") - Number(a.role?.id === "manager"));
   const rest = list.filter((s) => !s.programme_wide);
   const parts = [...new Set(rest.flatMap((s) => (s.component ? [s.component.id] : [])))];
-  const grouped = parts.filter((id) => rest.filter((s) => s.component?.id === id).length > 1);
-  const lone = rest.filter((s) => !s.component || !grouped.includes(s.component.id));
+  const loose = rest.filter((s) => !s.component);
+  // RULE: every component in a programme keeps its name, however few sessions it has
+  const named = parts.map((id) => {
+    const members = rest.filter((s) => s.component?.id === id);
+    return part(home, act, members[0]?.component?.name ?? id, members);
+  });
   return [
-    ...(wide.length ? [sessionList(home, act, wide, null)] : []),
-    ...grouped.flatMap((id) => {
-      const members = rest.filter((s) => s.component?.id === id);
-      return [
-        el("h3", "component", members[0]?.component?.name ?? id),
-        sessionList(home, act, members, null),
-      ];
-    }),
-    ...(lone.length ? [sessionList(home, act, lone, null)] : []),
+    el(
+      "div",
+      "parts",
+      ...(wide.length ? [part(home, act, t("programme.wide"), wide)] : []),
+      ...named,
+      ...(loose.length ? [part(home, act, t("programme.loose"), loose)] : []),
+    ),
   ];
 }
 

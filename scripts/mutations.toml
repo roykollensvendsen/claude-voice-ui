@@ -212,3 +212,15 @@ name = "the code-health page looks again only while it is open and the bridge is
 file = "src/app/actions.ts"
 find = 'if \(home\.health === next\) void readHealth\(\);'
 replace = '          void readHealth();'
+
+[[rule]]
+name = "every component in a programme keeps its name, however few sessions it has"
+file = "src/view/programmes.ts"
+find = 'return part\(home, act, members\[0\]\?\.component\?\.name \?\? id, members\);'
+replace = '    return sessionList(home, act, members, null);'
+
+[[rule]]
+name = "two sessions with the same name each say what tells them apart"
+file = "src/view/dom.ts"
+find = 'if \(!home\.sessions\.some\(\(o\) => o\.id !== s\.id && o\.name === s\.name\)\) return \[\];'
+replace = '  return [];'
