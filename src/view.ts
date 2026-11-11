@@ -3,7 +3,8 @@ import { t } from "./i18n";
 import { detailScreen } from "./view/detail";
 import { button, el } from "./view/dom";
 import { healthScreen } from "./view/health";
-import { groups } from "./view/machines";
+import { orgScreen } from "./view/org";
+import { groupSwitch, sessionGroups } from "./view/programmes";
 import { hiddenBlock, legend, viewSwitch } from "./view/sessions";
 import {
   CONNECTION,
@@ -22,7 +23,7 @@ import { prsBlock, waitingBlock } from "./view/work";
 
 // What the rest of the app reaches through this module.
 export { hasPrompt, matches } from "./view/dom";
-export type { Actions, Connection, Detail, Home, Theme, UpdateActions, View } from "./view/types";
+export type { Actions, Connection, Detail, GroupBy, Home, Theme, UpdateActions, View } from "./view/types";
 
 export function signInScreen(error: string | null, onSubmit: (secret: string) => void): HTMLElement {
   const input = el("input");
@@ -55,12 +56,20 @@ function lostContact(home: Home): HTMLElement[] {
   return [banner];
 }
 
+/** A screen that takes the place of the sessions: a session's page, an Organisation view, or health. */
+function asideScreen(home: Home, act: Actions): HTMLElement | null {
+  if (home.open) return detailScreen(home, home.open, act);
+  if (home.org) return orgScreen(home.org, home, act);
+  if (home.health) return healthScreen(home.health.data, act);
+  return null;
+}
+
 export function homeScreen(home: Home, act: Actions): HTMLElement {
   const menuToggle = button("⋯", act.toggleMenu, "menu-toggle");
   menuToggle.setAttribute("aria-label", t("menu.label"));
   menuToggle.setAttribute("aria-expanded", String(home.menuOpen));
   const connection = el("span", `connection ${home.connection}`, t(CONNECTION[home.connection]));
-  const { hidden, groups: lists } = groups(home, act);
+  const { hidden, groups: lists } = sessionGroups(home, act);
   const top = [
     el(
       "header",
@@ -79,8 +88,8 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
     ...newVersion(home, act),
   ];
   const problem = home.problem ? [el("p", "notice", home.problem)] : [];
-  if (home.open) return el("section", "home", ...top, ...problem, detailScreen(home, home.open, act));
-  if (home.health) return el("section", "home", ...top, ...problem, healthScreen(home.health.data, act));
+  const aside = asideScreen(home, act);
+  if (aside) return el("section", "home", ...top, ...problem, aside);
   return el(
     "section",
     "home",
@@ -90,6 +99,7 @@ export function homeScreen(home: Home, act: Actions): HTMLElement {
     ...problem,
     ...waitingBlock(home, act),
     viewSwitch(home, act),
+    ...groupSwitch(home, act),
     ...(home.legendOpen ? [legend()] : []),
     ...lists,
     ...hiddenBlock(hidden, home, act),

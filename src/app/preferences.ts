@@ -1,12 +1,13 @@
 // What this phone remembers between visits, and the language and theme it shows the page in.
 import { LANGUAGES, type Language, pickLanguage, setLanguage } from "../i18n";
 import { type Keep, recall } from "../remember";
-import type { Theme } from "../view";
+import type { GroupBy, Theme } from "../view";
 
 export const EXPANDED = "cvu.expanded";
 export const FOLDED = "cvu.folded";
 export const HIDDEN = "cvu.hidden";
 export const VIEW = "cvu.view";
+export const GROUP_BY = "cvu.groupby";
 export const THEME = "cvu.theme";
 export const LANG = "cvu.lang";
 /** The build this phone last loaded, where What's new starts. */
@@ -15,6 +16,11 @@ export const BUILD = "cvu.build";
 export function recalledLanguage(keep: Keep | undefined): Language | "system" {
   const saved = recall<string>(keep, LANG, "system");
   return Object.hasOwn(LANGUAGES, saved) ? (saved as Language) : "system";
+}
+
+export function recalledGroupBy(keep: Keep | undefined): GroupBy {
+  // RULE: a switch groups the sessions by machine instead, and the phone remembers it
+  return recall<string>(keep, GROUP_BY, "programme") === "machine" ? "machine" : "programme";
 }
 
 /** Show the page in the chosen language, or the first of the phone's that the page has. */

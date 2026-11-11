@@ -23,3 +23,8 @@ In short:
   offer `POST /api/v1/sessions/{id}/focus` for a session that runs there. The
   bridge's answer is a code (`raised`, `attached`, or a reason), which the page
   says in words.
+- group the sessions by programme: each session's `programme`, `component`,
+  `role` and `programme_wide`, the `programmes` beside the sessions with their
+  `order`, and the `programmes` event when that list changes. Each
+  programme's Organisation view is read from `/api/v1/org/{programme}` when it
+  is opened.

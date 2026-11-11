@@ -29,6 +29,16 @@ export const mic = () => el("span", "mic", "💬");
 export const kindMark = (s: Session) => (s.kind === "terminal" ? [el("span", "kind", ">_")] : []);
 
 /** The session's short number, when the bridge gives one. */
+/** Whether the bridge knows programmes, so the sessions can be grouped by them. */
+export const knowsProgrammes = (home: Home) =>
+  home.programmes.length > 0 || home.sessions.some((s) => s.programme);
+
+export const byProgramme = (home: Home) => home.groupBy === "programme" && knowsProgrammes(home);
+
+/** Grouped by programme, a session on another computer carries that computer as a small tag. */
+export const machineTag = (s: Session, home: Home) =>
+  s.machine && byProgramme(home) ? [el("span", "machine-tag", s.machine)] : [];
+
 export const number = (s: Session) => (s.number ? [el("span", "number", String(s.number))] : []);
 
 export const numbered = (s: Session) => `${s.number ? `${s.number} ` : ""}${label(s)}`;

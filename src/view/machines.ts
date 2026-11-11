@@ -18,7 +18,12 @@ function staleWhileLost(home: Home, list: HTMLElement): HTMLElement {
 }
 
 /** The sessions shown in one place, in the order they were placed; an ended one leaves a gap in the grid. */
-function sessionList(home: Home, act: Actions, placed: (Session | undefined)[], none: HTMLElement | null) {
+export function sessionList(
+  home: Home,
+  act: Actions,
+  placed: (Session | undefined)[],
+  none: HTMLElement | null,
+) {
   const shown = placed.filter((s): s is Session => Boolean(s) && !((s as Session).id in home.hidden));
   const items =
     home.view === "grid"

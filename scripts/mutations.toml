@@ -188,3 +188,21 @@ name = "an exempt measure shows its reason and is never marked green"
 file = "src/view/health.ts"
 find = 'return m\.status === "exempt" \? \[el\("span", "reason", m\.text\)\] : \[\];'
 replace = 'return [];'
+
+[[rule]]
+name = "a section folded by hand stays folded until something new waits in it"
+file = "src/app/sections.ts"
+find = 'if \(alarms.some\(\(id\) => !was.alarms.includes\(id\)\)\) was.open = true;'
+replace = '    if (alarms.length) was.open = true;'
+
+[[rule]]
+name = "a switch groups the sessions by machine instead, and the phone remembers it"
+file = "src/app/preferences.ts"
+find = 'return recall<string>\(keep, GROUP_BY, "programme"\) === "machine" \? "machine" : "programme";'
+replace = '  return "programme";'
+
+[[rule]]
+name = "each role shows its purpose, who fills it, its limits and routing, and an unfilled one is marked"
+file = "src/view/org.ts"
+find = 'const unfilled = org.unfilled.includes\(r.id\) \|\| !r.sessions.length;'
+replace = '  const unfilled = false;'

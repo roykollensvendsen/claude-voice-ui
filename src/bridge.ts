@@ -1,7 +1,10 @@
 // The bridge's event API, as this app uses it. The specification is API.md.
 import type { Git } from "./git";
 import type { Session } from "./states";
+import type { Focused, OrgProgramme, Programme, Whoami, Work } from "./team";
 import type { Usage } from "./usage";
+
+export type { Focused, OrgProgramme, OrgRole, Programme, Whoami, Work } from "./team";
 
 /** The session the voice sends to by default. */
 export interface Active {
@@ -31,6 +34,8 @@ export interface Snapshot {
   active: Active | null;
   /** Absent from a bridge that reaches no other computer. */
   machines?: Machine[];
+  /** Absent from a bridge from before programmes. */
+  programmes?: Programme[];
 }
 
 /** One dependency the bridge checks, as GET /api/v1/doctor gives it. */
@@ -184,39 +189,6 @@ export interface Prs {
   prs: Pr[];
 }
 
-/** Whether the page was opened on the bridge's own computer, and not through Tailscale or another site. */
-export type Whoami = { here: boolean };
-
-/** What the bridge did when asked to open a session's terminal, or (403, 409, 501) why it would not. */
-export type Focused =
-  | { done: "raised" | "attached" } // not shown
-  | { reason: "not_here" | "not_local" | "no_window" | "not_running" | "no_window_list" }; // not shown
-
-/** What the team's sessions wait on the owner for, and the open pull requests, as GET /api/v1/work gives them. */
-export interface Work {
-  as_of: string;
-  waiting_on_owner: {
-    id: string;
-    text: string;
-    /** An exact command for the owner to run, when there is one. */
-    command: string | null;
-    since: string;
-    repo: string | null;
-    /** The session it is about, by the name on its page. */
-    session: string | null;
-  }[];
-  open_prs: {
-    repo: string;
-    number: number;
-    title: string;
-    url: string;
-    checks: "pass" | "fail" | "pending"; // not shown
-    draft: boolean;
-  }[];
-  /** Repositories whose pull requests could not be read just now. */
-  unreadable?: string[];
-}
-
 export type SignIn = "ok" | "wrong" | "too-many" | "unreachable";
 
 /** The bridge answered 401: the sign-in cookie is missing or has run out. */
@@ -253,6 +225,8 @@ export interface Bridge {
   /** Where the page was opened (an older bridge means not here), and bringing a terminal forward there. */
   whoami(): Promise<Whoami>;
   focus(session: string): Promise<Focused>;
+  /** Who fills each role in a programme; null for a programme the bridge does not know. */
+  org(programme: string): Promise<OrgProgramme | null>;
 }
 
 /** The API is always at /api/v1 on the page's own origin, wherever the page itself is served. */
@@ -386,6 +360,10 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
       const response = await fetch(`${one(session)}/focus`, { method: "POST" });
       if ([403, 409, 501].includes(response.status)) return (await response.json()) as Focused;
       return read<Focused>(response);
+    },
+    async org(programme) {
+      const response = await fetch(`${BASE}/org/${encodeURIComponent(programme)}`, { cache: "no-store" });
+      return response.status === 404 ? null : read<OrgProgramme>(response);
     },
     async choose(session) {
       return read<Active>(
