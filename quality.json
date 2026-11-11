@@ -57,7 +57,7 @@
     "view/health.ts": 82,
     "view/machines.ts": 120,
     "view/sessions.ts": 249,
-    "view/terminal.ts": 18,
+    "view/terminal.ts": 31,
     "view/top.ts": 244,
     "view/types.ts": 147,
     "view/work.ts": 85
@@ -70,7 +70,7 @@
     "seconds": 60,
     "tolerance": 0.25
   },
-  "test_seconds": 17.2,
-  "tests": 437,
+  "test_seconds": 10.1,
+  "tests": 438,
   "type_errors": 0
 }

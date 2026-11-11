@@ -5,8 +5,21 @@ import { type Session } from "../states";
 import { button, el } from "../view/dom";
 import { type Actions, type Home } from "../view/types";
 
-/** The words for what the bridge did, or for why it would not. */
-const said = (answer: Focused) => t(`terminal.${"done" in answer ? answer.done : answer.reason}` as Key);
+const KNOWN = new Set([
+  "raised",
+  "attached",
+  "not_here",
+  "not_local",
+  "no_window",
+  "not_running",
+  "no_window_list",
+]);
+
+/** The words for what the bridge did, or for why it would not; plain words for an answer not known here. */
+function said(answer: Focused): string {
+  const code = "done" in answer ? answer.done : answer.reason;
+  return t(KNOWN.has(code) ? (`terminal.${code}` as Key) : "terminal.failed");
+}
 
 /** The button, and what the bridge said the last time it was pressed for this session. */
 export function terminalRow(home: Home, s: Session | undefined, act: Actions): HTMLElement[] {

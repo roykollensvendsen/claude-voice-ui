@@ -223,5 +223,6 @@
   "terminal.not_running": "It is not running.",
   "terminal.not_local": "It runs on another computer.",
   "terminal.not_here": "A terminal can only be opened from this computer.",
-  "terminal.no_window_list": "This computer cannot list its windows."
+  "terminal.no_window_list": "This computer cannot list its windows.",
+  "terminal.failed": "Could not open its terminal."
 }

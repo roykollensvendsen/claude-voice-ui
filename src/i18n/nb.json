@@ -223,5 +223,6 @@
   "terminal.not_running": "Den kjører ikke.",
   "terminal.not_local": "Den kjører på en annen datamaskin.",
   "terminal.not_here": "En terminal kan bare åpnes fra denne datamaskinen.",
-  "terminal.no_window_list": "Denne datamaskinen kan ikke liste vinduene sine."
+  "terminal.no_window_list": "Denne datamaskinen kan ikke liste vinduene sine.",
+  "terminal.failed": "Klarte ikke å åpne terminalen."
 }
