@@ -99,7 +99,11 @@ function section(home: Home, act: Actions, key: string, list: Session[]): HTMLEl
   const box = el("section", "programme", el("h2", "programme-heading", top));
   box.dataset.programme = key;
   if (!open) return box;
-  if (key !== OTHER) box.append(button(t("programme.org"), () => act.openOrg(key), "org-open"));
+  if (key !== OTHER) {
+    const org = button("", () => act.openOrg(key), "org-open");
+    org.append(el("span", "label", t("programme.org")), el("span", "chevron", "›"));
+    box.append(org);
+  }
   box.append(...(shown.length ? inside(home, act, shown) : [el("p", "muted", t("sessions.allHidden"))]));
   return box;
 }
