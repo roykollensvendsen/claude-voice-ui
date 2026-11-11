@@ -145,15 +145,50 @@ describe("a section for each programme", () => {
     ]);
   });
 
-  test("the programme-wide roles come first, then the components, and a lone session gets no group", async () => {
+  test("the programme-wide roles come first under their own heading, then every component under its name", async () => {
     await open();
     const acme = section("acme");
-    expect(shown(acme)[0]).toBe("m1");
-    expect([...(acme?.querySelectorAll("h3") ?? [])].map((h) => h.textContent)).toEqual([
-      "Robot arm",
-      "Camera vision",
-    ]);
+    const heads = [...(acme?.querySelectorAll(".part h3") ?? [])].map((h) => h.textContent);
+    expect(heads).toEqual(["Whole programme", "Robot arm", "Camera vision", "Handbook"]);
     expect(shown(acme)).toEqual(["m1", "a1", "a2", "v1", "lab-pc/v2", "d1"]);
+  });
+
+  test("a component with one session keeps its name, in a small group beside the others", async () => {
+    await open();
+    const docs = [...(section("acme")?.querySelectorAll<HTMLElement>(".part") ?? [])].at(-1);
+    expect(docs?.querySelector("h3")?.textContent).toBe("Handbook");
+    expect(docs?.classList.contains("small")).toBe(true);
+    expect(shown(docs)).toEqual(["d1"]);
+  });
+
+  test("a session in no component and not programme-wide is said to be outside the components", async () => {
+    await open();
+    top("zeta")?.click();
+    expect(section("zeta")?.querySelector(".part h3")?.textContent).toBe("Outside the components");
+  });
+
+  test("two sessions with the same name each say what tells them apart", async () => {
+    const one = inAcme({
+      id: "q1",
+      name: "acme-quality",
+      number: 8,
+      programme_wide: true,
+      kind: "terminal",
+      minutes_since_update: 5,
+    });
+    const two = inAcme({
+      id: "q2",
+      name: "acme-quality",
+      number: 9,
+      programme_wide: true,
+      kind: "bridge-session",
+      minutes_since_update: 720,
+    });
+    await open([{ ...SNAPSHOT, sessions: [...ALL, one, two] }]);
+    const twin = (id: string) => root.querySelector(`[data-session="${id}"] .twin`)?.textContent;
+    expect(twin("q1")).toBe("In a terminal · heard from 5 min ago");
+    expect(twin("q2")).toBe("Started by the bridge · heard from 12 h ago");
+    expect(root.querySelector('[data-session="m1"] .twin')).toBeNull();
   });
 
   test("a section's heading counts what waits and what works", async () => {
