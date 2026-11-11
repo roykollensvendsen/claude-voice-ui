@@ -320,3 +320,12 @@ describe("the Organisation view", () => {
     expect(await bridge(async () => reply(404)).org("nope")).toBeNull();
   });
 });
+
+describe("the button to a programme's Organisation view", () => {
+  test("it looks like a button: it carries an arrow beside its word", async () => {
+    await open();
+    const org = section("acme")?.querySelector<HTMLButtonElement>("button.org-open");
+    expect(org?.querySelector(".label")?.textContent).toBe("Organisation");
+    expect(org?.querySelector(".chevron")?.textContent).toBe("›");
+  });
+});
