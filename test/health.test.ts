@@ -193,7 +193,7 @@ describe("the measures the bridge keeps", () => {
     expect(b.health).toHaveBeenCalledOnce();
   });
 
-  test("closing the page stops looking again", async () => {
+  test("the code-health page looks again only while it is open and the bridge is measuring", async () => {
     const b = await openHealth(kept({ refreshing: true }));
     root.querySelector<HTMLButtonElement>(".health .back")?.click();
     await vi.advanceTimersByTimeAsync(90_000);

@@ -1,7 +1,7 @@
 // How both programs' code is doing, measure by measure.
 import { type Metric, type SoftwareHealth } from "../bridge";
 import { type Key, t } from "../i18n";
-import { button, el } from "../view/dom";
+import { ago, button, el } from "../view/dom";
 import { type Actions } from "../view/types";
 
 export const MEASURES: Record<string, Key> = {
@@ -69,12 +69,27 @@ export function measureRow(m: Metric): HTMLElement {
   );
 }
 
+const measured = (at: string | null | undefined): HTMLElement[] =>
+  at ? [el("span", "measured", t("health.measured", { ago: ago(at) }))] : [];
+
+const measuring = (on: boolean | undefined): HTMLElement[] =>
+  on ? [el("span", "refreshing", t("health.refreshing"))] : [];
+
+/** When the bridge measured, and a quiet sign while it measures again. */
+function freshness(data: SoftwareHealth): HTMLElement[] {
+  if (!data.repos.length)
+    return [el("p", "first muted", t(data.refreshing ? "health.first" : "health.none"))];
+  const parts = [...measured(data.measured_at), ...measuring(data.refreshing)];
+  return parts.length ? [el("p", "freshness muted", ...parts)] : [];
+}
+
 export function healthScreen(data: SoftwareHealth | null, act: Actions): HTMLElement {
   return el(
     "section",
     "health",
     button(t("detail.back"), act.closeHealth, "back"),
     el("h2", undefined, t("health.title")),
+    ...(data ? freshness(data) : []),
     ...(data
       ? data.repos.map((r) =>
           el(
