@@ -38,7 +38,7 @@
   "lint_errors": 0,
   "max_module_lines": {
     "app.ts": 380,
-    "app/actions.ts": 306,
+    "app/actions.ts": 311,
     "app/context.ts": 29,
     "app/home.ts": 84,
     "app/page.ts": 80,
@@ -72,14 +72,14 @@
     "view/work.ts": 85
   },
   "mutation": {
-    "killed": 38,
-    "total": 38
+    "killed": 40,
+    "total": 40
   },
   "test_budget": {
     "seconds": 60,
     "tolerance": 0.25
   },
-  "test_seconds": 21.0,
-  "tests": 474,
+  "test_seconds": 18.7,
+  "tests": 476,
   "type_errors": 0
 }

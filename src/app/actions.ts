@@ -56,8 +56,13 @@ async function copyText(text: string): Promise<boolean> {
 }
 
 /** Why the bridge refused an answer: its own words, with the status when it was not about the answer. */
-const refusal = (done: { refused: string; status?: number }) =>
-  done.status ? t("prompt.refused", { status: done.status, reason: done.refused }) : done.refused;
+function refusal({ refused, status }: { refused: string; status?: number }): string {
+  if (status === undefined) return refused || t("prompt.refusedPlain", { reason: t("prompt.noReason") });
+  // RULE: a refusal without the bridge's words still says what happened
+  const said = t("prompt.refused", { status, reason: refused || t("prompt.noReason") });
+  // RULE: an answer refused as coming from another page says where to answer instead
+  return status === 403 ? `${said}. ${t("prompt.otherPage")}` : said;
+}
 
 export interface Means {
   /** Whether a tap on `id` began there, and not just after the sessions moved. */

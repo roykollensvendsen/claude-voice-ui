@@ -242,3 +242,15 @@ name = "an answer that fails says why under the question"
 file = "src/app/actions.ts"
 find = 'else home\.replies\[prompt\.id\] = \{ error: t\("prompt\.notSent"\) \};'
 replace = '        else failed(error);'
+
+[[rule]]
+name = "a refusal without the bridge's words still says what happened"
+file = "src/app/actions.ts"
+find = 'const said = t\("prompt\.refused", \{ status, reason: refused \|\| t\("prompt\.noReason"\) \}\);'
+replace = '  const said = t("prompt.refused", { status, reason: refused });'
+
+[[rule]]
+name = "an answer refused as coming from another page says where to answer instead"
+file = "src/app/actions.ts"
+find = 'return status === 403 \? `\$\{said\}\. \$\{t\("prompt\.otherPage"\)\}` : said;'
+replace = '  return said;'
