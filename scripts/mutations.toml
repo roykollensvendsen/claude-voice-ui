@@ -254,3 +254,15 @@ name = "an answer refused as coming from another page says where to answer inste
 file = "src/app/actions.ts"
 find = 'return status === 403 \? `\$\{said\}\. \$\{t\("prompt\.otherPage"\)\}` : said;'
 replace = '  return said;'
+
+[[rule]]
+name = "an ending of the checks the page does not know still reads plainly"
+file = "src/view/health.ts"
+find = 'return said \? t\(said\) : t\("health\.ciOther", \{ state: state\.replaceAll\("_", " "\) \}\);'
+replace = '  return said ? t(said) : state;'
+
+[[rule]]
+name = "a measure with nothing measured yet says so in the page's language"
+file = "src/view/health.ts"
+find = 'if \(m\.value === null\) return t\("health\.unmeasured"\);'
+replace = '  if (m.value === null) return m.text;'

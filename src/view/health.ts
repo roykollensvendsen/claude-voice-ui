@@ -21,9 +21,19 @@ export const MEASURES: Record<string, Key> = {
 export const CHECKS: Record<string, Key> = {
   success: "health.ciPassing",
   failure: "health.ciFailing",
+  startup_failure: "health.ciFailing",
   running: "health.ciRunning",
   in_progress: "health.ciRunning",
   queued: "health.ciRunning",
+  waiting: "health.ciRunning",
+  requested: "health.ciRunning",
+  pending: "health.ciRunning",
+  cancelled: "health.ciCancelled",
+  skipped: "health.ciSkipped",
+  timed_out: "health.ciTimedOut",
+  action_required: "health.ciWaiting",
+  neutral: "health.ciNeutral",
+  stale: "health.ciStale",
 };
 
 export const SVG = "http://www.w3.org/2000/svg";
@@ -54,13 +64,25 @@ function reason(m: Metric): HTMLElement[] {
   return m.status === "exempt" ? [el("span", "reason", m.text)] : [];
 }
 
+/** How the checks on main ended, in the page's words, however GitHub put it. */
+function ended(state: string): string {
+  const said = CHECKS[state];
+  // RULE: an ending of the checks the page does not know still reads plainly
+  return said ? t(said) : t("health.ciOther", { state: state.replaceAll("_", " ") });
+}
+
+/** A measure's value in the page's words, read from the data and never from the bridge's wording. */
+function valueText(m: Metric): string {
+  // RULE: a measure with nothing measured yet says so in the page's language
+  if (m.value === null) return t("health.unmeasured");
+  if (typeof m.value === "number") return [m.value, m.unit].filter(Boolean).join(" ");
+  return m.id === "ci" ? ended(m.value) : m.text;
+}
+
 export function measureRow(m: Metric): HTMLElement {
   const key = MEASURES[m.id];
-  const said = CHECKS[String(m.value)];
-  const value =
-    typeof m.value === "number" ? [m.value, m.unit].filter(Boolean).join(" ") : said ? t(said) : m.text;
-  const link = el("a", "value", value);
-  link.href = m.url;
+  const link = el("a", "value", valueText(m));
+  if (m.url) link.href = m.url;
   link.target = "_blank";
   link.rel = "noopener";
   return el(
