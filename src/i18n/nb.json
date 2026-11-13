@@ -144,6 +144,8 @@
   "prompt.cut": "(forkortet)",
   "prompt.answered": "Svart: {answer}",
   "prompt.gone": "Allerede besvart et annet sted.",
+  "prompt.notSent": "Svaret kom ikke fram til broen: ingen forbindelse. Prøv igjen.",
+  "prompt.refused": "Broen avviste svaret ({status}): {reason}",
   "menu.theme": "Tema",
   "menu.language": "Språk",
   "settings.startIn": "Nye økter åpnes",

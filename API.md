@@ -37,3 +37,7 @@ In short:
   programme that message each other or share a folder or a name. Under Other,
   the page shows each group together with a note, a link to how a programme is
   written down, and a way to put the hint away. It never writes anything.
+- answer a session's question or approval: `POST /api/v1/prompts/{id}`. The
+  page tells the cases apart under the question: answered, gone (404), not
+  fitting (409, 502), refused for another reason (its status and the bridge's
+  words), and an answer that never reached the bridge.
