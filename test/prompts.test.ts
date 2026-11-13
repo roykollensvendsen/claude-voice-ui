@@ -154,6 +154,31 @@ describe("prompts that change under the phone", () => {
     expect(box()?.querySelector(".error")?.textContent).toBe("that option is not offered");
   });
 
+  test("an answer that fails says why under the question", async () => {
+    const b = withPrompts(QUESTION);
+    b.answer.mockRejectedValue(new TypeError("Failed to fetch"));
+    await open(b);
+    await longPress(root, "q-1");
+    buttonIn("blue")?.click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(box()?.querySelector(".error")?.textContent).toBe(
+      "The answer did not reach the bridge: no connection. Try again.",
+    );
+    expect(root.querySelector(".notice")).toBeNull();
+  });
+
+  test("an answer the bridge refuses for another reason says its status and its words", async () => {
+    const b = withPrompts(QUESTION);
+    b.answer.mockResolvedValue({ refused: "not from an allowed page", status: 403 });
+    await open(b);
+    await longPress(root, "q-1");
+    buttonIn("blue")?.click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(box()?.querySelector(".error")?.textContent).toBe(
+      "The bridge refused the answer (403): not from an allowed page",
+    );
+  });
+
   test("a question answered elsewhere says so and goes", async () => {
     const b = withPrompts(QUESTION);
     b.answer.mockResolvedValue("gone");
@@ -209,5 +234,20 @@ describe("the bridge's prompts calls", () => {
     });
     expect(await api.answer("p1", { answer: "x" })).toEqual({ refused: "no such option" });
     expect(await api.answer("p1", { answer: "x" })).toBe("gone");
+  });
+
+  test("any other refusal from the bridge comes back with its status and its words", async () => {
+    const reply = (status: number, body: unknown) => new Response(JSON.stringify(body), { status });
+    const api = (r: Response) => bridge(vi.fn().mockResolvedValue(r));
+    expect(
+      await api(reply(403, { error: "not from an allowed page" })).answer("p1", { answer: "blue" }),
+    ).toEqual({
+      refused: "not from an allowed page",
+      status: 403,
+    });
+    expect(await api(new Response("oops", { status: 500 })).answer("p1", { answer: "blue" })).toEqual({
+      refused: "",
+      status: 500,
+    });
   });
 });

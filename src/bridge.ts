@@ -181,8 +181,11 @@ export type Reply =
   | { answer: string | string[] | { text: string } }
   | { decision: "allow" | "deny"; reason?: string };
 
-/** "gone" when it was answered or closed elsewhere; `refused` when the answer does not fit it. */
-export type Answered = "ok" | "gone" | { refused: string };
+/**
+ * "gone" when it was answered or closed elsewhere; `refused` when the answer does not fit it, in the
+ * bridge's words, with the `status` when the bridge refused it for another reason.
+ */
+export type Answered = "ok" | "gone" | { refused: string; status?: number };
 
 export interface Pr {
   number: number;
