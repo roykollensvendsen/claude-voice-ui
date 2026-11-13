@@ -60,7 +60,7 @@
     "view.ts": 108,
     "view/detail.ts": 216,
     "view/dom.ts": 119,
-    "view/health.ts": 104,
+    "view/health.ts": 108,
     "view/hints.ts": 53,
     "view/machines.ts": 125,
     "view/org.ts": 51,
@@ -79,7 +79,7 @@
     "seconds": 60,
     "tolerance": 0.25
   },
-  "test_seconds": 18.7,
-  "tests": 476,
+  "test_seconds": 15.6,
+  "tests": 478,
   "type_errors": 0
 }

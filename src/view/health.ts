@@ -10,16 +10,20 @@ export const MEASURES: Record<string, Key> = {
   tests: "health.tests",
   problems: "health.problems",
   cycles: "health.cycles",
+  layers: "health.layers",
+  duplication: "health.duplication",
   complexity: "health.complexity",
   test_time: "health.testTime",
   ci: "health.ci",
 };
 
-/** The checks on main, as GitHub states them. */
+/** The checks on main, as GitHub states them: a run's conclusion, or its status while it is not done. */
 export const CHECKS: Record<string, Key> = {
   success: "health.ciPassing",
   failure: "health.ciFailing",
   running: "health.ciRunning",
+  in_progress: "health.ciRunning",
+  queued: "health.ciRunning",
 };
 
 export const SVG = "http://www.w3.org/2000/svg";
