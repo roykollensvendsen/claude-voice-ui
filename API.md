@@ -40,4 +40,6 @@ In short:
 - answer a session's question or approval: `POST /api/v1/prompts/{id}`. The
   page tells the cases apart under the question: answered, gone (404), not
   fitting (409, 502), refused for another reason (its status and the bridge's
-  words), and an answer that never reached the bridge.
+  words, or a plain sentence when it gave none), and an answer that never
+  reached the bridge. A refusal as coming from another page (403) adds a next
+  step: open the page at the bridge's own address.

@@ -10,13 +10,13 @@ Where a rule already exists, this is the substitute. Each rule is disabled in
 turn, by replacing its one line with something that can never hold, and the
 suite is run. A rule whose removal breaks no test is a rule nothing protects.
 
-**Result: 38 of 38 rules turned off the test that names them.** None survived.
+**Result: 40 of 40 rules turned off the test that names them.** None survived.
 
 | Rule turned off | Tests that went red | The test that names it | Did that one go red? |
 |---|---|---|---|
 | a session with a question waits for an answer | 1 | `test_a_session_with_a_question_waits_for_an_answer` | yes |
-| sessions keep the order of their numbers, whatever their state | 244 | `test_sessions_keep_the_order_of_their_numbers_whatever_their_state` | yes |
-| a focus event matches a session by id as well as by name | 21 | `test_a_focus_event_matches_a_session_by_id_as_well_as_by_name` | yes |
+| sessions keep the order of their numbers, whatever their state | 246 | `test_sessions_keep_the_order_of_their_numbers_whatever_their_state` | yes |
+| a focus event matches a session by id as well as by name | 23 | `test_a_focus_event_matches_a_session_by_id_as_well_as_by_name` | yes |
 | the sessions are fetched again every minute | 7 | `test_the_sessions_are_fetched_again_every_minute` | yes |
 | after two quiet minutes the speech bubble goes away | 3 | `test_after_two_quiet_minutes_the_speech_bubble_goes_away` | yes |
 | being signed out while watching returns to the sign-in page | 6 | `test_being_signed_out_while_watching_returns_to_the_sign_in_page` | yes |
@@ -52,6 +52,8 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | a hint put away stays away for that same group | 1 | `test_a_hint_put_away_stays_away_for_that_same_group` | yes |
 | a hint with fewer than two of its sessions on the page is not shown | 1 | `test_a_hint_with_fewer_than_two_of_its_sessions_on_the_page_is_not_shown` | yes |
 | an answer that fails says why under the question | 1 | `test_an_answer_that_fails_says_why_under_the_question` | yes |
+| a refusal without the bridge's words still says what happened | 1 | `test_a_refusal_without_the_bridge_s_words_still_says_what_happened` | yes |
+| an answer refused as coming from another page says where to answer instead | 1 | `test_an_answer_refused_as_coming_from_another_page_says_where_to_answer_instead` | yes |
 
 ## What this does not prove
 
