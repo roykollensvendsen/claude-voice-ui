@@ -144,6 +144,8 @@
   "prompt.cut": "(cut short)",
   "prompt.answered": "Answered: {answer}",
   "prompt.gone": "Already answered somewhere else.",
+  "prompt.notSent": "The answer did not reach the bridge: no connection. Try again.",
+  "prompt.refused": "The bridge refused the answer ({status}): {reason}",
   "menu.theme": "Theme",
   "menu.language": "Language",
   "settings.startIn": "New sessions open",

@@ -1,4 +1,5 @@
 // What a tap on the page asks for.
+import { SignedOut } from "../bridge";
 import { whatsNew } from "../changes";
 import { t } from "../i18n";
 import { recall, remember } from "../remember";
@@ -53,6 +54,10 @@ async function copyText(text: string): Promise<boolean> {
     box.remove();
   }
 }
+
+/** Why the bridge refused an answer: its own words, with the status when it was not about the answer. */
+const refusal = (done: { refused: string; status?: number }) =>
+  done.status ? t("prompt.refused", { status: done.status, reason: done.refused }) : done.refused;
 
 export interface Means {
   /** Whether a tap on `id` began there, and not just after the sessions moved. */
@@ -251,12 +256,14 @@ export function tapActions({ home, deps, keep, draw, failed }: Context, means: M
     },
     async answer(prompt, reply, said) {
       const done = await deps.bridge.answer(prompt.id, reply).catch((error) => {
-        failed(error);
+        // RULE: an answer that fails says why under the question
+        if (error instanceof SignedOut) failed(error);
+        else home.replies[prompt.id] = { error: t("prompt.notSent") };
         return null;
       });
-      if (done === null) return;
+      if (done === null) return draw();
       if (typeof done === "object") {
-        home.replies[prompt.id] = { error: done.refused };
+        home.replies[prompt.id] = { error: refusal(done) };
       } else {
         home.prompts = home.prompts.filter((x) => x.id !== prompt.id);
         home.replies[prompt.session] = {

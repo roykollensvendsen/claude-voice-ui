@@ -1,6 +1,6 @@
 # Every rule, turned off in turn
 
-*Run 2026-11-11 by `python scripts/mutate.py --write
+*Run 2026-11-13 by `python scripts/mutate.py --write
 evidence/tests/rule-mutations.md`, which is how to repeat it. The script
 restores every file it touched before it exits.*
 
@@ -10,13 +10,13 @@ Where a rule already exists, this is the substitute. Each rule is disabled in
 turn, by replacing its one line with something that can never hold, and the
 suite is run. A rule whose removal breaks no test is a rule nothing protects.
 
-**Result: 37 of 37 rules turned off the test that names them.** None survived.
+**Result: 38 of 38 rules turned off the test that names them.** None survived.
 
 | Rule turned off | Tests that went red | The test that names it | Did that one go red? |
 |---|---|---|---|
 | a session with a question waits for an answer | 1 | `test_a_session_with_a_question_waits_for_an_answer` | yes |
-| sessions keep the order of their numbers, whatever their state | 242 | `test_sessions_keep_the_order_of_their_numbers_whatever_their_state` | yes |
-| a focus event matches a session by id as well as by name | 19 | `test_a_focus_event_matches_a_session_by_id_as_well_as_by_name` | yes |
+| sessions keep the order of their numbers, whatever their state | 244 | `test_sessions_keep_the_order_of_their_numbers_whatever_their_state` | yes |
+| a focus event matches a session by id as well as by name | 21 | `test_a_focus_event_matches_a_session_by_id_as_well_as_by_name` | yes |
 | the sessions are fetched again every minute | 7 | `test_the_sessions_are_fetched_again_every_minute` | yes |
 | after two quiet minutes the speech bubble goes away | 3 | `test_after_two_quiet_minutes_the_speech_bubble_goes_away` | yes |
 | being signed out while watching returns to the sign-in page | 6 | `test_being_signed_out_while_watching_returns_to_the_sign_in_page` | yes |
@@ -51,6 +51,7 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | two sessions with the same name each say what tells them apart | 1 | `test_two_sessions_with_the_same_name_each_say_what_tells_them_apart` | yes |
 | a hint put away stays away for that same group | 1 | `test_a_hint_put_away_stays_away_for_that_same_group` | yes |
 | a hint with fewer than two of its sessions on the page is not shown | 1 | `test_a_hint_with_fewer_than_two_of_its_sessions_on_the_page_is_not_shown` | yes |
+| an answer that fails says why under the question | 1 | `test_an_answer_that_fails_says_why_under_the_question` | yes |
 
 ## What this does not prove
 

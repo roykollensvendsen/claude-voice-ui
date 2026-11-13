@@ -253,6 +253,15 @@ async function read<T>(response: Response): Promise<T> {
   return (await response.json()) as T;
 }
 
+/** 409: the answer does not fit; 502: the other computer the prompt belongs to did not take it. */
+const NOT_FITTING = new Set([409, 502]);
+
+/** Why the bridge refused an answer, in its words, with the status when it was not about the answer. */
+async function refusedBy(response: Response): Promise<Answered> {
+  const error = ((await response.json().catch(() => ({}))) as { error?: string }).error ?? "";
+  return NOT_FITTING.has(response.status) ? { refused: error } : { refused: error, status: response.status };
+}
+
 export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge {
   return {
     async signIn(secret) {
@@ -347,13 +356,11 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
         body: JSON.stringify(reply),
       });
       if (response.status === 404) return "gone";
-      // 502: the other computer the prompt belongs to did not take the answer.
-      if (response.status === 409 || response.status === 502) {
-        const body = (await response.json().catch(() => ({}))) as { error?: string };
-        return { refused: body.error ?? "" };
+      if (response.status === 401 || response.ok) {
+        await read<unknown>(response);
+        return "ok";
       }
-      await read<unknown>(response);
-      return "ok";
+      return refusedBy(response);
     },
     async work() {
       const response = await fetch(`${BASE}/work`, { cache: "no-store" });

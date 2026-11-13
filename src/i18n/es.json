@@ -144,6 +144,8 @@
   "prompt.cut": "(recortado)",
   "prompt.answered": "Respondido: {answer}",
   "prompt.gone": "Ya respondido en otro sitio.",
+  "prompt.notSent": "La respuesta no llegó al puente: sin conexión. Inténtalo de nuevo.",
+  "prompt.refused": "El puente rechazó la respuesta ({status}): {reason}",
   "menu.theme": "Tema",
   "menu.language": "Idioma",
   "settings.startIn": "Las sesiones nuevas se abren",
