@@ -31,7 +31,7 @@
     "view/top.ts": 12,
     "view/work.ts": 6
   },
-  "coverage": 96.29,
+  "coverage": 96.3,
   "cycles": 0,
   "duplication": 0.0,
   "layer_violations": 0,
@@ -46,7 +46,7 @@
     "app/sections.ts": 20,
     "app/stream.ts": 168,
     "app/updating.ts": 85,
-    "bridge.ts": 394,
+    "bridge.ts": 396,
     "changes.ts": 31,
     "git.ts": 66,
     "i18n.ts": 48,
@@ -60,7 +60,7 @@
     "view.ts": 108,
     "view/detail.ts": 216,
     "view/dom.ts": 119,
-    "view/health.ts": 108,
+    "view/health.ts": 130,
     "view/hints.ts": 53,
     "view/machines.ts": 125,
     "view/org.ts": 51,
@@ -72,14 +72,14 @@
     "view/work.ts": 85
   },
   "mutation": {
-    "killed": 40,
-    "total": 40
+    "killed": 42,
+    "total": 42
   },
   "test_budget": {
     "seconds": 60,
     "tolerance": 0.25
   },
-  "test_seconds": 15.6,
-  "tests": 478,
+  "test_seconds": 16.0,
+  "tests": 481,
   "type_errors": 0
 }

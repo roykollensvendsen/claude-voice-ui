@@ -152,11 +152,13 @@ export interface SessionDetail {
 export interface Metric {
   id: string;
   label: string;
-  value: number | string;
+  /** Null when nothing is measured yet; for the checks on main, GitHub's conclusion or status. */
+  value: number | string | null;
   unit: string;
   text: string;
   status: "ok" | "warn" | "bad" | "exempt" | "unknown";
-  url: string;
+  /** Null when there is nowhere to link to yet. */
+  url: string | null;
   /** Up to 30 earlier values, oldest first. */
   trend: number[];
 }

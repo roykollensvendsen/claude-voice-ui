@@ -10,12 +10,12 @@ Where a rule already exists, this is the substitute. Each rule is disabled in
 turn, by replacing its one line with something that can never hold, and the
 suite is run. A rule whose removal breaks no test is a rule nothing protects.
 
-**Result: 40 of 40 rules turned off the test that names them.** None survived.
+**Result: 42 of 42 rules turned off the test that names them.** None survived.
 
 | Rule turned off | Tests that went red | The test that names it | Did that one go red? |
 |---|---|---|---|
 | a session with a question waits for an answer | 1 | `test_a_session_with_a_question_waits_for_an_answer` | yes |
-| sessions keep the order of their numbers, whatever their state | 246 | `test_sessions_keep_the_order_of_their_numbers_whatever_their_state` | yes |
+| sessions keep the order of their numbers, whatever their state | 251 | `test_sessions_keep_the_order_of_their_numbers_whatever_their_state` | yes |
 | a focus event matches a session by id as well as by name | 23 | `test_a_focus_event_matches_a_session_by_id_as_well_as_by_name` | yes |
 | the sessions are fetched again every minute | 7 | `test_the_sessions_are_fetched_again_every_minute` | yes |
 | after two quiet minutes the speech bubble goes away | 3 | `test_after_two_quiet_minutes_the_speech_bubble_goes_away` | yes |
@@ -38,7 +38,7 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | the percentage turns from grey to yellow to red near the limit | 5 | `test_the_percentage_turns_from_grey_to_yellow_to_red_near_the_limit` | yes |
 | a new version is loaded only when the notice is tapped | 2 | `test_a_new_version_is_loaded_only_when_the_notice_is_tapped` | yes |
 | the theme chosen is remembered | 1 | `test_the_theme_chosen_is_remembered` | yes |
-| the language chosen is remembered | 6 | `test_the_language_chosen_is_remembered` | yes |
+| the language chosen is remembered | 11 | `test_the_language_chosen_is_remembered` | yes |
 | a name the voice used matches the session on this computer, not one of that name on another machine | 2 | `test_a_name_the_voice_used_matches_the_session_on_this_computer_not_one_of_that_name_on_another_machine` | yes |
 | a machine's folded group stays folded when the page opens again | 1 | `test_a_machine_s_folded_group_stays_folded_when_the_page_opens_again` | yes |
 | a terminal is offered only on this computer, and only for a session that runs on it | 1 | `test_a_terminal_is_offered_only_on_this_computer_and_only_for_a_session_that_runs_on_it` | yes |
@@ -54,6 +54,8 @@ suite is run. A rule whose removal breaks no test is a rule nothing protects.
 | an answer that fails says why under the question | 1 | `test_an_answer_that_fails_says_why_under_the_question` | yes |
 | a refusal without the bridge's words still says what happened | 1 | `test_a_refusal_without_the_bridge_s_words_still_says_what_happened` | yes |
 | an answer refused as coming from another page says where to answer instead | 1 | `test_an_answer_refused_as_coming_from_another_page_says_where_to_answer_instead` | yes |
+| an ending of the checks the page does not know still reads plainly | 1 | `test_an_ending_of_the_checks_the_page_does_not_know_still_reads_plainly` | yes |
+| a measure with nothing measured yet says so in the page's language | 1 | `test_a_measure_with_nothing_measured_yet_says_so_in_the_page_s_language` | yes |
 
 ## What this does not prove
 
