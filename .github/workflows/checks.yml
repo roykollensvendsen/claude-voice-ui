@@ -95,9 +95,11 @@ jobs:
 
   # The quality ratchet: nothing measured in quality.json may get worse than on the base,
   # unless the pull request has a Ratchet-Exception line for it.
+  # No time limit, on purpose: this job holds the mutation run, which grows with every rule,
+  # and a run cut short proves nothing. Never cap it; remove a cap rather than raise it.
+  # (GitHub itself still stops any job after 360 minutes.)
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 20          # the mutation run is the slow part: the suite once per rule
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
