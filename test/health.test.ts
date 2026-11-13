@@ -104,6 +104,53 @@ describe("how both programs' code is doing", () => {
     expect(rows(0).map((r) => r.querySelector(".value")?.textContent)).toEqual(["består", "47.7 s"]);
   });
 
+  // Every measure the bridge sends, by id, with the English label it sends along.
+  const FROM_THE_BRIDGE: Record<string, string> = {
+    coverage: "Test coverage",
+    mutation: "Rules proven by a test",
+    tests: "Tests",
+    problems: "Lint and type errors",
+    cycles: "Import cycles",
+    layers: "Modules in their layers",
+    duplication: "Copied code",
+    complexity: "Most tangled function",
+    test_time: "Time the tests take",
+    ci: "Checks on main",
+  };
+
+  test("every measure the bridge sends is named in the page's language", async () => {
+    localStorage.setItem("cvu.lang", JSON.stringify("nb"));
+    await openHealth({
+      ...HEALTH,
+      repos: [
+        {
+          ...HEALTH.repos[0]!,
+          metrics: Object.entries(FROM_THE_BRIDGE).map(([id, label]) => metric({ id, label })),
+        },
+      ],
+    });
+    const named = rows(0).map((r) => r.querySelector(".name")?.textContent);
+    expect(named.filter((name) => Object.values(FROM_THE_BRIDGE).includes(name ?? ""))).toEqual([]);
+    expect(named).toContain("Regler bevist av en test (mutasjonstester)");
+  });
+
+  test("checks on main that are still queued or in progress are told as running", async () => {
+    localStorage.setItem("cvu.lang", JSON.stringify("nb"));
+    await openHealth({
+      ...HEALTH,
+      repos: [
+        {
+          ...HEALTH.repos[0]!,
+          metrics: [
+            metric({ id: "ci", value: "in_progress", text: "running" }),
+            metric({ id: "ci", value: "queued", text: "running" }),
+          ],
+        },
+      ],
+    });
+    expect(rows(0).map((r) => r.querySelector(".value")?.textContent)).toEqual(["kjører", "kjører"]);
+  });
+
   test("a measure with a history draws its trend", async () => {
     await openHealth();
     const [coverage, , ci] = rows(0);
