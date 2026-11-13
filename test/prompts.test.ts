@@ -167,15 +167,35 @@ describe("prompts that change under the phone", () => {
     expect(root.querySelector(".notice")).toBeNull();
   });
 
-  test("an answer the bridge refuses for another reason says its status and its words", async () => {
+  async function refusedWith(done: { refused: string; status?: number }) {
     const b = withPrompts(QUESTION);
-    b.answer.mockResolvedValue({ refused: "not from an allowed page", status: 403 });
+    b.answer.mockResolvedValue(done);
     await open(b);
     await longPress(root, "q-1");
     buttonIn("blue")?.click();
     await vi.advanceTimersByTimeAsync(0);
-    expect(box()?.querySelector(".error")?.textContent).toBe(
-      "The bridge refused the answer (403): not from an allowed page",
+    return box()?.querySelector(".error")?.textContent;
+  }
+
+  test("an answer the bridge refuses for another reason says its status and its words", async () => {
+    expect(await refusedWith({ refused: "the session is busy", status: 500 })).toBe(
+      "The bridge refused the answer (500): the session is busy",
+    );
+  });
+
+  test("a refusal without the bridge's words still says what happened", async () => {
+    expect(await refusedWith({ refused: "", status: 500 })).toBe(
+      "The bridge refused the answer (500): it did not say why. Try again.",
+    );
+    expect(await refusedWith({ refused: "" })).toBe(
+      "The bridge refused the answer: it did not say why. Try again.",
+    );
+  });
+
+  test("an answer refused as coming from another page says where to answer instead", async () => {
+    expect(await refusedWith({ refused: "not from an allowed page", status: 403 })).toBe(
+      "The bridge refused the answer (403): not from an allowed page. " +
+        "Open this page at the bridge's own address, on the tailnet, and answer again.",
     );
   });
 
