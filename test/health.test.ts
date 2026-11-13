@@ -151,6 +151,55 @@ describe("how both programs' code is doing", () => {
     expect(rows(0).map((r) => r.querySelector(".value")?.textContent)).toEqual(["kjører", "kjører"]);
   });
 
+  const valuesOf = async (metrics: Metric[]) => {
+    localStorage.setItem("cvu.lang", JSON.stringify("nb"));
+    await openHealth({ ...HEALTH, repos: [{ ...HEALTH.repos[0]!, metrics }] });
+    return rows(0).map((r) => r.querySelector(".value")?.textContent);
+  };
+
+  test("a measure with nothing measured yet says so in the page's language", async () => {
+    const unmeasured: Partial<Metric> = {
+      value: null,
+      status: "unknown",
+      text: "Nothing measured yet",
+      trend: [],
+    };
+    expect(
+      await valuesOf([
+        metric({ id: "coverage", ...unmeasured }),
+        metric({ id: "ci", ...unmeasured, text: "not known" }),
+      ]),
+    ).toEqual(["ikke målt ennå", "ikke målt ennå"]);
+  });
+
+  test("every way GitHub can end the checks on main is told in the page's language", async () => {
+    const ends = [
+      "cancelled",
+      "skipped",
+      "timed_out",
+      "startup_failure",
+      "action_required",
+      "neutral",
+      "stale",
+    ];
+    const told = await valuesOf(ends.map((value) => metric({ id: "ci", value, text: value, status: "bad" })));
+    expect(told).toEqual([
+      "avbrutt",
+      "hoppet over",
+      "tidsavbrutt",
+      "feiler",
+      "venter på godkjenning",
+      "ferdig uten dom",
+      "utdatert",
+    ]);
+  });
+
+  test("an ending of the checks the page does not know still reads plainly", async () => {
+    expect(
+      await valuesOf([metric({ id: "ci", value: "brand_new_end", text: "brand_new_end", status: "bad" })]),
+    ).toEqual(["avsluttet: brand new end"]);
+  });
+
   test("a measure with a history draws its trend", async () => {
     await openHealth();
     const [coverage, , ci] = rows(0);
