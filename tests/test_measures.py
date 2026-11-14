@@ -74,3 +74,12 @@ def test_an_unreachable_list_says_where_it_looked_and_how_to_try_again(monkeypat
     said = capsys.readouterr().out
     assert measures.PUBLISHED in said
     assert "gh workflow run measures" in said
+
+
+def test_a_list_that_is_not_json_says_where_it_looked_and_how_to_try_again(tmp_path, capsys):
+    listed = tmp_path / "measures.json"
+    listed.write_text("<html>a proxy's own page</html>", encoding="utf-8")
+    assert measures.main(["measures.py", str(listed)]) == 1
+    said = capsys.readouterr().out
+    assert str(listed) in said
+    assert "gh workflow run measures" in said
