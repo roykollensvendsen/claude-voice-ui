@@ -69,7 +69,7 @@ def main(argv: list[str]) -> int:
     words = json.loads((ROOT / "src" / "i18n" / "en.json").read_text(encoding="utf-8"))
     try:
         published = read(where)
-    except (urllib.error.URLError, TimeoutError) as error:
+    except (urllib.error.URLError, TimeoutError, ValueError) as error:
         sys.stdout.write(
             f"Could not read {where}: {error}.\n"
             "Try again with: gh workflow run measures --repo roykollensvendsen/claude-voice-ui\n"
