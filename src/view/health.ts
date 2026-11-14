@@ -25,7 +25,7 @@ export const CHECKS: Record<string, Key> = {
   running: "health.ciRunning",
   in_progress: "health.ciRunning",
   queued: "health.ciRunning",
-  waiting: "health.ciRunning",
+  waiting: "health.ciWaiting",
   requested: "health.ciRunning",
   pending: "health.ciRunning",
   cancelled: "health.ciCancelled",
