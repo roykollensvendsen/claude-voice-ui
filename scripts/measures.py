@@ -19,6 +19,7 @@ import json
 import pathlib
 import re
 import sys
+import urllib.error
 import urllib.request
 
 ROOT = pathlib.Path(__file__).parent.parent
@@ -66,7 +67,15 @@ def main(argv: list[str]) -> int:
     where = argv[1] if len(argv) > 1 else PUBLISHED
     source = (ROOT / "src" / "view" / "health.ts").read_text(encoding="utf-8")
     words = json.loads((ROOT / "src" / "i18n" / "en.json").read_text(encoding="utf-8"))
-    lines = missing(read(where), source, words)
+    try:
+        published = read(where)
+    except (urllib.error.URLError, TimeoutError) as error:
+        sys.stdout.write(
+            f"Could not read {where}: {error}.\n"
+            "Try again with: gh workflow run measures --repo roykollensvendsen/claude-voice-ui\n"
+        )
+        return 1
+    lines = missing(published, source, words)
     for line in lines:
         sys.stdout.write(f"{line}\n")
     if lines:
