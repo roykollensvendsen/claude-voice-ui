@@ -173,6 +173,11 @@ translated; they are shown as they arrive.
 - `scripts/ui_text.py` fails on a string in `src/*.ts` that reads as words,
   so new text cannot skip the files. A string that only reaches a log ends
   its line with `// not shown`.
+- `scripts/measures.py` reads the measures the bridge publishes in
+  `docs/event-api/measures.json` in its own repository, and fails, naming the
+  measure, when the code-health page has no words for one. The `measures`
+  workflow runs it on every pull request and once a day. It needs the network,
+  so it stays out of the test suite.
 
 To add a language, say German:
 
