@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { start } from "../src/app";
 import type { Metric, SoftwareHealth } from "../src/bridge";
+import { MEASURES } from "../src/view/health";
 import { FakeSource, fakeBridge, ONE } from "./fakes";
 
 let root: HTMLElement;
@@ -104,33 +105,19 @@ describe("how both programs' code is doing", () => {
     expect(rows(0).map((r) => r.querySelector(".value")?.textContent)).toEqual(["består", "47.7 s"]);
   });
 
-  // Every measure the bridge sends, by id, with the English label it sends along.
-  const FROM_THE_BRIDGE: Record<string, string> = {
-    coverage: "Test coverage",
-    mutation: "Rules proven by a test",
-    tests: "Tests",
-    problems: "Lint and type errors",
-    cycles: "Import cycles",
-    layers: "Modules in their layers",
-    duplication: "Copied code",
-    complexity: "Most tangled function",
-    test_time: "Time the tests take",
-    ci: "Checks on main",
-  };
-
-  test("every measure the bridge sends is named in the page's language", async () => {
+  // Which measures the bridge sends is checked against its published list by
+  // scripts/measures.py, in CI and daily, so the suite itself stays offline.
+  test("every measure the page knows is named in the page's language", async () => {
     localStorage.setItem("cvu.lang", JSON.stringify("nb"));
+    const label = (id: string) => `the bridge's label for ${id}`;
     await openHealth({
       ...HEALTH,
       repos: [
-        {
-          ...HEALTH.repos[0]!,
-          metrics: Object.entries(FROM_THE_BRIDGE).map(([id, label]) => metric({ id, label })),
-        },
+        { ...HEALTH.repos[0]!, metrics: Object.keys(MEASURES).map((id) => metric({ id, label: label(id) })) },
       ],
     });
     const named = rows(0).map((r) => r.querySelector(".name")?.textContent);
-    expect(named.filter((name) => Object.values(FROM_THE_BRIDGE).includes(name ?? ""))).toEqual([]);
+    expect(named.filter((name) => name?.startsWith("the bridge's label"))).toEqual([]);
     expect(named).toContain("Regler bevist av en test (mutasjonstester)");
   });
 
