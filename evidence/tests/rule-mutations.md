@@ -1,6 +1,6 @@
 # Every rule, turned off in turn
 
-*Run 2026-11-13 by `python scripts/mutate.py --write
+*Run 2026-11-14 by `python scripts/mutate.py --write
 evidence/tests/rule-mutations.md`, which is how to repeat it. The script
 restores every file it touched before it exits.*
 
