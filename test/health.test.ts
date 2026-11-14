@@ -181,6 +181,7 @@ describe("how both programs' code is doing", () => {
       "action_required",
       "neutral",
       "stale",
+      "waiting",
     ];
     const told = await valuesOf(ends.map((value) => metric({ id: "ci", value, text: value, status: "bad" })));
     expect(told).toEqual([
@@ -191,6 +192,7 @@ describe("how both programs' code is doing", () => {
       "venter på godkjenning",
       "ferdig uten dom",
       "utdatert",
+      "venter på godkjenning",
     ]);
   });
 
