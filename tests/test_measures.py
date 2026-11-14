@@ -62,3 +62,15 @@ def test_the_command_fails_and_names_the_id(tmp_path):
     )
     assert done.returncode == 1
     assert "brand_new" in done.stdout
+
+
+def test_an_unreachable_list_says_where_it_looked_and_how_to_try_again(monkeypatch, capsys):
+    def unreachable(*_args, **_kwargs):
+        reason = "no route to host"
+        raise measures.urllib.error.URLError(reason)
+
+    monkeypatch.setattr(measures.urllib.request, "urlopen", unreachable)
+    assert measures.main(["measures.py", measures.PUBLISHED]) == 1
+    said = capsys.readouterr().out
+    assert measures.PUBLISHED in said
+    assert "gh workflow run measures" in said
