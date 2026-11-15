@@ -234,12 +234,16 @@ def main() -> int:
     args = parser.parse_args()
 
     tidy_up()
-    # RULE: an empty rule table is not a crash
-    # A scaffolded repository starts with a table of comments and no rows.
-    rules = tomllib.loads(TABLE.read_text()).get("rule", [])
+    # A table emptied, moved or lost by mistake would leave every rule unproven
+    # while the run stayed green, so nothing to check is a failure.
+    rules = tomllib.loads(TABLE.read_text()).get("rule", []) if TABLE.is_file() else []
+    # RULE: no rows to check is a failure not a pass
     if not rules:
-        print(f"no rules in {TABLE.relative_to(ROOT)} yet; add one per rule the code enforces")  # noqa: T201
-        return 0
+        print(  # noqa: T201
+            f"nothing to switch off: no rows in {TABLE.name}. Restore it from main "
+            "(git checkout origin/main -- scripts/mutations.toml), or add a row per rule."
+        )
+        return 1
     results = []
     lost: list[str] = []
     standing: tuple[pathlib.Path, str, str] | None = None

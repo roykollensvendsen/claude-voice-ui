@@ -302,7 +302,7 @@ find = 'plain = ANSI\.sub\("", r\.stdout\)'
 replace = 'plain = r.stdout'
 
 [[rule]]
-name = "an empty rule table is not a crash"
+name = "no rows to check is a failure not a pass"
 file = "scripts/mutate.py"
 find = '^\s*if not rules:$'
 replace = 'if False:'
