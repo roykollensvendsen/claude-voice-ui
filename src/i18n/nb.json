@@ -189,6 +189,7 @@
   "health.none": "Ingen målinger ennå",
   "health.coverage": "Testdekning",
   "health.mutation": "Regler bevist av en test (mutasjonstester)",
+  "health.mutants": "Kodeendringer testene fanger",
   "health.tests": "Tester",
   "health.problems": "Lint- og typefeil",
   "health.cycles": "Importsykluser",

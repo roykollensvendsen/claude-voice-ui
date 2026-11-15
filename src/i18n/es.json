@@ -189,6 +189,7 @@
   "health.none": "Aún no hay medidas",
   "health.coverage": "Cobertura de pruebas",
   "health.mutation": "Reglas probadas por un test (tests de mutación)",
+  "health.mutants": "Cambios en el código que los tests detectan",
   "health.tests": "Pruebas",
   "health.problems": "Errores de lint y de tipos",
   "health.cycles": "Ciclos de importación",
