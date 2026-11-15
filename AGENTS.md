@@ -10,7 +10,7 @@ the bridge only through the bridge's event API, specified in claude-voice's
 [ADR-CVU-002](decisions/ADR-CVU-002-how-a-change-is-made.md) is why. In short:
 
 - **A failing test first.** Commit the test on its own, red, then the code
-  that turns it green, as two commits. A `// RULE:` line in the code needs a
+  that turns it green, as two commits. A `// RULE:` line in the code, or `# RULE:` in `scripts/`, needs a
   test titled with the same words and a row in `scripts/mutations.toml`.
 - **Conventional Commits.** `type: Subject` in the imperative, at most 72
   characters; the types are in `committed.toml`. The body is written for a

@@ -88,7 +88,8 @@ get past the limit; that is an exemption, and section 4 applies.
 
 **A rule nobody proves.** `mutate.py` names each rule whose removal no test
 noticed. A rule is a line marked `// RULE: what it says` in `src/` (or
-`# RULE:` in the Python tooling); it needs a row in `scripts/mutations.toml`
+`# RULE:` in the Python tooling under `scripts/`, the mutation runner
+included, though never in its `repair()`); it needs a row in `scripts/mutations.toml`
 and a test titled in the rule's own words (`// RULE: a wrong secret is refused`
 wants `test("a wrong secret is refused", …)`). Write that test, run the
 mutation, see that very test go red, and keep the row. Never loosen a row or

@@ -266,3 +266,67 @@ name = "a measure with nothing measured yet says so in the page's language"
 file = "src/view/health.ts"
 find = 'if \(m\.value === null\) return t\("health\.unmeasured"\);'
 replace = '  if (m.value === null) return m.text;'
+
+# The project's own tools. The mutation runner can switch off its own lines,
+# because it has loaded its code before it does; only repair(), which a killed
+# run calls with the line still switched off, must never hold a rule.
+
+[[rule]]
+name = "a killed run's temporary files are swept at the next start"
+file = "scripts/mutate.py"
+find = '^\s*for left in MUTATE_TMP\.iterdir\(\) if MUTATE_TMP\.is_dir\(\) else \[\]:$'
+replace = 'for left in []:'
+
+[[rule]]
+name = "a file changed during the run is never restored over"
+file = "scripts/mutate.py"
+find = '^\s*return False$'
+replace = 'pass'
+
+[[rule]]
+name = "two mutations never share a bytecode cache"
+file = "scripts/mutate.py"
+find = 'env = \{\*\*os\.environ, "PYTHONDONTWRITEBYTECODE": "1"\}'
+replace = 'env = {**os.environ}'
+
+[[rule]]
+name = "a suite run leaves no temporary files behind"
+file = "scripts/mutate.py"
+find = '^\s*_remove\(temporary\)$'
+replace = 'pass'
+
+[[rule]]
+name = "a coloured failure line is still attributed"
+file = "scripts/mutate.py"
+find = 'plain = ANSI\.sub\("", r\.stdout\)'
+replace = 'plain = r.stdout'
+
+[[rule]]
+name = "an empty rule table is not a crash"
+file = "scripts/mutate.py"
+find = '^\s*if not rules:$'
+replace = 'if False:'
+
+[[rule]]
+name = "a commit message never links to a Claude session"
+file = "scripts/no_session_links.py"
+find = '^\s*if SESSION\.search\(message\):$'
+replace = 'if False:'
+
+[[rule]]
+name = "a subject that opens a noun phrase is refused"
+file = "scripts/imperative.py"
+find = '\(word in NOT_A_VERB, "opens a phrase rather than an instruction"\),'
+replace = '(False, "opens a phrase rather than an instruction"),'
+
+[[rule]]
+name = "a subject in the past tense is refused"
+file = "scripts/imperative.py"
+find = '\(word\.endswith\("ed"\), "is a past tense"\),'
+replace = '(False, "is a past tense"),'
+
+[[rule]]
+name = "when main's levels are missing, the base is measured"
+file = "scripts/ratchet.py"
+find = '^\s*return measure_base\(\)$'
+replace = 'return {}'
