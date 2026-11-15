@@ -1,0 +1,5 @@
+[[rule]]
+name = "two sessions with the same name each say what tells them apart"
+file = "src/view/dom.ts"
+find = 'if \(!home\.sessions\.some\(\(o\) => o\.id !== s\.id && o\.name === s\.name\)\) return \[\];'
+replace = '  return [];'

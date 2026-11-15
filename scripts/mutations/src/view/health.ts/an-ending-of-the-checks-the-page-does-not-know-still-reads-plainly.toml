@@ -1,0 +1,5 @@
+[[rule]]
+name = "an ending of the checks the page does not know still reads plainly"
+file = "src/view/health.ts"
+find = 'return said \? t\(said\) : t\("health\.ciOther", \{ state: state\.replaceAll\("_", " "\) \}\);'
+replace = '  return said ? t(said) : state;'

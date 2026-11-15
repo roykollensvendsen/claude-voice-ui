@@ -1,0 +1,5 @@
+[[rule]]
+name = "the sessions are fetched again every minute"
+file = "src/app.ts"
+find = '^const POLL_MS = 60_000;'
+replace = 'const POLL_MS = 120_000;'

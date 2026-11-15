@@ -1,0 +1,5 @@
+[[rule]]
+name = "a refusal without the bridge's words still says what happened"
+file = "src/app/actions.ts"
+find = 'const said = t\("prompt\.refused", \{ status, reason: refused \|\| t\("prompt\.noReason"\) \}\);'
+replace = '  const said = t("prompt.refused", { status, reason: refused });'

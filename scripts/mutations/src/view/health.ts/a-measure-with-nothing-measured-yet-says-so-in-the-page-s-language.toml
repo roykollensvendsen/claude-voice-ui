@@ -1,0 +1,5 @@
+[[rule]]
+name = "a measure with nothing measured yet says so in the page's language"
+file = "src/view/health.ts"
+find = 'if \(m\.value === null\) return t\("health\.unmeasured"\);'
+replace = '  if (m.value === null) return m.text;'

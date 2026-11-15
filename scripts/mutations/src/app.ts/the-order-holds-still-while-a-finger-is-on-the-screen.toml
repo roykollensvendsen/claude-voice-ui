@@ -1,0 +1,5 @@
+[[rule]]
+name = "the order holds still while a finger is on the screen"
+file = "src/app.ts"
+find = '^    if \(pressing \|\| typing\(\)\) \{$'
+replace = '    if (typing()) {'

@@ -1,0 +1,5 @@
+[[rule]]
+name = "a switch groups the sessions by machine instead, and the phone remembers it"
+file = "src/app/preferences.ts"
+find = 'return recall<string>\(keep, GROUP_BY, "programme"\) === "machine" \? "machine" : "programme";'
+replace = '  return "programme";'

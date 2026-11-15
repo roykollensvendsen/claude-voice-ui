@@ -1,0 +1,5 @@
+[[rule]]
+name = "a focus event matches a session by id as well as by name"
+file = "src/view/dom.ts"
+find = 'return key != null && \(key === s\.id \|\| key === name\);'
+replace = 'return key != null && key === name;'

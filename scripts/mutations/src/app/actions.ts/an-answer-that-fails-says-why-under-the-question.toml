@@ -1,0 +1,5 @@
+[[rule]]
+name = "an answer that fails says why under the question"
+file = "src/app/actions.ts"
+find = 'else home\.replies\[prompt\.id\] = \{ error: t\("prompt\.notSent"\) \};'
+replace = '        else failed(error);'

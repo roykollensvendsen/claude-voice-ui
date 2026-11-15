@@ -1,0 +1,5 @@
+[[rule]]
+name = "a session with a question waits for an answer"
+file = "src/states.ts"
+find = 'if \(s\.question\) return "answer";'
+replace = 'if (false) return "answer";'

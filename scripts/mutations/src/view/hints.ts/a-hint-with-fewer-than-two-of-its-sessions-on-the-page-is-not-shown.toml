@@ -1,0 +1,5 @@
+[[rule]]
+name = "a hint with fewer than two of its sessions on the page is not shown"
+file = "src/view/hints.ts"
+find = 'if \(members\.length < 2 \|\| home\.dismissedHints\.includes\(hint\.id\)\) return \[\];'
+replace = '    if (home.dismissedHints.includes(hint.id)) return [];'

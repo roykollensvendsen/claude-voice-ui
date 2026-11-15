@@ -1,0 +1,5 @@
+[[rule]]
+name = "sessions keep the order of their numbers, whatever their state"
+file = "src/states.ts"
+find = '\(a\.number \?\? Number\.POSITIVE_INFINITY\) - \(b\.number'
+replace = '      0 || a.name.localeCompare(b.name),'

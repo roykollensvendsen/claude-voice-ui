@@ -1,0 +1,5 @@
+[[rule]]
+name = "the percentage turns from grey to yellow to red near the limit"
+file = "src/usage.ts"
+find = 'if \(warning === "allowed_warning" \|\| percent >= 70\) return "warn";'
+replace = '  if (false) return "warn";'
