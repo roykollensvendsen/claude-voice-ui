@@ -219,3 +219,13 @@ def test_five_repeated_lines_are_not_yet_a_copy(tmp_path):
     (tmp_path / "a.ts").write_text(block + "\n")
     (tmp_path / "b.ts").write_text(block + "\n")
     assert ratchet.duplication(tmp_path) == 0.0
+
+
+def test_the_base_shares_this_tree_s_packages_only_when_its_lockfile_is_the_same(tmp_path):
+    here, base = tmp_path / "here", tmp_path / "base"
+    for folder in (here, base):
+        folder.mkdir()
+        (folder / "package-lock.json").write_text('{"lockfileVersion": 3}')
+    assert ratchet.shares_packages(here, base)
+    (base / "package-lock.json").write_text('{"lockfileVersion": 3, "packages": {"x": {}}}')
+    assert not ratchet.shares_packages(here, base)
