@@ -2,7 +2,7 @@
 
 `scripts/mutate.py` proves every other rule by switching its line off and
 watching the test named after it go red. Its own rules are proven the same
-way, from rows in `scripts/mutations.toml`. That works because the runner has
+way, from rows under `scripts/mutations/scripts/mutate.py/`. That works because the runner has
 already loaded its code when it switches a line off, and the suite it starts
 loads the switched-off file. Ported from garage-door #36.
 
@@ -14,7 +14,6 @@ import ast
 import importlib.util
 import pathlib
 import subprocess
-import tomllib
 
 import pytest
 
@@ -71,19 +70,20 @@ def test_a_coloured_failure_line_is_still_attributed(monkeypatch, mutate):
     assert mutate.run_pytest() == (1, ["test_a_worse_level_fails"])
 
 
-@pytest.mark.parametrize("table", ["missing", "comments only"])
+@pytest.mark.parametrize("table", ["missing", "empty"])
 def test_no_rows_to_check_is_a_failure_not_a_pass(tmp_path, monkeypatch, capsys, mutate, table):
     """A table emptied or lost by mistake would leave every rule unproven while the run stayed green."""
-    rows = tmp_path / "mutations.toml"
+    rows = tmp_path / "mutations"
     if table == "comments only":
-        rows.write_text("# no rows yet\n")
+        (rows / "src/states.ts").mkdir(parents=True)
+        (rows / "README.md").write_text("no rows yet\n")
     monkeypatch.setattr(mutate, "ROOT", tmp_path)
-    monkeypatch.setattr(mutate, "TABLE", rows)
+    monkeypatch.setattr(mutate, "ROWS", rows)
     monkeypatch.setattr("sys.argv", ["mutate.py"])
     assert mutate.main() == 1
     said = capsys.readouterr().out
     assert "nothing to switch off" in said
-    assert "git checkout origin/main -- scripts/mutations.toml" in said
+    assert "git checkout origin/main -- scripts/mutations" in said
 
 
 #: The function a killed run repairs with. A rule there would be switched off while it repairs.
@@ -143,7 +143,6 @@ def test_a_rule_inside_repair_or_what_it_calls_is_found(mutate):
 def test_no_rule_lives_inside_repair(mutate):
     """A killed run repairs with the code it left switched off, so a rule in repair() cannot be proven."""
     text = (ROOT / "scripts/mutate.py").read_text(encoding="utf-8")
-    table = tomllib.loads((ROOT / "scripts/mutations.toml").read_text())
-    rows = [r for r in table.get("rule", []) if r["file"] == "scripts/mutate.py"]
+    rows = [r for r in mutate.all_rows() if r["file"] == "scripts/mutate.py"]
     assert rows, "the runner's own rows are missing"
     assert _inside_repair(text, rows, mutate) == []
