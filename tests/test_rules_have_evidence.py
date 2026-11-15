@@ -1,6 +1,7 @@
 """Every rule this project enforces has evidence, and the evidence names it.
 
-A rule here is one line of source marked ``# RULE: what it says``. Three things
+A rule here is one line of source marked ``# RULE: what it says``, in the
+page's code (``src/``) or in the project's own tools (``scripts/``). Three things
 have to be true of each, and none of them is true by writing the rule:
 
 * it has a row in ``scripts/mutations.toml``, so something switches it off;
@@ -35,7 +36,8 @@ def _mutate():
 def marked_rules() -> set[str]:
     """Every rule the source marks, by the words the marker gives it."""
     found = set()
-    for source in sorted((ROOT / "src").rglob("*.ts")):
+    sources = [*(ROOT / "src").rglob("*.ts"), *(ROOT / "scripts").rglob("*.py")]
+    for source in sorted(p for p in sources if p.is_file()):
         for line in source.read_text().splitlines():
             match = MARKER.search(line)
             if match:
