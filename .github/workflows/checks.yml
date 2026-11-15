@@ -122,6 +122,7 @@ jobs:
       # Main keeps its levels with each of its runs. Missing ones, from a run cancelled or
       # expired, leave no file, and the ratchet then measures the base itself.
       - name: The levels main kept for the base
+        if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -132,21 +133,29 @@ jobs:
               && break
           done
           ls "$RUNNER_TEMP/base" 2>/dev/null || echo "Main kept no levels for $BASE; the ratchet will measure it."
+      # Only a pull request is compared: a change merged with a Ratchet-Exception is already
+      # agreed, and comparing it again on main would turn main red for nothing.
       - name: The quality ratchet
+        if: github.event_name == 'pull_request'
         env:                     # the pull request's text, for its Ratchet-Exception lines; never inline in run
           RATCHET_EXCEPTIONS: ${{ github.event.pull_request.body }}
-          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE: ${{ github.event.pull_request.base.sha }}
           LEVELS: ${{ runner.temp }}/base/levels.json
+        run: uv run python scripts/ratchet.py check --base "$BASE" --levels "$LEVELS"
+      - name: Measure main's levels
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
           OUT: ${{ runner.temp }}/levels.json
-        run: uv run python scripts/ratchet.py check --base "$BASE" --levels "$LEVELS" --out "$OUT"
+        run: uv run python scripts/ratchet.py measure --out "$OUT"
       # The bridge's code-health page reads these, run by run, as this page's history.
+      # A measure that left no file is an error, so a failed one shows at once.
       - name: Keep main's levels with this run
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !cancelled()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: quality-levels
           path: ${{ runner.temp }}/levels.json
-          if-no-files-found: ignore
+          if-no-files-found: error
 
   # The tooling that guards the rules: commit checks, mutation runner, document tests.
   tooling:
