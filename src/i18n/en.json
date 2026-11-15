@@ -189,6 +189,7 @@
   "health.none": "No measures yet",
   "health.coverage": "Test coverage",
   "health.mutation": "Rules proven by a test (mutation tests)",
+  "health.mutants": "Code changes the tests catch",
   "health.tests": "Tests",
   "health.problems": "Lint and type errors",
   "health.cycles": "Import cycles",

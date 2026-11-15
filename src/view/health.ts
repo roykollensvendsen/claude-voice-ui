@@ -7,6 +7,7 @@ import { type Actions } from "../view/types";
 export const MEASURES: Record<string, Key> = {
   coverage: "health.coverage",
   mutation: "health.mutation",
+  mutants: "health.mutants",
   tests: "health.tests",
   problems: "health.problems",
   cycles: "health.cycles",
