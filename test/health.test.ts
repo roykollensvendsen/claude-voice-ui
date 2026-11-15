@@ -121,6 +121,20 @@ describe("how both programs' code is doing", () => {
     expect(named).toContain("Regler bevist av en test (mutasjonstester)");
   });
 
+  test("the share of code changes the tests catch is named in the page's language", async () => {
+    localStorage.setItem("cvu.lang", JSON.stringify("nb"));
+    await openHealth({
+      ...HEALTH,
+      repos: [
+        {
+          ...HEALTH.repos[0]!,
+          metrics: [metric({ id: "mutants", label: "Code changes the tests catch", value: 93, unit: "%" })],
+        },
+      ],
+    });
+    expect(rows(0)[0]?.querySelector(".name")?.textContent).toBe("Kodeendringer testene fanger");
+  });
+
   test("checks on main that are still queued or in progress are told as running", async () => {
     localStorage.setItem("cvu.lang", JSON.stringify("nb"));
     await openHealth({
