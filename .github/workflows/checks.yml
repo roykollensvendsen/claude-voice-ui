@@ -93,17 +93,21 @@ jobs:
       - name: The build
         run: npm run build
 
-  # The quality ratchet: nothing measured in quality.json may get worse than on the base,
-  # unless the pull request has a Ratchet-Exception line for it.
+  # The quality ratchet: nothing measured may get worse than on the base, unless the pull
+  # request has a Ratchet-Exception line for it. Main keeps its own levels with each of its
+  # runs, so a change never records them; quality.json holds only the time budget.
   # No time limit, on purpose: this job holds the mutation run, which grows with every rule,
   # and a run cut short proves nothing. Never cap it; remove a cap rather than raise it.
   # (GitHub itself still stops any job after 360 minutes.)
   quality:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read              # to fetch the levels main kept with its own run
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0         # the ratchet reads the base's quality.json
+          fetch-depth: 0         # the base is measured in a copy when main's levels are missing
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "24"     # runs scripts/structure.ts as it is
@@ -115,11 +119,34 @@ jobs:
           python-version: "3.12"
       - run: npm ci
       - run: uv sync --locked
+      # Main keeps its levels with each of its runs. Missing ones, from a run cancelled or
+      # expired, leave no file, and the ratchet then measures the base itself.
+      - name: The levels main kept for the base
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          for run in $(gh run list --repo "$GITHUB_REPOSITORY" --workflow checks.yml --commit "$BASE" \
+                         --event push --json databaseId -q '.[].databaseId'); do
+            gh run download "$run" --repo "$GITHUB_REPOSITORY" --name quality-levels --dir "$RUNNER_TEMP/base" \
+              && break
+          done
+          ls "$RUNNER_TEMP/base" 2>/dev/null || echo "Main kept no levels for $BASE; the ratchet will measure it."
       - name: The quality ratchet
         env:                     # the pull request's text, for its Ratchet-Exception lines; never inline in run
           RATCHET_EXCEPTIONS: ${{ github.event.pull_request.body }}
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: uv run python scripts/ratchet.py check --base "$BASE"
+          LEVELS: ${{ runner.temp }}/base/levels.json
+          OUT: ${{ runner.temp }}/levels.json
+        run: uv run python scripts/ratchet.py check --base "$BASE" --levels "$LEVELS" --out "$OUT"
+      # The bridge's code-health page reads these, run by run, as this page's history.
+      - name: Keep main's levels with this run
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !cancelled()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: quality-levels
+          path: ${{ runner.temp }}/levels.json
+          if-no-files-found: ignore
 
   # The tooling that guards the rules: commit checks, mutation runner, document tests.
   tooling:
