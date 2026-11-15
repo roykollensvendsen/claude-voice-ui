@@ -261,13 +261,26 @@ def base_levels(kept: Path | None, measure_base: Callable[[], Levels]) -> Levels
 
 
 def _recorded_at(ref: str) -> Levels | None:
-    """The levels a base from before main kept its own still records in its quality.json."""
+    """The levels a base from before main kept its own still records in its quality.json.
+
+    Only for the handover: once main has kept its first quality-levels artifact, no base
+    records levels any more, and this goes (CONTRIBUTING, "The quality ratchet").
+    """
     shown = _run("git", "show", f"{ref}:quality.json")
     try:
         levels = json.loads(shown.stdout) if shown.returncode == 0 else None
     except ValueError:
         return None
     return levels if isinstance(levels, dict) and "coverage" in levels else None
+
+
+def shares_packages(here: Path, base: Path) -> bool:
+    """Whether the base can use this tree's installed packages: only when the lockfiles match."""
+    lock = "package-lock.json"
+    try:
+        return (here / lock).read_bytes() == (base / lock).read_bytes()
+    except OSError:
+        return False
 
 
 def measure_at(ref: str) -> Levels:
@@ -279,9 +292,15 @@ def measure_at(ref: str) -> Levels:
             msg = f"Cannot check out {ref} to measure it:\n{added.stderr}"
             raise SystemExit(msg)
         try:
-            # The base's packages are this tree's, near enough, and installing them again
-            # would take minutes; a base whose packages differ fails its own suite and says so.
-            (copy / "node_modules").symlink_to(ROOT / "node_modules")
+            # Installing the packages again takes minutes, so the copy shares this tree's when
+            # its lockfile is the same, and installs its own when it is not.
+            if shares_packages(ROOT, copy):
+                (copy / "node_modules").symlink_to(ROOT / "node_modules")
+            else:
+                installed = _run("npm", "ci", "--no-audit", "--no-fund", cwd=copy)
+                if installed.returncode:
+                    msg = f"Cannot install {ref}'s packages to measure it:\n{installed.stderr[-2000:]}"
+                    raise SystemExit(msg)
             env = {**os.environ, "RATCHET_ROOT": str(copy)}
             here = str(Path(__file__).resolve())
             measured = _run("uv", "run", "python", here, "measure", "--out", str(out), cwd=copy, env=env)

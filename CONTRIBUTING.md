@@ -72,6 +72,15 @@ or measures the base itself when they are missing:
   level there: levels change with every merge, so a file holding them
   collides between changes.
 
+On a push to main the job only measures and keeps the levels; it never
+compares, so a change merged with a `Ratchet-Exception:` does not turn main
+red afterwards.
+
+For the handover, a base whose `quality.json` still records levels is read
+from there. Once main has kept its first `quality-levels` artifact, nothing
+records levels any more: remove `_recorded_at` from `scripts/ratchet.py`
+then.
+
 To see what CI will say before you push:
 
 <!-- not run: it runs the whole suite and the mutation run, a few minutes -->
