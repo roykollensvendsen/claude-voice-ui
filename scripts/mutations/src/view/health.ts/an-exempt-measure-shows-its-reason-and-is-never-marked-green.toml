@@ -1,0 +1,5 @@
+[[rule]]
+name = "an exempt measure shows its reason and is never marked green"
+file = "src/view/health.ts"
+find = 'return m\.status === "exempt" \? \[el\("span", "reason", m\.text\)\] : \[\];'
+replace = 'return [];'

@@ -1,0 +1,5 @@
+[[rule]]
+name = "after two quiet minutes the speech bubble goes away"
+file = "src/app/stream.ts"
+find = '^export const FOCUS_MS = 2 \* 60_000;'
+replace = 'export const FOCUS_MS = 20 * 60_000;'

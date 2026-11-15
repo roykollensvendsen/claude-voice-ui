@@ -1,0 +1,5 @@
+[[rule]]
+name = "a long press opens the session's page without choosing it"
+file = "src/view/sessions.ts"
+find = '^    if \(held\) \{$'
+replace = '    if (false) {'

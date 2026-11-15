@@ -1,0 +1,5 @@
+[[rule]]
+name = "a missing required thing shows a red banner"
+file = "src/view/top.ts"
+find = 'const severity = failing\.some\(\(c\) => c\.required\) \? "required" : "optional";'
+replace = 'const severity = "optional";'

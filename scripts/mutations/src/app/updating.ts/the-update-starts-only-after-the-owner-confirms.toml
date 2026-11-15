@@ -1,0 +1,5 @@
+[[rule]]
+name = "the update starts only after the owner confirms"
+file = "src/app/updating.ts"
+find = 'home\.update = \{ \.\.\.IDLE, phase: "confirm" \};'
+replace = 'void updating.confirm();'

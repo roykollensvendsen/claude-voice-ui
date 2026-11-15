@@ -1,0 +1,5 @@
+[[rule]]
+name = "the code-health page looks again only while it is open and the bridge is measuring"
+file = "src/app/actions.ts"
+find = 'if \(home\.health === next\) void readHealth\(\);'
+replace = '          void readHealth();'

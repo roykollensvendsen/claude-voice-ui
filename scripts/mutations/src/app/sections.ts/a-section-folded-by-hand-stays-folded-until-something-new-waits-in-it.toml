@@ -1,0 +1,5 @@
+[[rule]]
+name = "a section folded by hand stays folded until something new waits in it"
+file = "src/app/sections.ts"
+find = 'if \(alarms.some\(\(id\) => !was.alarms.includes\(id\)\)\) was.open = true;'
+replace = '    if (alarms.length) was.open = true;'

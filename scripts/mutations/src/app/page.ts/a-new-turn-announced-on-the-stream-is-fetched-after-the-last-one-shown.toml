@@ -1,0 +1,5 @@
+[[rule]]
+name = "a new turn announced on the stream is fetched after the last one shown"
+file = "src/app/page.ts"
+find = '\(\) => deps\.bridge\.output\(id, home\.open\?\.lastIndex\),'
+replace = '() => deps.bridge.output(id, undefined),'

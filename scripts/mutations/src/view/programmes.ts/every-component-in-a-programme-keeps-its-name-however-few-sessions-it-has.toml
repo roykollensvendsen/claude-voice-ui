@@ -1,0 +1,5 @@
+[[rule]]
+name = "every component in a programme keeps its name, however few sessions it has"
+file = "src/view/programmes.ts"
+find = 'return part\(home, act, members\[0\]\?\.component\?\.name \?\? id, members\);'
+replace = '    return sessionList(home, act, members, null);'

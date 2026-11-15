@@ -1,0 +1,5 @@
+[[rule]]
+name = "each role shows its purpose, who fills it, its limits and routing, and an unfilled one is marked"
+file = "src/view/org.ts"
+find = 'const unfilled = org.unfilled.includes\(r.id\) \|\| !r.sessions.length;'
+replace = '  const unfilled = false;'

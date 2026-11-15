@@ -1,0 +1,5 @@
+[[rule]]
+name = "a hint put away stays away for that same group"
+file = "src/app/home.ts"
+find = 'dismissedHints: recall<string\[\]>\(keep, HINTS, \[\]\),'
+replace = '    dismissedHints: [],'

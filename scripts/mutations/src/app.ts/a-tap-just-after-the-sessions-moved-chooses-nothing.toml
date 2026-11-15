@@ -1,0 +1,5 @@
+[[rule]]
+name = "a tap just after the sessions moved chooses nothing"
+file = "src/app.ts"
+find = 'return began === id && pressedAt - movedAt >= SETTLE_MS;'
+replace = '    return began === id;'

@@ -1,0 +1,5 @@
+[[rule]]
+name = "being signed out while watching returns to the sign-in page"
+file = "src/app.ts"
+find = 'if \(error instanceof SignedOut\) showSignIn\(\);'
+replace = 'if (false) showSignIn();'

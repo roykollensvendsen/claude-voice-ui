@@ -111,11 +111,12 @@ because a major version can change behaviour the checks do not see.
 3. **Write a test and watch it fail.** A test that passes on its first run
    proves nothing. Where the rule already exists and no test can precede it,
    turn the rule off with `uv run python scripts/mutate.py`, watch a named test
-   go red, and keep the row in `scripts/mutations.toml`.
+   go red, and keep the row under `scripts/mutations/`.
 
    A rule is a line marked `// RULE: what it says` in the app's source, or
    `# RULE: what it says` in the project's own tools under `scripts/`. Every
-   one needs a row in `scripts/mutations.toml` and a test whose title is the
+   one needs a row, a file of its own under `scripts/mutations/` (its
+   [README](scripts/mutations/README.md) says where), and a test whose title is the
    rule's own words — `// RULE: a wrong secret is refused` wants
    `test("a wrong secret is refused", …)`. `tests/test_rules_have_evidence.py` refuses
    a rule missing either. That naming is not decoration: the mutation script

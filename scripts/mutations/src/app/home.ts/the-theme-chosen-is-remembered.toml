@@ -1,0 +1,5 @@
+[[rule]]
+name = "the theme chosen is remembered"
+file = "src/app/home.ts"
+find = 'theme: \(\["light", "dark"\] as const\)\.find\(\(t\) => t === recall<string>\(keep, THEME, "system"\)\) \?\? "system",'
+replace = '    theme: "system" as Theme,'

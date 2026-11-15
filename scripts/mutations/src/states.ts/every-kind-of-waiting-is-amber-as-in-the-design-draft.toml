@@ -1,0 +1,5 @@
+[[rule]]
+name = "every kind of waiting is amber, as in the design draft"
+file = "src/states.ts"
+find = 'const WAITING_TONE = "amber";'
+replace = 'const WAITING_TONE = "gold";'

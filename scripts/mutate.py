@@ -3,8 +3,9 @@
 
 Green on a first run proves nothing: a test that has never been red tests
 nothing. Where a rule is written before its test, the test is run red first.
-Where a rule already exists, this is the substitute. Every rule lives in
-scripts/mutations.toml, one row each. Run it from the repository root:
+Where a rule already exists, this is the substitute. Every rule has a row, a
+file of its own under scripts/mutations/ (its README says where). Run it from
+the repository root:
 
     uv run python scripts/mutate.py [--write evidence/tests/rule-mutations.md]
 
@@ -41,7 +42,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-TABLE = ROOT / "scripts/mutations.toml"
+ROWS = ROOT / "scripts/mutations"
 #: Where the one mutated file is recorded while it is mutated. A `finally` does
 #: not run when the process is killed, so without this a hard stop leaves a
 #: source file switched off and the next person wondering why the suite is red.
@@ -227,6 +228,57 @@ def run_pytest() -> tuple[int, list[str]]:
     return int(m.group(1)) if m else 0, [f.split("::")[-1].split("[")[0] for f in failed]
 
 
+def row_path(rule: dict[str, str]) -> pathlib.PurePosixPath:
+    """Where a rule's row belongs under ``ROWS``: the whole path of the file it switches off, then its words.
+
+    A rule named "a session with a question waits for an answer" in ``src/states.ts``
+    goes in ``src/states.ts/a-session-with-a-question-waits-for-an-answer.toml``. The
+    whole path, extension included, is the layout every repository here uses.
+    """
+    words = re.sub(r"[^a-z0-9]+", "-", str(rule["name"]).lower()).strip("-")
+    if not words:
+        msg = f"the rule {rule['name']!r} has no letter or digit to file its row under; reword it"
+        raise SystemExit(msg)
+    return pathlib.PurePosixPath(rule["file"]) / f"{words}.toml"
+
+
+def _rows_in(path: pathlib.Path) -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = tomllib.loads(path.read_text(encoding="utf-8")).get("rule", [])
+    return rows
+
+
+def all_rows(folder: pathlib.Path | None = None) -> list[dict[str, str]]:
+    """Every row, one file each, in path order; a rule with two rows stops the run, naming both."""
+    folder = ROWS if folder is None else folder  # read when called, not when defined
+    found = []
+    for path in sorted(folder.rglob("*.toml")) if folder.is_dir() else []:
+        found += [(path.relative_to(folder).as_posix(), rule) for rule in _rows_in(path)]
+    where: dict[str, str] = {}
+    for place, rule in found:
+        if rule["name"] in where:
+            msg = (
+                f"the rule {rule['name']!r} has two rows, in {where[rule['name']]} and in {place};"
+                f" delete one and keep {row_path(rule)}"
+            )
+            raise SystemExit(msg)
+        where[rule["name"]] = place
+    return [rule for _, rule in found]
+
+
+def misfiled(folder: pathlib.Path | None = None) -> list[str]:
+    """Row files that hold other than one row, or sit where their rule does not put them."""
+    folder = ROWS if folder is None else folder
+    found = []
+    for path in sorted(folder.rglob("*.toml")) if folder.is_dir() else []:
+        here = pathlib.PurePosixPath(path.relative_to(folder).as_posix())
+        rows = _rows_in(path)
+        if len(rows) != 1:
+            found.append(f"{here} holds {len(rows)} rows; give each rule a file of its own")
+        elif here != (belongs := row_path(rows[0])):
+            found.append(f"{here} should be {belongs}; move it there")
+    return found
+
+
 def main() -> int:
     """Mutate every rule in turn, restore the tree, and report."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -236,12 +288,12 @@ def main() -> int:
     tidy_up()
     # A table emptied, moved or lost by mistake would leave every rule unproven
     # while the run stayed green, so nothing to check is a failure.
-    rules = tomllib.loads(TABLE.read_text()).get("rule", []) if TABLE.is_file() else []
+    rules = all_rows()
     # RULE: no rows to check is a failure not a pass
     if not rules:
         print(  # noqa: T201
-            f"nothing to switch off: no rows in {TABLE.name}. Restore it from main "
-            "(git checkout origin/main -- scripts/mutations.toml), or add a row per rule."
+            f"nothing to switch off: no rows in {ROWS.name}/. Restore it from main "
+            "(git checkout origin/main -- scripts/mutations), or add a row per rule."
         )
         return 1
     results = []
@@ -333,7 +385,7 @@ it names. It proves each rule is load-bearing: switch it off and a named test
 says so. The last column is why that is worth more than a count: a mutation can
 break a test for an incidental reason, and a `NO` there fails this script even
 though something went red. A new rule follows the order in `CONTRIBUTING.md`
-instead, a failing test first, and is added to `scripts/mutations.toml`, which
+instead, a failing test first, and gets a row under `scripts/mutations/`, which
 `tests/test_rules_have_evidence.py` requires.
 """
 

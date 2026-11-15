@@ -1,0 +1,5 @@
+[[rule]]
+name = "an approval it waits on is shown, to be answered by voice or at the screen"
+file = "src/view/detail.ts"
+find = 'if \(p\.approvals\.length\) parts\.push\(el\("p", "muted", t\("pending\.answerElsewhere"\)\)\);'
+replace = 'if (false) parts.push(el("p", "muted", ""));'

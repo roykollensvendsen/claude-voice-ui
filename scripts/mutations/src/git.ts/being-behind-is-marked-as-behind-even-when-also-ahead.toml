@@ -1,0 +1,5 @@
+[[rule]]
+name = "being behind is marked as behind even when also ahead"
+file = "src/git.ts"
+find = 'return \[\{ text: `\$\{arrows\} \$\{name\}`, kind: d\.behind \? "behind" : "ahead" \}\];'
+replace = 'return [{ text: `${arrows} ${name}`, kind: d.ahead ? "ahead" : "behind" }];'

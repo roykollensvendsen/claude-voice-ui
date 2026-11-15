@@ -1,0 +1,5 @@
+[[rule]]
+name = "a reached limit says so"
+file = "src/usage.ts"
+find = 'if \(w\.status === "rejected"\) return \{ text: t\("usage\.reached"\), severity: "stop" \};'
+replace = '  if (false) return { text: "", severity: "stop" };'

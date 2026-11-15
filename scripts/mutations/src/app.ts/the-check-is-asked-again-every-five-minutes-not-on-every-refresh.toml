@@ -1,0 +1,5 @@
+[[rule]]
+name = "the check is asked again every five minutes, not on every refresh"
+file = "src/app.ts"
+find = '^const DOCTOR_MS = 5 \* 60_000;'
+replace = 'const DOCTOR_MS = 60_000;'

@@ -1,0 +1,5 @@
+[[rule]]
+name = "the language chosen is remembered"
+file = "src/app/home.ts"
+find = 'language: recalledLanguage\(keep\),'
+replace = '    language: "system" as Language | "system",'

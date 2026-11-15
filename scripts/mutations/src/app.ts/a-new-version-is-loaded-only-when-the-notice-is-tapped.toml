@@ -1,0 +1,5 @@
+[[rule]]
+name = "a new version is loaded only when the notice is tapped"
+file = "src/app.ts"
+find = 'if \(latestBuild !== deps\.version\.built\) \{'
+replace = '      if (latestBuild !== deps.version.built) { (deps.reload ?? (() => {}))();'

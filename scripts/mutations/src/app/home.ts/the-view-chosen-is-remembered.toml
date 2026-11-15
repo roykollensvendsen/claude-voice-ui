@@ -1,0 +1,5 @@
+[[rule]]
+name = "the view chosen is remembered"
+file = "src/app/home.ts"
+find = 'view: recall<View>\(keep, VIEW, "grid"\) === "cards" \? "cards" : "grid",'
+replace = '    view: "grid" as View,'

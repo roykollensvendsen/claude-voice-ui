@@ -1,0 +1,5 @@
+[[rule]]
+name = "a machine's folded group stays folded when the page opens again"
+file = "src/app/home.ts"
+find = 'folded: new Set\(recall<string\[\]>\(keep, FOLDED, \[\]\)\),'
+replace = 'folded: new Set<string>(),'
