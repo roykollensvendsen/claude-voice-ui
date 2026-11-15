@@ -260,20 +260,6 @@ def base_levels(kept: Path | None, measure_base: Callable[[], Levels]) -> Levels
     return measure_base()
 
 
-def _recorded_at(ref: str) -> Levels | None:
-    """The levels a base from before main kept its own still records in its quality.json.
-
-    Only for the handover: once main has kept its first quality-levels artifact, no base
-    records levels any more, and this goes (CONTRIBUTING, "The quality ratchet").
-    """
-    shown = _run("git", "show", f"{ref}:quality.json")
-    try:
-        levels = json.loads(shown.stdout) if shown.returncode == 0 else None
-    except ValueError:
-        return None
-    return levels if isinstance(levels, dict) and "coverage" in levels else None
-
-
 def shares_packages(here: Path, base: Path) -> bool:
     """Whether the base can use this tree's installed packages: only when the lockfiles match."""
     lock = "package-lock.json"
@@ -331,7 +317,7 @@ def main() -> int:
     if not args.base:
         print("check needs --base, the ref to compare with (usually origin/main).", file=sys.stderr)  # noqa: T201
         return 1
-    base = base_levels(args.levels, lambda: _recorded_at(args.base) or measure_at(args.base))
+    base = base_levels(args.levels, lambda: measure_at(args.base))
     now = measure(skip_mutation=args.skip_mutation, recorded=base)
     if args.out:
         write_levels(args.out, now)
