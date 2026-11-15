@@ -1,23 +1,25 @@
 #!/usr/bin/env python3
 """The quality ratchet: the code may get better or stay as it is, never worse unless a change says why.
 
-`quality.json` at the root records the current measures: how much of the source the
-suite runs, the share of rules whose test notices them switched off, the number of
-passing tests, lint and type errors, import cycles among the modules, and the most
-tangled function in each module. A change that makes one worse fails, unless its pull
-request has a line of its own
+It measures how much of the source the suite runs, the share of rules whose test
+notices them switched off, the number of passing tests, lint and type errors, import
+cycles and layers among the modules, copied code, each module's length and its most
+tangled function, and compares them with the levels main reached. A change that makes
+one worse fails, unless its pull request has a line of its own
 
     Ratchet-Exception: coverage - the reason
 
-naming the measure. A change that makes one better must record the new level in the same
-change (`update`), so the level never slips back. The suite also has a time budget, which
-is a limit rather than a level: it is changed by hand.
+naming the measure. Main keeps its levels: continuous integration measures them after
+every push to main and keeps them with that run, so a change never records them. When
+they are missing, the base is measured in a copy of it, which takes as long again.
+`quality.json` holds only what is set by hand: the suite's time budget.
 
-    uv run python scripts/ratchet.py update            # measure and record (a few minutes)
-    uv run python scripts/ratchet.py check --base REF  # measure and compare with REF's quality.json
+    uv run python scripts/ratchet.py check --base REF   # measure and compare with REF
+    uv run python scripts/ratchet.py check --base REF --levels FILE --out FILE
+    uv run python scripts/ratchet.py measure --out FILE  # measure only
 
 `check` reads exceptions from the environment variable RATCHET_EXCEPTIONS (continuous
-integration passes the pull request's text). `--skip-mutation` keeps the recorded
+integration passes the pull request's text). `--skip-mutation` keeps the base's
 mutation figures, for a quick local look; continuous integration never skips it.
 
 The measures and the rules are claude-voice's, so its health page reads both alike.
@@ -34,13 +36,17 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 #: A measure as quality.json holds it: a number, or for mutation {killed, total}.
 Measure = float | int | dict[str, int]
 Levels = dict[str, Any]
 
-ROOT = Path(__file__).resolve().parent.parent
+# The tree to measure: this one, or a copy of the base named by RATCHET_ROOT (see measure_at).
+ROOT = Path(os.environ.get("RATCHET_ROOT") or Path(__file__).resolve().parent.parent)
 FILE = ROOT / "quality.json"
 SOURCE = ROOT / "src"
 COVERAGE_WOBBLE = 0.5  # percentage points: coverage differs slightly between machines and versions
@@ -49,14 +55,19 @@ LOWER = ("lint_errors", "type_errors", "cycles", "layer_violations", "duplicatio
 CEILING = 15  # the most tangled function a new module may have
 BLOCK = 6  # consecutive lines that, repeated, count as a copy
 MODULE_CEILING = 400  # the most lines a new module may have
+DEFAULT_BUDGET = {"seconds": 60, "tolerance": 0.25}
+#: The only keys quality.json may hold: limits set by hand, never a measured level.
+SET_BY_HAND = {"test_budget"}
 EXCEPTION = re.compile(r"^\s*ratchet-exception:\s*([a-z_]+)", re.IGNORECASE | re.MULTILINE)
 
 
 # -- measuring ---------------------------------------------------------------------------
 
 
-def _run(*command: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(command, cwd=ROOT, capture_output=True, text=True, check=False)  # noqa: S603
+def _run(
+    *command: str, cwd: Path = ROOT, env: dict[str, str] | None = None
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(command, cwd=cwd, env=env, capture_output=True, text=True, check=False)  # noqa: S603
 
 
 def structure(folder: Path) -> dict[str, Any]:
@@ -169,16 +180,11 @@ def _worse(metric: str, base: Measure, now: Measure) -> bool:
     return _score(now) > _score(base)
 
 
-def _differs(metric: str, recorded: Measure, now: Measure) -> bool:
-    wobble = COVERAGE_WOBBLE if metric == "coverage" else 0.0
-    return abs(_score(now) - _score(recorded)) > wobble
-
-
-def compare(base: Levels, now: Levels, committed: Levels, allowed: set[str]) -> list[str]:
+def compare(base: Levels, now: Levels, allowed: set[str], budget: dict[str, Any]) -> list[str]:
     """What is wrong with `now`.
 
-    A measure worse than the base without an exception, a level not recorded, or the
-    suite over its time budget.
+    A measure worse than the base without an exception, or the suite over its time
+    budget. A better level needs no recording: main measures its own.
     """
     found = [
         f"{metric} got worse: {base[metric]} -> {now[metric]}"
@@ -195,12 +201,6 @@ def compare(base: Levels, now: Levels, committed: Levels, allowed: set[str]) -> 
         elif before is None and score > CEILING:
             found.append(f"complexity of new module {module} is {score}, over the ceiling of {CEILING}")
     found += _grown(base.get("max_module_lines"), now["max_module_lines"], allowed)
-    stale = [m for m in (*HIGHER, *LOWER) if m not in committed or _differs(m, committed[m], now[m])]
-    stale += [m for m in ("complexity", "max_module_lines") if committed.get(m) != now[m]]
-    if stale:
-        listed = ", ".join(stale)
-        found.append(f"quality.json does not record the levels now ({listed}): run scripts/ratchet.py update")
-    budget = committed.get("test_budget") or base["test_budget"]
     limit = budget["seconds"] * (1 + budget["tolerance"])
     if now["test_seconds"] > limit:
         found.append(
@@ -234,43 +234,93 @@ def exceptions(text: str) -> set[str]:
     return {m.lower() for m in EXCEPTION.findall(text or "")}
 
 
-def write(path: Path, now: Levels) -> None:
-    """Record the measures, keeping the hand-set time budget."""
+def budget(path: Path) -> dict[str, Any]:
+    """The suite's time budget, the one thing `quality.json` keeps."""
     try:
-        old = json.loads(path.read_text())
+        return dict(json.loads(path.read_text())["test_budget"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return dict(DEFAULT_BUDGET)
+
+
+def write_levels(path: Path, now: Levels) -> None:
+    """Write the measured levels, for main to keep with its run."""
+    levels = {k: v for k, v in now.items() if k != "test_budget"}
+    path.write_text(json.dumps(levels, indent=2, sort_keys=True) + "\n")
+
+
+def base_levels(kept: Path | None, measure_base: Callable[[], Levels]) -> Levels:
+    """Main's kept levels for the base, or, when they are missing, the base measured."""
+    try:
+        levels = json.loads(kept.read_text()) if kept else None
     except (OSError, ValueError):
-        old = {}
-    budget = now.get("test_budget") or old.get("test_budget") or {"seconds": 120, "tolerance": 0.25}
-    path.write_text(json.dumps({**now, "test_budget": budget}, indent=2, sort_keys=True) + "\n")
+        levels = None
+    if isinstance(levels, dict) and "coverage" in levels:
+        return levels
+    # RULE: when main's levels are missing, the base is measured
+    return measure_base()
 
 
-def _at(ref: str) -> Levels | None:
+def _recorded_at(ref: str) -> Levels | None:
+    """The levels a base from before main kept its own still records in its quality.json."""
     shown = _run("git", "show", f"{ref}:quality.json")
-    return json.loads(shown.stdout) if shown.returncode == 0 else None
+    try:
+        levels = json.loads(shown.stdout) if shown.returncode == 0 else None
+    except ValueError:
+        return None
+    return levels if isinstance(levels, dict) and "coverage" in levels else None
+
+
+def measure_at(ref: str) -> Levels:
+    """Measure `ref` in a copy of it, with this ratchet, so both sides are measured alike."""
+    with tempfile.TemporaryDirectory() as tmp:
+        copy, out = Path(tmp) / "base", Path(tmp) / "levels.json"
+        added = _run("git", "worktree", "add", "--detach", str(copy), ref)
+        if added.returncode:
+            msg = f"Cannot check out {ref} to measure it:\n{added.stderr}"
+            raise SystemExit(msg)
+        try:
+            # The base's packages are this tree's, near enough, and installing them again
+            # would take minutes; a base whose packages differ fails its own suite and says so.
+            (copy / "node_modules").symlink_to(ROOT / "node_modules")
+            env = {**os.environ, "RATCHET_ROOT": str(copy)}
+            here = str(Path(__file__).resolve())
+            measured = _run("uv", "run", "python", here, "measure", "--out", str(out), cwd=copy, env=env)
+            if measured.returncode:
+                said = f"{measured.stdout[-2000:]}{measured.stderr[-2000:]}"
+                msg = f"Measuring {ref} failed:\n{said}"
+                raise SystemExit(msg)
+            return dict(json.loads(out.read_text()))
+        finally:
+            _run("git", "worktree", "remove", "--force", str(copy))
 
 
 def main() -> int:
-    """Measure, then record the levels or check them against a base."""
+    """Measure, then write the levels or check them against a base."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("action", choices=("check", "update"))
-    parser.add_argument("--base", help="the git ref whose quality.json is the level to keep")
+    parser.add_argument("action", choices=("check", "measure"))
+    parser.add_argument("--base", help="the git ref to compare with, usually origin/main")
+    parser.add_argument("--levels", type=Path, help="main's kept levels for the base, if there are any")
+    parser.add_argument("--out", type=Path, help="where to write the levels measured now")
     parser.add_argument("--skip-mutation", action="store_true")
     args = parser.parse_args()
-    committed = json.loads(FILE.read_text()) if FILE.exists() else None
-    now = measure(skip_mutation=args.skip_mutation, recorded=committed)
-    if args.action == "update":
-        write(FILE, now)
-        print(f"Recorded the levels in {FILE.name}.")  # noqa: T201
+    if args.action == "measure":
+        now = measure()
+        if args.out:
+            write_levels(args.out, now)
+        print(json.dumps(now, indent=2, sort_keys=True))  # noqa: T201
         return 0
-    if committed is None:
-        print("There is no quality.json yet: run scripts/ratchet.py update.", file=sys.stderr)  # noqa: T201
+    if not args.base:
+        print("check needs --base, the ref to compare with (usually origin/main).", file=sys.stderr)  # noqa: T201
         return 1
-    base = (_at(args.base) if args.base else None) or committed
-    found = compare(base, now, committed, exceptions(os.environ.get("RATCHET_EXCEPTIONS", "")))
+    base = base_levels(args.levels, lambda: _recorded_at(args.base) or measure_at(args.base))
+    now = measure(skip_mutation=args.skip_mutation, recorded=base)
+    if args.out:
+        write_levels(args.out, now)
+    found = compare(base, now, exceptions(os.environ.get("RATCHET_EXCEPTIONS", "")), budget(FILE))
     for problem in found:
         print(problem, file=sys.stderr)  # noqa: T201
     if not found:
-        print("The ratchet holds: nothing got worse, and quality.json records the levels.")  # noqa: T201
+        print("The ratchet holds: nothing got worse than the base.")  # noqa: T201
     return 1 if found else 0
 
 

@@ -46,14 +46,17 @@ way to learn that the gates are not a ritual performed once.
 
 ## The quality ratchet
 
-`quality.json` at the root records how the code stands: how much of `src`
+The ratchet measures how the code stands: how much of `src`
 the suite runs (`coverage`), how many guarded rules turn their test red when
 switched off (`mutation`), the passing tests of both suites, lint and type
 errors, import cycles among the modules that load, the most tangled
 function in each module (`complexity`, McCabe's count), imports that reach up
 a layer (`layer_violations`), and the share of lines in copied blocks of six
-or more (`duplication`). The `quality` job in
-CI measures the pull request and compares it with the base's `quality.json`:
+or more (`duplication`). After every push to main, the `quality` job keeps
+the levels it measured with that run, as the artifact `quality-levels`; the
+bridge's health page reads them from there. On a pull request the job
+measures the change and compares it with the levels main kept for its base,
+or measures the base itself when they are missing:
 
 - a measure may stay or get better, never worse; coverage may wobble half a
   point;
@@ -64,19 +67,20 @@ CI measures the pull request and compares it with the base's `quality.json`:
   storage, then what the data means and how the bridge is reached, then
   drawing, then the app, then the start. The layers are `LAYERS` in
   `scripts/structure.ts`, and a new module goes into one there;
-- a level that got better is recorded in the same pull request, so it cannot
-  slip back unnoticed;
 - the suites together stay within `test_budget`, a limit changed by hand.
+  It is the only thing `quality.json` holds, and a test refuses a measured
+  level there: levels change with every merge, so a file holding them
+  collides between changes.
 
-Record the levels after a change, and commit `quality.json` with it:
+To see what CI will say before you push:
 
 <!-- not run: it runs the whole suite and the mutation run, a few minutes -->
 ```
-uv run python scripts/ratchet.py update
+uv run python scripts/ratchet.py check --base origin/main
 ```
 
 When a change has to make something worse, say so in the pull request, on a
-line of its own, and still record the new level:
+line of its own:
 
 <!-- not run: a line in a pull request, not a command -->
 ```

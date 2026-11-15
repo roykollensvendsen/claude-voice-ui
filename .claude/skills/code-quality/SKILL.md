@@ -8,8 +8,8 @@ description: Make this repository's measures on the code-health page green, and 
 The bridge's software page (`http://127.0.0.1:8811/ui/`, read from
 `GET /api/v1/health/software`) shows one row per repository and one cell per
 measure; this repository is the claude-voice-ui row. The numbers come from the
-`quality.json` that main's checks keep after every merge, so a pull request
-turns a cell green only once it has landed. This skill is the routine: read the
+levels main's checks keep with each of their runs (the `quality-levels`
+artifact), so a pull request turns a cell green only once it has landed. This skill is the routine: read the
 page, measure the same thing locally, fix the worst cell test-first, land it.
 
 ## 1. What the page measures, and when it is green
@@ -42,12 +42,12 @@ mutation run reports rules as unproven that are not.
 
 <!-- not run: the full measure runs both suites and the mutation run, a few minutes -->
 ```
-uv run python scripts/ratchet.py check --base origin/main   # every measure, compared with main's quality.json
-uv run python scripts/ratchet.py update                     # measure and record the levels in quality.json
+uv run python scripts/ratchet.py check --base origin/main   # every measure, compared with main's levels
+uv run python scripts/ratchet.py measure                    # every measure, printed
 uv run python scripts/mutate.py                             # each rule switched off in turn
 ```
 
-`--skip-mutation` on either ratchet command keeps the recorded mutation figures
+`--skip-mutation` on `check` keeps the base's mutation figures
 for a quick look; continuous integration never skips it.
 
 For one cell at a time:
@@ -71,8 +71,8 @@ suites together, and it changes only by hand, with the owner's yes.
 
 Work on one cell per pull request, the reddest first. Everything here follows
 CONTRIBUTING.md: a failing test committed before the code, one logical change
-per pull request, commits through the `write-commit` skill, and `quality.json`
-updated in the same pull request.
+per pull request, and commits through the `write-commit` skill. Levels are
+never recorded by hand: main measures its own.
 
 **Checks on main red.** Fix that before anything else: every other number is
 measured by those checks, so while they fail the page stops moving.
