@@ -71,15 +71,19 @@ def test_a_coloured_failure_line_is_still_attributed(monkeypatch, mutate):
     assert mutate.run_pytest() == (1, ["test_a_worse_level_fails"])
 
 
-def test_an_empty_rule_table_is_not_a_crash(tmp_path, monkeypatch, capsys, mutate):
-    """A scaffolded repository starts with a table of comments and no rows, and says what to add."""
-    table = tmp_path / "mutations.toml"
-    table.write_text("# no rows yet\n")
+@pytest.mark.parametrize("table", ["missing", "comments only"])
+def test_no_rows_to_check_is_a_failure_not_a_pass(tmp_path, monkeypatch, capsys, mutate, table):
+    """A table emptied or lost by mistake would leave every rule unproven while the run stayed green."""
+    rows = tmp_path / "mutations.toml"
+    if table == "comments only":
+        rows.write_text("# no rows yet\n")
     monkeypatch.setattr(mutate, "ROOT", tmp_path)
-    monkeypatch.setattr(mutate, "TABLE", table)
+    monkeypatch.setattr(mutate, "TABLE", rows)
     monkeypatch.setattr("sys.argv", ["mutate.py"])
-    assert mutate.main() == 0
-    assert "no rules in mutations.toml yet" in capsys.readouterr().out
+    assert mutate.main() == 1
+    said = capsys.readouterr().out
+    assert "nothing to switch off" in said
+    assert "git checkout origin/main -- scripts/mutations.toml" in said
 
 
 #: The function a killed run repairs with. A rule there would be switched off while it repairs.
