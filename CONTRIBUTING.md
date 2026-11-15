@@ -113,7 +113,8 @@ because a major version can change behaviour the checks do not see.
    turn the rule off with `uv run python scripts/mutate.py`, watch a named test
    go red, and keep the row in `scripts/mutations.toml`.
 
-   A rule is a line marked `// RULE: what it says` in the app's source. Every
+   A rule is a line marked `// RULE: what it says` in the app's source, or
+   `# RULE: what it says` in the project's own tools under `scripts/`. Every
    one needs a row in `scripts/mutations.toml` and a test whose title is the
    rule's own words — `// RULE: a wrong secret is refused` wants
    `test("a wrong secret is refused", …)`. `tests/test_rules_have_evidence.py` refuses
@@ -121,6 +122,11 @@ because a major version can change behaviour the checks do not see.
    checks that the test named after a rule is one of the ones that went red, and
    fails the run when something else broke instead. A kill by an unrelated test
    is not evidence about the rule.
+
+   The mutation runner proves its own rules the same way, because it has
+   loaded its code before it switches a line off. The one exception is
+   `repair()`, which a killed run calls with the line still switched off, so
+   it must never hold a rule; `tests/test_mutate_runner.py` checks that.
 
    Do not edit the tree while it runs. It refuses to restore a file that
    changed underneath it and says so, but the run it was in the middle of is
