@@ -2,8 +2,9 @@
 
 The measures and their rules are the ones claude-voice uses, so the bridge's
 health page reads both repositories the same way. These cases are the ones a
-change will actually meet: a measure slipping, a better level left unrecorded,
-an exception written in the pull request, a slower suite.
+change will actually meet: a measure slipping, an exception written in the pull
+request, a slower suite. Main keeps its own levels with each of its runs, so a
+change never records them, and quality.json holds only what is set by hand.
 """
 
 import json
@@ -36,11 +37,11 @@ def _now(**change):
     return {**LEVEL, **change}
 
 
-def _problems(now, base=LEVEL, committed=None, allowed=()):
-    return ratchet.compare(base, now, committed or now, set(allowed))
+def _problems(now, base=LEVEL, allowed=()):
+    return ratchet.compare(base, now, set(allowed), LEVEL["test_budget"])
 
 
-def test_nothing_worse_and_everything_recorded_passes():
+def test_nothing_worse_passes():
     assert _problems(_now()) == []
 
 
@@ -106,9 +107,8 @@ def test_an_exception_in_the_pull_request_lets_that_measure_slip():
     assert _problems(_now(tests=1), allowed=["coverage"]) != []
 
 
-def test_a_better_level_must_be_recorded_in_the_same_change():
-    (problem,) = _problems(_now(tests=310), committed=LEVEL)
-    assert "quality.json does not record the levels now (tests)" in problem
+def test_a_better_level_needs_no_recording():
+    assert _problems(_now(tests=310, coverage=95.0)) == []
 
 
 def test_a_suite_over_its_time_budget_fails():
@@ -122,13 +122,42 @@ def test_exceptions_are_read_only_from_lines_of_their_own():
     assert ratchet.exceptions(text) == {"coverage"}
 
 
-def test_the_record_keeps_the_hand_set_budget_and_sorts_its_keys(tmp_path):
+def test_the_levels_main_keeps_leave_out_the_budget_and_sort_their_keys(tmp_path):
+    path = tmp_path / "levels.json"
+    ratchet.write_levels(path, {**LEVEL, "test_budget": None})
+    written = json.loads(path.read_text())
+    assert "test_budget" not in written
+    assert written["tests"] == LEVEL["tests"]
+    assert list(written) == sorted(written)
+
+
+def test_the_budget_is_read_from_quality_json_or_falls_back_to_a_default(tmp_path):
     path = tmp_path / "quality.json"
     path.write_text(json.dumps({"test_budget": {"seconds": 90, "tolerance": 0.1}}))
-    ratchet.write(path, {**LEVEL, "test_budget": None})
-    written = path.read_text()
-    assert json.loads(written)["test_budget"] == {"seconds": 90, "tolerance": 0.1}
-    assert list(json.loads(written)) == sorted(json.loads(written))
+    assert ratchet.budget(path) == {"seconds": 90, "tolerance": 0.1}
+    assert ratchet.budget(tmp_path / "missing.json") == ratchet.DEFAULT_BUDGET
+
+
+def test_the_base_is_compared_with_the_levels_main_kept(tmp_path):
+    kept = tmp_path / "levels.json"
+    kept.write_text(json.dumps({k: v for k, v in LEVEL.items() if k != "test_budget"}))
+    unmeasured = lambda: pytest.fail("measured although main kept levels")  # noqa: E731
+    assert ratchet.base_levels(kept, unmeasured)["tests"] == 300
+
+
+def test_when_main_s_levels_are_missing_the_base_is_measured(tmp_path):
+    measured = {**LEVEL, "tests": 123}
+    assert ratchet.base_levels(None, lambda: measured)["tests"] == 123
+    broken = tmp_path / "levels.json"
+    broken.write_text("not json")
+    assert ratchet.base_levels(broken, lambda: measured)["tests"] == 123
+
+
+def test_a_measured_level_in_quality_json_is_refused():
+    """Measured levels change with every merge, so a file holding them collides between changes."""
+    recorded = json.loads((pathlib.Path(__file__).parent.parent / "quality.json").read_text())
+    measured = set(recorded) - ratchet.SET_BY_HAND
+    assert measured == set(), f"measured, not set by hand: {measured}"
 
 
 def test_modules_that_import_each_other_when_they_load_are_one_cycle(tmp_path):
