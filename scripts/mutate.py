@@ -111,10 +111,50 @@ def _remove(folder: pathlib.Path) -> None:
     shutil.rmtree(folder, onexc=_writable_again)
 
 
+def own_place(place: pathlib.Path) -> pathlib.Path:
+    """Make `place`, or check the one there: a real folder of this user's, open to no one else.
+
+    The runs keep their files in a folder with a fixed name in the shared temporary area,
+    where another user could have put a link or a folder of theirs first. It is opened
+    without following a link and checked through what was opened, so it cannot be swapped
+    in between. A folder of this user's that others may only read, made before this check,
+    is closed to them; one they can write to is refused, as they may already have put
+    something in it.
+    """
+    with contextlib.suppress(FileExistsError):
+        place.mkdir(mode=0o700)
+    try:
+        # RULE: a link in place of the shared folder stops the run
+        opened = os.open(place, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    except OSError as e:
+        raise SystemExit(_not_ours(place, f"it cannot be opened as a folder ({e.strerror})")) from None
+    try:
+        found = os.fstat(opened)
+        # RULE: the shared folder the runs live in is this user's alone
+        if found.st_uid != os.getuid():
+            raise SystemExit(_not_ours(place, f"it belongs to user {found.st_uid}"))
+        # RULE: a shared folder others can write to stops the run
+        if found.st_mode & 0o022:
+            raise SystemExit(_not_ours(place, "others can write to it, and may already have"))
+        if found.st_mode & 0o077:
+            # RULE: a shared folder others may only read is closed to them
+            os.fchmod(opened, 0o700)
+    finally:
+        os.close(opened)
+    return place
+
+
+def _not_ours(place: pathlib.Path, why: str) -> str:
+    return (
+        f"{place} is not a folder only you can use: {why}. Nothing was run. Look at what it is, "
+        f"remove it if it is not yours to keep (rm -rf -- {place}), and run this again."
+    )
+
+
 def sweep() -> None:
     """Remove what an earlier run, killed before it could clean up, left behind."""
     # RULE: a killed run's temporary files are swept at the next start
-    for left in MUTATE_TMP.iterdir() if MUTATE_TMP.is_dir() else []:
+    for left in own_place(MUTATE_TMP).iterdir():
         _remove(left)
 
 
@@ -216,8 +256,7 @@ def run_pytest() -> tuple[int, list[str]]:
     # the wrong rule, so no bytecode is written at all.
     # RULE: two mutations never share a bytecode cache
     env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
-    MUTATE_TMP.mkdir(parents=True, exist_ok=True)
-    temporary = pathlib.Path(tempfile.mkdtemp(prefix="run-", dir=MUTATE_TMP))
+    temporary = pathlib.Path(tempfile.mkdtemp(prefix="run-", dir=own_place(MUTATE_TMP)))
     try:
         r = subprocess.run(  # noqa: S603 - our own interpreter and fixed arguments
             [
