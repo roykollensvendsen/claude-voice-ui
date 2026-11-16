@@ -147,3 +147,24 @@ def test_a_test_finds_the_signal_handlers_the_run_began_with(tmp_path):
         check=False,
     )
     assert done.returncode == 0, done.stdout
+
+
+#: The line in tests/conftest.py that puts each handler back.
+RESTORE = "        signal.signal(each, handler)\n"
+
+
+def test_the_handler_check_fails_when_the_fixture_puts_nothing_back(tmp_path):
+    """The proof above is only worth something if the scratch suite fails without the restore line."""
+    conftest = (ROOT / "tests/conftest.py").read_text(encoding="utf-8")
+    assert conftest.count(RESTORE) == 1, "the restore line moved; point RESTORE at it again"
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests/conftest.py").write_text(conftest.replace(RESTORE, "        pass\n"))
+    (tmp_path / "tests/test_scratch.py").write_text(TESTS)
+    done = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "--rootdir", str(tmp_path), "tests"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert "1 failed, 1 passed" in done.stdout, done.stdout
