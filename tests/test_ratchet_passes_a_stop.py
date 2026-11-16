@@ -146,11 +146,15 @@ def test_a_stop_reaches_the_python_under_uv_once(tmp_path, stop):
 
 def test_the_cleanup_kills_its_own_stand_in_and_spares_a_stranger(tmp_path):
     """A saved number may by now belong to anything else; only a step naming this test's folder dies."""
+    # A program that waits whatever comes after it; `sleep` would read the folder as a bad interval and exit.
+    waits = [sys.executable, "-c", "import time; time.sleep(30)"]
     with (
-        subprocess.Popen(["sleep", "30"]) as stranger,
-        subprocess.Popen(["sleep", "30", str(tmp_path)]) as ours,
+        subprocess.Popen(waits) as stranger,
+        subprocess.Popen([*waits, str(tmp_path)]) as ours,
     ):
         try:
+            for each in (stranger, ours):  # Popen may return before the new command line shows
+                _wait_for_command_line(each.pid, waits[-1])
             _end_the_stand_in(stranger.pid, tmp_path)
             _end_the_stand_in(ours.pid, tmp_path)
             assert ours.wait(timeout=5) == -signal.SIGKILL
@@ -158,3 +162,10 @@ def test_the_cleanup_kills_its_own_stand_in_and_spares_a_stranger(tmp_path):
         finally:
             stranger.kill()
             ours.kill()
+
+
+def _wait_for_command_line(pid, own_word):
+    deadline = time.monotonic() + 5
+    while os.fsencode(own_word) not in pathlib.Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0"):
+        assert time.monotonic() < deadline, f"program {pid} never showed its command line"
+        time.sleep(0.01)
