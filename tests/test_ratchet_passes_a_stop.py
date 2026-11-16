@@ -142,3 +142,19 @@ def test_a_stop_reaches_the_python_under_uv_once(tmp_path, stop):
     code, out = _stop_while_the_step_runs(tmp_path, send, THROUGH_UV)
     assert code != 0, out
     _told_once_and_put_back(tmp_path, out)
+
+
+def test_the_cleanup_kills_its_own_stand_in_and_spares_a_stranger(tmp_path):
+    """A saved number may by now belong to anything else; only a step naming this test's folder dies."""
+    with (
+        subprocess.Popen(["sleep", "30"]) as stranger,
+        subprocess.Popen(["sleep", "30", str(tmp_path)]) as ours,
+    ):
+        try:
+            _end_the_stand_in(stranger.pid, tmp_path)
+            _end_the_stand_in(ours.pid, tmp_path)
+            assert ours.wait(timeout=5) == -signal.SIGKILL
+            assert stranger.poll() is None
+        finally:
+            stranger.kill()
+            ours.kill()
