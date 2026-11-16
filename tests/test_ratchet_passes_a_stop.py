@@ -52,7 +52,10 @@ def count(signum, frame):
 signal.signal(signal.SIGINT, count)
 (tmp / "step.pid").write_text(str(os.getpid()))
 (tmp / "ready").write_text("")
+give_up = time.monotonic() + 30  # a step never told gives up, leaving no put-back: the test then fails
 while not (tmp / "got-int").exists():
+    if time.monotonic() > give_up:
+        sys.exit(1)
     time.sleep(0.05)
 time.sleep(1)  # putting the line back takes a moment: the ratchet waits, and a second Ctrl-C lands here
 (tmp / "put-back").write_text("")

@@ -31,6 +31,7 @@ import argparse
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
 import tempfile
@@ -64,10 +65,66 @@ EXCEPTION = re.compile(r"^\s*ratchet-exception:\s*([a-z_]+)", re.IGNORECASE | re
 # -- measuring ---------------------------------------------------------------------------
 
 
+STOPS = (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)
+
+
+def stop_cleanly() -> None:
+    """Turn a stop from outside (a cancelled CI job, a closed terminal) into the exit Ctrl-C gives.
+
+    Then the step that is running is told, and every `finally` runs: the base's copy goes too.
+    """
+
+    def stop(signum: int, _frame: object) -> None:
+        for each in STOPS:  # GitHub cancels with SIGINT, then SIGTERM; one stop is enough
+            signal.signal(each, signal.SIG_IGN)
+        if signum == signal.SIGINT:
+            raise KeyboardInterrupt
+        raise SystemExit(128 + signum)
+
+    for each in STOPS:
+        signal.signal(each, stop)
+
+
 def _run(
     *command: str, cwd: Path = ROOT, env: dict[str, str] | None = None
 ) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(command, cwd=cwd, env=env, capture_output=True, text=True, check=False)  # noqa: S603
+    """Run one step; a stop reaches it as one Ctrl-C and is waited for, so it can put back what it changed.
+
+    The step runs in a session of its own, so a terminal's Ctrl-C reaches it only through
+    here, and once. That Ctrl-C goes to the step alone, never to its whole group: the step
+    is `uv run`, and uv passes a Ctrl-C on to its own child, so one sent to the group would
+    reach that child twice, and a second Ctrl-C cuts pytest's cleanup short. Passing it on
+    is the step's own job. The wait after it has no time limit, as these runs never have
+    one. A step that hangs there, or one left running after the ratchet itself was killed
+    with -9, is ended by hand, with everything it started: kill -9 -- -<the step's pid>.
+    """
+    # Files, not pipes: a step waited for while nobody reads its pipe would block on a full one,
+    # and one that outlived the ratchet would die of SIGPIPE mid-mutation.
+    with tempfile.TemporaryFile("w+") as out, tempfile.TemporaryFile("w+") as err:
+        # RULE: a Ctrl-C in the terminal reaches the step once
+        step = subprocess.Popen(  # noqa: S603
+            command, cwd=cwd, env=env, stdout=out, stderr=err, text=True, start_new_session=True
+        )
+        try:
+            step.wait()
+        except BaseException:
+            _tell(step)
+            step.wait()  # no time limit: these runs never have one
+            raise
+        out.seek(0)
+        err.seek(0)
+        return subprocess.CompletedProcess(command, step.returncode, out.read(), err.read())
+
+
+def _tell(step: subprocess.Popen[str]) -> None:
+    """Pass a stop on to the step, as one Ctrl-C, so it puts back what it changed."""
+    try:
+        # RULE: a stopped measurement lets its step put back what it changed
+        # RULE: a stop reaches the python under uv once
+        step.send_signal(signal.SIGINT)
+    except ProcessLookupError:
+        if step.poll() is None:  # gone only if it ended; a live step must be told
+            raise
 
 
 def structure(folder: Path) -> dict[str, Any]:
@@ -308,6 +365,7 @@ def main() -> int:
     parser.add_argument("--out", type=Path, help="where to write the levels measured now")
     parser.add_argument("--skip-mutation", action="store_true")
     args = parser.parse_args()
+    stop_cleanly()
     if args.action == "measure":
         now = measure()
         if args.out:

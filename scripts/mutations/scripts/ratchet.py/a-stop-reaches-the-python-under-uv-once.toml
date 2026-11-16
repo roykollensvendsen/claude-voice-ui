@@ -1,0 +1,5 @@
+[[rule]]
+name = "a stop reaches the python under uv once"
+file = "scripts/ratchet.py"
+find = '^\s*step\.send_signal\(signal\.SIGINT\)$'
+replace = 'os.killpg(step.pid, signal.SIGINT)'
