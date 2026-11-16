@@ -85,8 +85,22 @@ def _stop_while_the_step_runs(tmp_path, send, starts=STRAIGHT):
         if ratchet.poll() is None:
             ratchet.kill()
         if (tmp_path / "step.pid").exists():
-            with contextlib.suppress(ProcessLookupError):
-                os.kill(int((tmp_path / "step.pid").read_text()), signal.SIGKILL)
+            _end_the_stand_in(int((tmp_path / "step.pid").read_text()), tmp_path)
+
+
+def _end_the_stand_in(pid, tmp_path):
+    """Kill a stand-in step left running, but only if that number is still this test's step.
+
+    A step that ended long ago leaves its number free for the system to give to anything
+    else; the step's own command line names this test's folder, so that is what is checked.
+    """
+    try:
+        command = pathlib.Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0")
+    except OSError:
+        return  # gone already
+    if os.fsencode(str(tmp_path)) in command:
+        with contextlib.suppress(ProcessLookupError):
+            os.kill(pid, signal.SIGKILL)
 
 
 def _told_once_and_put_back(tmp_path, out):
@@ -109,10 +123,15 @@ def test_a_ctrl_c_in_the_terminal_reaches_the_step_once(tmp_path):
     _told_once_and_put_back(tmp_path, out)
 
 
-@pytest.mark.skipif(shutil.which("uv") is None, reason="needs uv, as the ratchet's own steps do")
+@pytest.mark.skipif(
+    shutil.which("uv") is None and not os.environ.get("CI"),
+    reason="needs uv, as the ratchet's own steps do; continuous integration must have it",
+)
 @pytest.mark.parametrize("stop", ["ctrl-c", "cancel"])
 def test_a_stop_reaches_the_python_under_uv_once(tmp_path, stop):
     """The ratchet starts its steps through `uv run`, and uv passes a Ctrl-C on to its own child."""
+    if shutil.which("uv") is None:  # in CI: a skip there would leave the only proof unrun, and green
+        pytest.fail("CI has no uv, so the proof that a stop reaches the python under uv once cannot run")
 
     def send(ratchet):
         if stop == "ctrl-c":
