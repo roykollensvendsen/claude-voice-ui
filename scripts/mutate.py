@@ -31,6 +31,7 @@ import os
 import pathlib
 import re
 import shutil
+import signal
 import stat
 import subprocess
 import sys
@@ -115,6 +116,26 @@ def sweep() -> None:
     # RULE: a killed run's temporary files are swept at the next start
     for left in MUTATE_TMP.iterdir() if MUTATE_TMP.is_dir() else []:
         _remove(left)
+
+
+def stop_cleanly() -> None:
+    """Turn a stop from outside (a cancelled CI job, a closed terminal) into the exit Ctrl-C gives.
+
+    Then main()'s `finally` puts the switched-off line back, as it does for Ctrl-C.
+    """
+    stops = (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)
+
+    def stop(signum: int, _frame: object) -> None:
+        # RULE: a second stop does not cut the cleanup short
+        for each in stops:  # GitHub cancels with SIGINT, then SIGTERM
+            signal.signal(each, signal.SIG_IGN)
+        if signum == signal.SIGINT:
+            raise KeyboardInterrupt
+        raise SystemExit(128 + signum)
+
+    # RULE: a stopped run cleans up as an interrupted one does
+    for each in stops:
+        signal.signal(each, stop)
 
 
 def tidy_up() -> None:
@@ -285,6 +306,7 @@ def main() -> int:
     parser.add_argument("--write", type=pathlib.Path, help="write the evidence table here")
     args = parser.parse_args()
 
+    stop_cleanly()
     tidy_up()
     # A table emptied, moved or lost by mistake would leave every rule unproven
     # while the run stayed green, so nothing to check is a failure.
@@ -332,6 +354,11 @@ def main() -> int:
             restore(*standing)
         RECOVERY.unlink(missing_ok=True)
 
+    return summary(results, lost, args.write)
+
+
+def summary(results: list[tuple[str, int, str, bool]], lost: list[str], write: pathlib.Path | None) -> int:
+    """Say how many rules were proven and which were not, write the report if asked, and give the exit."""
     survived = [name for name, count, _, _ in results if count == 0]
     lucky = [name for name, count, _, own in results if count and not own]
     proven = len(results) - len(survived) - len(lucky)
@@ -343,8 +370,8 @@ def main() -> int:
     if lost:
         print("CHANGED WHILE MUTATED, so left as they are:", ", ".join(sorted(set(lost))))  # noqa: T201
         print("Edit the tree while this runs and the result is not about your code.")  # noqa: T201
-    if args.write:
-        args.write.write_text(report(results, survived, lucky))
+    if write:
+        write.write_text(report(results, survived, lucky))
     return 1 if survived or lucky or lost else 0
 
 
