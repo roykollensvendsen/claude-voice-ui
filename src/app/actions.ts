@@ -5,6 +5,7 @@ import { t } from "../i18n";
 import { recall, remember } from "../remember";
 import { type Session, waitsForOwner } from "../states";
 import { type Actions, hasPrompt, type UpdateActions } from "../view";
+import type { CallsPart } from "./calls";
 import type { Context } from "./context";
 import {
   applyLanguage,
@@ -76,6 +77,7 @@ export interface Means {
   /** The newest build the page has heard of, or "" before it has asked. */
   latestBuild(): string;
   update: UpdateActions;
+  calls: CallsPart;
 }
 
 export function tapActions({ home, deps, keep, draw, failed }: Context, means: Means): Actions {
@@ -191,7 +193,7 @@ export function tapActions({ home, deps, keep, draw, failed }: Context, means: M
       home.menuOpen = false;
       home.health = { data: null };
       draw();
-      await readHealth();
+      await Promise.all([readHealth(), means.calls.open()]);
     },
     dismissRestart() {
       home.restarted = null;
@@ -249,8 +251,12 @@ export function tapActions({ home, deps, keep, draw, failed }: Context, means: M
     },
     closeHealth() {
       home.health = null;
+      means.calls.close();
       draw();
     },
+    resetSince: () => means.calls.resetSince(),
+    openDay: (day, tool) => void means.calls.openDay(day, tool),
+    closeDay: () => means.calls.closeDay(),
     async changeSettings(change) {
       try {
         home.settings = await deps.bridge.changeSettings(change);

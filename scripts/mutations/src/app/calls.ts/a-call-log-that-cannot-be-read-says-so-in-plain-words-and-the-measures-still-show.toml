@@ -1,0 +1,5 @@
+[[rule]]
+name = "a call log that cannot be read says so in plain words, and the measures still show"
+file = "src/app/calls.ts"
+find = 'shown\.problem = \"unreadable\";'
+replace = 'shown.problem = null;'

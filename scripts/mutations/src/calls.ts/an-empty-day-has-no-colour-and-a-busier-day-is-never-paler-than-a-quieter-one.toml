@@ -1,0 +1,5 @@
+[[rule]]
+name = "an empty day has no colour, and a busier day is never paler than a quieter one"
+file = "src/calls.ts"
+find = 'if \(count <= 0\) return 0;'
+replace = 'if (false) return 0;'

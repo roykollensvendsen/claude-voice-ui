@@ -1,8 +1,10 @@
 // How both programs' code is doing, measure by measure.
 import { type Metric, type SoftwareHealth } from "../bridge";
+import { type CallLog } from "../calls";
 import { type Key, t } from "../i18n";
 import { ago, button, el } from "../view/dom";
 import { type Actions } from "../view/types";
+import { callsSection } from "./calls";
 
 export const MEASURES: Record<string, Key> = {
   coverage: "health.coverage",
@@ -110,7 +112,7 @@ function freshness(data: SoftwareHealth): HTMLElement[] {
   return parts.length ? [el("p", "freshness muted", ...parts)] : [];
 }
 
-export function healthScreen(data: SoftwareHealth | null, act: Actions): HTMLElement {
+export function healthScreen(data: SoftwareHealth | null, act: Actions, calls: CallLog | null): HTMLElement {
   return el(
     "section",
     "health",
@@ -127,5 +129,6 @@ export function healthScreen(data: SoftwareHealth | null, act: Actions): HTMLEle
           ),
         )
       : [el("p", "muted", t("health.loading"))]),
+    callsSection(calls, act),
   );
 }

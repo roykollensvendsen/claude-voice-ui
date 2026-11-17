@@ -1,4 +1,5 @@
 // The state the screens are drawn from, and what a tap on them asks for.
+
 import {
   type Active,
   type BridgeInfo,
@@ -18,6 +19,7 @@ import {
   type Turn,
   type Work,
 } from "../bridge";
+import type { CallLog } from "../calls";
 import { type Language } from "../i18n";
 import { type Session } from "../states";
 import { type UpdateState } from "../update";
@@ -72,6 +74,8 @@ export interface Home {
   settings: Settings | null;
   /** The page of how both programs' code is doing, when open; `data` is null while it loads. */
   health: { data: SoftwareHealth | null } | null;
+  /** The voice tools' calls while the code-health page is open; null while they load or it is shut. */
+  calls: CallLog | null;
   /** What came of an answer: a refusal by prompt id, or a note by session id once it is gone. */
   replies: Record<string, { error?: string; note?: string }>;
   /** Whether the owner has opened the list of what is missing. */
@@ -144,6 +148,11 @@ export interface Actions {
   changeSettings(change: Partial<Settings>): void;
   openHealth(): void;
   closeHealth(): void;
+  /** Start the count of calls since the page opened again from now. */
+  resetSince(): void;
+  /** Show one day's calls to one tool, from a tap on the map. */
+  openDay(day: string, tool: string): void;
+  closeDay(): void;
   dismissRestart(): void;
   /** Copy a waiting item's command, so the owner can paste it. */
   copy(id: string, command: string): void;

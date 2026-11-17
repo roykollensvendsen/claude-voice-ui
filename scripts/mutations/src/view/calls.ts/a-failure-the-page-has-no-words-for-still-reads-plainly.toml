@@ -1,0 +1,5 @@
+[[rule]]
+name = "a failure the page has no words for still reads plainly"
+file = "src/view/calls.ts"
+find = 'return said \? t\(said\) : t\(\"calls\.failedWith\"'
+replace = 'return said ? t(said) : call.error_class;'

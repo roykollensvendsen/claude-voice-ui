@@ -153,3 +153,24 @@ describe("one session's output, what it waits for, and its pull requests", () =>
     expect(fetch).toHaveBeenCalledWith("/api/v1/sessions/a1/prs", { cache: "no-store" });
   });
 });
+
+describe("the voice tools' call log", () => {
+  test("the totals, the newest calls and one day's calls are read from their addresses", async () => {
+    const fetch = vi.fn(async () => answer(200, {}));
+    const b = bridge(fetch);
+    await b.callTotals("2026-11-04", "2026-11-17");
+    await b.recentCalls(20);
+    await b.dayCalls("2026-11-16", "ask_active_session");
+    expect(fetch.mock.calls.map((c) => (c as unknown[])[0])).toEqual([
+      "/api/v1/calls/totals?from=2026-11-04&to=2026-11-17",
+      "/api/v1/calls/recent?limit=20",
+      "/api/v1/calls/day/2026-11-16/ask_active_session",
+    ]);
+  });
+
+  test("a bridge without a call log is told apart from one that did not answer", async () => {
+    expect(await bridge(async () => answer(404)).callTotals("a", "b")).toBeNull();
+    await expect(bridge(async () => answer(500)).callTotals("a", "b")).rejects.toThrow();
+    await expect(bridge(async () => answer(401)).callTotals("a", "b")).rejects.toBeInstanceOf(SignedOut);
+  });
+});

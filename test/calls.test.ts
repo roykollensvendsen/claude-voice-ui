@@ -150,8 +150,28 @@ describe("the voice tools' calls on the code-health page", () => {
     const level = (tool: string, day: string) => Number(cell(tool, day)?.dataset.level);
     expect(level("garage_status", "2026-11-17")).toBe(0);
     expect(level("garage_status", "2026-11-10")).toBeGreaterThan(0);
-    expect(level("whats_new", "2026-11-17")).toBeGreaterThanOrEqual(level("ask_active_session", "2026-11-16"));
-    expect(level("ask_active_session", "2026-11-16")).toBeGreaterThanOrEqual(level("garage_status", "2026-11-10"));
+    expect(level("whats_new", "2026-11-17")).toBeGreaterThanOrEqual(
+      level("ask_active_session", "2026-11-16"),
+    );
+    expect(level("ask_active_session", "2026-11-16")).toBeGreaterThanOrEqual(
+      level("garage_status", "2026-11-10"),
+    );
+  });
+
+  test("after the stream drops and comes back, the counts are read again but the colours hold", async () => {
+    const b = await openHealth();
+    const scale = root.querySelector<HTMLElement>(".calls .map")?.dataset.scale;
+    b.callTotals.mockResolvedValue({
+      ...TOTALS,
+      rows: [
+        { day: "2026-11-17", tool: "ask_active_session", calls: 9000, errors: 0, median_ms: 1, p95_ms: 1 },
+      ],
+    });
+    FakeSource.last?.onerror?.(new Event("error"));
+    FakeSource.last?.onopen?.(new Event("open"));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(cell("ask_active_session", "2026-11-17")?.textContent).toBe("9000");
+    expect(root.querySelector<HTMLElement>(".calls .map")?.dataset.scale).toBe(scale);
   });
 
   test("opening the page again sets the scale again from what it reads then", async () => {
@@ -281,7 +301,10 @@ describe("one day's calls to one tool", () => {
         day: "2026-11-16",
         tool: "ask_active_session",
         counted_only: false,
-        calls: [call({ id: "d1", tool: "ask_active_session" }), call({ id: "d2", tool: "ask_active_session" })],
+        calls: [
+          call({ id: "d1", tool: "ask_active_session" }),
+          call({ id: "d2", tool: "ask_active_session" }),
+        ],
       },
     });
     cell("ask_active_session", "2026-11-16")?.click();

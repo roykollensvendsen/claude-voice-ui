@@ -1,0 +1,5 @@
+[[rule]]
+name = "after the stream drops and comes back, the counts are read again but the colours hold"
+file = "src/calls.ts"
+find = 'if \(setScale\) log\.scale = scaleOf\(totals\.rows\.map\(\(r\) => r\.calls\)\);'
+replace = 'log.scale = scaleOf(totals.rows.map((r) => r.calls));'

@@ -1,4 +1,5 @@
 // The bridge's event API, as this app uses it. The specification is API.md.
+import type { CallTotals, DayCalls, RecentCalls } from "./calls";
 import type { Git } from "./git";
 import type { Session } from "./states";
 import type { Focused, OrgProgramme, Programme, ProgrammeHint, Whoami, Work } from "./team";
@@ -238,6 +239,10 @@ export interface Bridge {
   focus(session: string): Promise<Focused>;
   /** Who fills each role in a programme; null for a programme the bridge does not know. */
   org(programme: string): Promise<OrgProgramme | null>;
+  /** The voice tools' calls per Oslo day from `from` to `to`; null from a bridge that keeps no log. */
+  callTotals(from: string, to: string): Promise<CallTotals | null>;
+  recentCalls(limit: number): Promise<RecentCalls>;
+  dayCalls(day: string, tool: string): Promise<DayCalls>;
 }
 
 /** The API is always at /api/v1 on the page's own origin, wherever the page itself is served. */
@@ -368,6 +373,19 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
       const response = await fetch(`${BASE}/work`, { cache: "no-store" });
       if (response.status === 404) return null;
       return read<Work>(response);
+    },
+    async callTotals(from, to) {
+      const response = await fetch(`${BASE}/calls/totals?from=${from}&to=${to}`, { cache: "no-store" });
+      // RULE: a bridge without a call log is told apart from one that did not answer
+      if (response.status === 404) return null;
+      return read<CallTotals>(response);
+    },
+    async recentCalls(limit) {
+      return read<RecentCalls>(await fetch(`${BASE}/calls/recent?limit=${limit}`, { cache: "no-store" }));
+    },
+    async dayCalls(day, tool) {
+      const where = `${BASE}/calls/day/${encodeURIComponent(day)}/${encodeURIComponent(tool)}`;
+      return read<DayCalls>(await fetch(where, { cache: "no-store" }));
     },
     async whoami() {
       const response = await fetch(`${BASE}/whoami`, { cache: "no-store" });
