@@ -134,10 +134,11 @@ describe("the voice tools' calls on the code-health page", () => {
     expect(cell("ask_active_session", "2026-11-17")?.classList.contains("has-errors")).toBe(true);
   });
 
-  test.each(["refused", "cancelled"])("a %s call is not counted as failed on its day", async (outcome) => {
+  test("a call refused or cancelled is counted, but not marked as failed", async () => {
     await openHealth();
-    ended({ tool: "ask_active_session", outcome, error_class: null });
-    expect(cell("ask_active_session", "2026-11-17")?.textContent).toBe("3");
+    ended({ id: "e1", tool: "ask_active_session", outcome: "refused", error_class: null });
+    ended({ id: "e2", tool: "ask_active_session", outcome: "cancelled", error_class: null });
+    expect(cell("ask_active_session", "2026-11-17")?.textContent).toBe("4");
     expect(cell("ask_active_session", "2026-11-17")?.classList.contains("has-errors")).toBe(false);
   });
 

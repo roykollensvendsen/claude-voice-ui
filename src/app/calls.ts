@@ -2,6 +2,8 @@
 import { SignedOut } from "../bridge";
 import {
   type CallEnd,
+  type CallLog,
+  type CallTotals,
   callEnded,
   callStarted,
   DAYS,
@@ -9,6 +11,7 @@ import {
   emptyLog,
   osloDay,
   RECENT,
+  type RecentCalls,
   type Running,
   resetSince,
   takeRecent,
@@ -35,31 +38,53 @@ export interface CallsPart {
 
 export function callsPart({ home, deps, draw, failed }: Context): CallsPart {
   let ticker: ReturnType<typeof setInterval> | undefined;
+  /** Calls that end while the counts are read again, held until the fresh counts are in. */
+  let held: CallEnd[] | null = null;
 
   /** Read the totals and the newest calls into the log the page shows, if it is still the one shown. */
   async function read(setScale: boolean) {
+    if (held) return;
     const shown = home.calls ?? emptyLog(osloDay(Date.now()));
-    const days = daysUpTo(osloDay(Date.now()), DAYS);
+    held = setScale ? null : [];
     try {
-      const [totals, recent] = await Promise.all([
-        deps.bridge.callTotals(days[0] ?? "", days.at(-1) ?? ""),
-        deps.bridge.recentCalls(RECENT),
-      ]);
-      if (!home.health) return;
-      if (totals === null) shown.problem = "none";
-      else {
-        takeTotals(shown, totals, setScale);
-        takeRecent(shown, recent);
-        shown.problem = null;
-      }
+      const [totals, recent] = await readBoth();
+      if (!home.health) return void (held = null);
+      take(shown, totals, recent, setScale);
     } catch (error) {
+      // Nothing is counted on a log that could not be read, so what was held is let go.
+      held = null;
       if (error instanceof SignedOut) return failed(error);
       if (!home.health) return;
       // RULE: a call log that cannot be read says so in plain words, and the measures still show
       shown.problem = "unreadable";
     }
     home.calls = shown;
+    settle(shown);
     draw();
+  }
+
+  /** The fourteen days' counts up to today in Oslo, and the newest calls, read together. */
+  function readBoth() {
+    const days = daysUpTo(osloDay(Date.now()), DAYS);
+    return Promise.all([
+      deps.bridge.callTotals(days[0] ?? "", days.at(-1) ?? ""),
+      deps.bridge.recentCalls(RECENT),
+    ]);
+  }
+
+  /** What a read brought: the counts and newest calls, or that the bridge keeps no log. */
+  function take(log: CallLog, totals: CallTotals | null, recent: RecentCalls, setScale: boolean) {
+    if (totals === null) return void (log.problem = "none");
+    takeTotals(log, totals, setScale);
+    takeRecent(log, recent);
+    log.problem = null;
+  }
+
+  /** Let the calls that ended during a read count now, each once, whichever side of the read it fell. */
+  function settle(log: CallLog) {
+    const waiting = held ?? [];
+    held = null;
+    for (const end of waiting) callEnded(log, end);
   }
 
   /** The page shows the calls only while it is open and they have been read. */
@@ -70,11 +95,16 @@ export function callsPart({ home, deps, draw, failed }: Context): CallsPart {
       home.calls = null;
       clearInterval(ticker);
       ticker = setInterval(() => {
-        if (live()?.running.length) draw();
+        const log = live();
+        if (!log) return;
+        // RULE: when midnight passes in Oslo, the map moves on a day and keeps its colours
+        if (osloDay(Date.now()) !== log.days.at(-1)) void read(false);
+        else if (log.running.length) draw();
       }, TICK_MS);
       await read(true);
     },
     close() {
+      held = null;
       clearInterval(ticker);
       ticker = undefined;
       home.calls = null;
@@ -89,6 +119,8 @@ export function callsPart({ home, deps, draw, failed }: Context): CallsPart {
     ended(end) {
       const log = live();
       if (!log) return;
+      // RULE: a call that ends while the counts are read again is counted once, whichever way it falls
+      if (held) return void held.push(end);
       callEnded(log, end);
       draw();
     },

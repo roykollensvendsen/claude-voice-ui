@@ -1,0 +1,5 @@
+[[rule]]
+name = "a call that ends while the counts are read again is counted once, whichever way it falls"
+file = "src/app/calls.ts"
+find = 'if \(held\) return void held\.push\(end\);'
+replace = 'if (false) return;'

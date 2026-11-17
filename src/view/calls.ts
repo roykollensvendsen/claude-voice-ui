@@ -1,5 +1,5 @@
 // The voice tools' calls on the code-health page: a map of the last days, and the newest calls, live.
-import { type Call, type CallLog, type Running, shade, toolsShown, toolTotal } from "../calls";
+import { type Call, type CallLog, failed, type Running, shade, toolsShown, toolTotal } from "../calls";
 import { type Key, t } from "../i18n";
 import { button, el } from "./dom";
 import type { Actions } from "./types";
@@ -69,7 +69,7 @@ function runningRow(r: Running): HTMLElement {
 export function callRow(c: Call): HTMLElement {
   const row = el(
     "li",
-    `call${c.outcome === "ok" ? "" : " failed"}`,
+    `call${failed(c.outcome) ? " failed" : ""}`,
     el("span", "at", clock(c.ended_at)),
     el("span", "tool", c.tool),
     el("span", "how", how(c)),
