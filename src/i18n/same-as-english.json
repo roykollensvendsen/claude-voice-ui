@@ -12,7 +12,8 @@
     "turn.claude",
     "prompt.send",
     "timeline.commit",
-    "machine.hub"
+    "machine.hub",
+    "calls.ok"
   ],
   "es": [
     "app.title",

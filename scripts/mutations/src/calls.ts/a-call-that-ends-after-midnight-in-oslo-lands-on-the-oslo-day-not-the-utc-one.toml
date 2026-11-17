@@ -1,0 +1,5 @@
+[[rule]]
+name = "a call that ends after midnight in Oslo lands on the Oslo day, not the UTC one"
+file = "src/calls.ts"
+find = 'return OSLO\.format\(new Date\(at\)\);'
+replace = 'return new Date(at).toISOString().slice(0, 10);'

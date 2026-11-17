@@ -1,0 +1,5 @@
+[[rule]]
+name = "the list keeps the twenty newest"
+file = "src/calls.ts"
+find = 'log\.recent = \[call, \.\.\.log\.recent\.filter\(\(c\) => c\.id !== end\.id\)\]\.slice\(0, RECENT\);'
+replace = 'log.recent = [call, ...log.recent.filter((c) => c.id !== end.id)];'

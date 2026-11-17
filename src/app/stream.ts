@@ -1,5 +1,6 @@
 // What the bridge's stream of live events changes on the page.
 import type { Handlers } from "../live";
+import type { CallsPart } from "./calls";
 import type { Context } from "./context";
 import type { SessionPage } from "./page";
 import type { Updating } from "./updating";
@@ -13,6 +14,8 @@ export interface Reads {
   readPrompts(): Promise<void>;
   readSettings(): Promise<void>;
   readWork(): Promise<void>;
+  /** The voice tools' calls on the open code-health page. */
+  calls: CallsPart;
 }
 
 /** The handlers for `follow`, and `stop` to clear the timers they leave running. */
@@ -35,6 +38,7 @@ export function streamHandlers(
     void reads.refresh();
     void reads.readSettings();
     void reads.readWork();
+    void reads.calls.readAgain();
     const open = home.open?.id;
     if (!open) return;
     void page.readDetail(open);
@@ -152,6 +156,8 @@ export function streamHandlers(
       // Its sessions come or go with the list, which the bridge has already changed.
       void reads.refresh();
     },
+    callStart: (running) => reads.calls.started(running),
+    callEnd: (end) => reads.calls.ended(end),
     promptClosed(closed) {
       home.prompts = home.prompts.filter((x) => x.id !== closed.id);
       draw();

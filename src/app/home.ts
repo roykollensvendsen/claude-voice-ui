@@ -26,6 +26,7 @@ export function freshHome(keep: Keep | undefined): Home {
     prompts: [],
     settings: null,
     health: null,
+    calls: null,
     replies: {},
     connection: "connecting",
     problem: null,

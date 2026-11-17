@@ -1,4 +1,5 @@
 // The bridge's stream of live events: focus, peek, active, news, status, git, update, output, prompts, settings, summaries and machines.
+
 import type {
   Active,
   Machine,
@@ -10,6 +11,7 @@ import type {
   UpdateStep,
   Work,
 } from "./bridge";
+import type { CallEnd, Running } from "./calls";
 import type { Git } from "./git";
 
 /** The part of the browser's EventSource this app uses, so a test can stand in for it. */
@@ -83,6 +85,10 @@ export interface Handlers {
   messageSent(sent: { session: string; id: string; delivered: boolean; detail: string }): void;
   /** Another computer started or stopped answering; the whole machine. */
   machine(machine: Machine): void;
+  /** A voice tool call began; polling tools send none. */
+  callStart(running: Running): void;
+  /** A voice tool call ended, however it ended. */
+  callEnd(end: CallEnd): void;
   /** The programmes were renamed, reordered, added or removed; the whole list. */
   programmes(change: { programmes: Programme[] }): void;
   /** The groups under Other that could be a programme changed; the whole list. */
@@ -112,6 +118,8 @@ export function follow(open: (url: string) => EventSourceLike, on: Handlers): ()
   source.addEventListener("hello", (e) => on.hello(parse(e)));
   source.addEventListener("message_sent", (e) => on.messageSent(parse(e)));
   source.addEventListener("machine", (e) => on.machine(parse(e)));
+  source.addEventListener("call_start", (e) => on.callStart(parse(e)));
+  source.addEventListener("call_end", (e) => on.callEnd(parse(e)));
   source.addEventListener("work", (e) => on.work(parse(e))); // not shown
   source.addEventListener("programmes", (e) => on.programmes(parse(e))); // not shown
   source.addEventListener("programme_hints", (e) => on.programmeHints(parse(e))); // not shown

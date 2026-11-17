@@ -1,0 +1,5 @@
+[[rule]]
+name = "a call that begins shows as running, with a timer counting from when it began"
+file = "src/view/calls.ts"
+find = 'el\(\"span\", \"took\", soFar\(r\.at\)\),'
+replace = 'el("span", "took", ""),'

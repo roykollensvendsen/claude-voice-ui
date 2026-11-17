@@ -60,7 +60,7 @@ function lostContact(home: Home): HTMLElement[] {
 function asideScreen(home: Home, act: Actions): HTMLElement | null {
   if (home.open) return detailScreen(home, home.open, act);
   if (home.org) return orgScreen(home.org, home, act);
-  if (home.health) return healthScreen(home.health.data, act);
+  if (home.health) return healthScreen(home.health.data, act, home.calls);
   return null;
 }
 

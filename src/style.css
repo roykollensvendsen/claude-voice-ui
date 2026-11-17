@@ -1174,6 +1174,138 @@ button.open-terminal {
   stroke-width: 1.5;
 }
 
+/* The voice tools' calls: a map of the last days, and the newest calls, live. */
+.calls .map {
+  --days: 14;
+  display: grid;
+  gap: 2px;
+  margin: 0 0 12px;
+  font-variant-numeric: tabular-nums;
+}
+/* Each tool's name has a line of its own, so the fourteen days, the total and "since opened" fit a phone. */
+.calls .row {
+  display: grid;
+  grid-template-columns: repeat(var(--days), minmax(0, 1fr)) 2.4rem 3.2rem;
+  gap: 2px;
+  align-items: center;
+}
+.calls .name {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  font-size: 0.85em;
+}
+.calls .head .name {
+  display: none;
+}
+.calls .head {
+  color: var(--muted);
+  font-size: 0.75em;
+  text-align: center;
+}
+.calls .since-label {
+  display: grid;
+  gap: 2px;
+}
+.calls .reset {
+  font-size: 0.85em;
+  padding: 1px 4px;
+}
+.calls .cell {
+  position: relative;
+  height: 1.7rem;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  font: inherit;
+  font-size: 0.65em;
+  overflow: hidden;
+  color: var(--text);
+  background: var(--card);
+  cursor: pointer;
+}
+.calls .cell[data-level="1"] {
+  background: color-mix(in srgb, var(--focus) 25%, var(--card));
+}
+.calls .cell[data-level="2"] {
+  background: color-mix(in srgb, var(--focus) 45%, var(--card));
+}
+.calls .cell[data-level="3"] {
+  background: color-mix(in srgb, var(--focus) 70%, var(--card));
+}
+.calls .cell[data-level="4"] {
+  background: var(--focus);
+  color: var(--bg);
+}
+.calls .has-errors::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-top: 7px solid var(--red);
+  border-left: 7px solid transparent;
+  border-top-right-radius: 3px;
+}
+.calls .total,
+.calls .since {
+  text-align: right;
+  font-size: 0.85em;
+}
+.calls .since {
+  color: var(--accent);
+}
+.calls .strip {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 3px;
+}
+.calls .call {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: baseline;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--card);
+  border-left: 4px solid var(--green);
+  font-size: 0.9em;
+}
+.calls .call .tool {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.calls .call .took {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.calls .call .caller {
+  grid-column: 2 / -1;
+  font-size: 0.85em;
+}
+.calls .call.running {
+  border-left-color: var(--focus);
+}
+.calls .call.running .how {
+  color: var(--focus);
+}
+.calls .call.failed {
+  border-left-color: var(--red);
+}
+.calls .call.failed .how {
+  color: var(--red);
+}
+.calls .day {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.calls .problem {
+  color: var(--amber);
+}
+
 /* While the stream from the bridge is down, the page says so and shows its sessions as stale. */
 .lost-contact {
   margin: 0 0 10px;
