@@ -57,6 +57,12 @@ export interface DayCalls {
   calls: Call[];
 }
 
+/** Whether a call failed: it went wrong or timed out. One refused or stopped by its caller did not. */
+export function failed(outcome: Outcome): boolean {
+  // RULE: a call refused or cancelled is counted, but not marked as failed
+  return outcome === "error" || outcome === "timeout";
+}
+
 /** The call_end event. */
 export type CallEnd = Pick<Call, "id" | "tool" | "outcome" | "error_class" | "ms" | "ended_at">;
 
@@ -115,6 +121,10 @@ export interface CallLog {
   running: Running[];
   /** Calls ended since the page opened, or since Reset, by tool. */
   since: Map<string, number>;
+  /** The calls the stream has reported ending, so one reported twice counts once. */
+  ended: Set<string>;
+  /** The calls the last totals read already hold, by the newest calls read with them. */
+  counted: Set<string>;
   /** "none" when the bridge keeps no log; "unreadable" when it did not answer. */
   problem: "none" | "unreadable" | null;
   /** The cell tapped, and its calls once read. */
@@ -130,6 +140,8 @@ export function emptyLog(today: string): CallLog {
     recent: [],
     running: [],
     since: new Map(),
+    ended: new Set(),
+    counted: new Set(),
     problem: null,
     day: null,
   };
@@ -169,29 +181,45 @@ export function takeTotals(log: CallLog, totals: CallTotals, setScale: boolean) 
 export function takeRecent(log: CallLog, recent: RecentCalls) {
   log.recent = recent.calls.slice(0, RECENT);
   log.running = recent.running;
+  log.counted = new Set(recent.calls.map((c) => c.id));
 }
 
 export function callStarted(log: CallLog, running: Running) {
   log.running = [running, ...log.running.filter((r) => r.id !== running.id)];
 }
 
-/** A call ended: it leaves the running ones, joins the strip, and counts on its day and since opening. */
-export function callEnded(log: CallLog, end: CallEnd) {
-  const began = log.running.find((r) => r.id === end.id);
-  log.running = log.running.filter((r) => r.id !== end.id);
-  const call: Call = {
+/** A finished call, with where it came from when the page saw it begin. */
+function asCall(end: CallEnd, began: Running | undefined): Call {
+  return {
     source: began?.source ?? "",
     caller: began?.caller ?? null,
     at: began?.at ?? end.ended_at,
     ...end,
   };
+}
+
+/** A call ended: it leaves the running ones, joins the strip, and counts on its day and since opening. */
+export function callEnded(log: CallLog, end: CallEnd) {
+  // RULE: the same call ending twice on the stream counts once
+  if (log.ended.has(end.id)) return;
+  log.ended.add(end.id);
+  const call = asCall(
+    end,
+    log.running.find((r) => r.id === end.id),
+  );
+  log.running = log.running.filter((r) => r.id !== end.id);
   // RULE: the list keeps the twenty newest
   log.recent = [call, ...log.recent.filter((c) => c.id !== end.id)].slice(0, RECENT);
+  log.since.set(end.tool, (log.since.get(end.tool) ?? 0) + 1);
+  // A call the totals were read with is in them already.
+  if (!log.counted.has(end.id)) countOnItsDay(log, end);
+}
+
+function countOnItsDay(log: CallLog, end: CallEnd) {
   const cell = cellOf(log, end.tool, osloDay(end.ended_at));
   cell.calls += 1;
   // RULE: a failed call that lands is marked on its day
-  if (end.outcome !== "ok") cell.errors += 1;
-  log.since.set(end.tool, (log.since.get(end.tool) ?? 0) + 1);
+  if (failed(end.outcome)) cell.errors += 1;
 }
 
 /** Start "since opened" again from now. */

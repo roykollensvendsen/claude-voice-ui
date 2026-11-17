@@ -1,0 +1,5 @@
+[[rule]]
+name = "the same call ending twice on the stream counts once"
+file = "src/calls.ts"
+find = 'if \(log\.ended\.has\(end\.id\)\) return;'
+replace = 'if (false) return;'

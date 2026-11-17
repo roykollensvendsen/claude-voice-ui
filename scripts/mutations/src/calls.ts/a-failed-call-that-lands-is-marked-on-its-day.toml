@@ -1,5 +1,5 @@
 [[rule]]
 name = "a failed call that lands is marked on its day"
 file = "src/calls.ts"
-find = 'if \(end\.outcome !== \"ok\"\) cell\.errors \+= 1;'
+find = 'if \(failed\(end\.outcome\)\) cell\.errors \+= 1;'
 replace = 'if (false) cell.errors += 1;'

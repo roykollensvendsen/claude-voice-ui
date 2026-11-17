@@ -1,0 +1,5 @@
+[[rule]]
+name = "a call refused or cancelled is counted, but not marked as failed"
+file = "src/calls.ts"
+find = 'return outcome === "error" \|\| outcome === "timeout";'
+replace = 'return outcome !== "ok";'

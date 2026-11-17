@@ -1,0 +1,5 @@
+[[rule]]
+name = "when midnight passes in Oslo, the map moves on a day and keeps its colours"
+file = "src/app/calls.ts"
+find = 'if \(osloDay\(Date\.now\(\)\) !== log\.days\.at\(-1\)\) void read\(false\);'
+replace = 'if (false) void read(false);'
