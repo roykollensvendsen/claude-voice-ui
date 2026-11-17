@@ -1,5 +1,6 @@
 // Drawing the screens. Each function builds fresh elements from the state it is given.
 import { t } from "./i18n";
+import { callsSection } from "./view/calls";
 import { detailScreen } from "./view/detail";
 import { button, el } from "./view/dom";
 import { healthScreen } from "./view/health";
@@ -60,7 +61,12 @@ function lostContact(home: Home): HTMLElement[] {
 function asideScreen(home: Home, act: Actions): HTMLElement | null {
   if (home.open) return detailScreen(home, home.open, act);
   if (home.org) return orgScreen(home.org, home, act);
-  if (home.health) return healthScreen(home.health.data, act, home.calls);
+  if (home.health) {
+    const screen = healthScreen(home.health.data, act);
+    // The voice tools' calls sit under the measures, on the same page.
+    screen.append(callsSection(home.calls, act));
+    return screen;
+  }
   return null;
 }
 
