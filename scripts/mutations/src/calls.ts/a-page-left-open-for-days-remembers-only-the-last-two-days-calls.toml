@@ -1,0 +1,5 @@
+[[rule]]
+name = "a page left open for days remembers only the last two days' calls"
+file = "src/calls.ts"
+find = 'for \(const \[id, day\] of log\.ended\) if \(day < yesterday\) log\.ended\.delete\(id\);'
+replace = 'for (const [id, day] of log.ended) if (false) log.ended.delete(id + day);'
