@@ -134,6 +134,13 @@ describe("the voice tools' calls on the code-health page", () => {
     expect(cell("ask_active_session", "2026-11-17")?.classList.contains("has-errors")).toBe(true);
   });
 
+  test.each(["refused", "cancelled"])("a %s call is not counted as failed on its day", async (outcome) => {
+    await openHealth();
+    ended({ tool: "ask_active_session", outcome, error_class: null });
+    expect(cell("ask_active_session", "2026-11-17")?.textContent).toBe("3");
+    expect(cell("ask_active_session", "2026-11-17")?.classList.contains("has-errors")).toBe(false);
+  });
+
   test("the colour scale is set as the page opens and held while it stays open", async () => {
     await openHealth();
     const map = root.querySelector<HTMLElement>(".calls .map");
@@ -343,5 +350,50 @@ describe("when the call log cannot be shown", () => {
     ended({ id: "c9" });
     expect(root.querySelector(".calls")).toBeNull();
     expect(b.callTotals).not.toHaveBeenCalled();
+  });
+});
+
+describe("the counts stay right across midnight and a dropped stream", () => {
+  test("the same call ending twice on the stream counts once", async () => {
+    await openHealth();
+    ended({ id: "same", tool: "ask_active_session" });
+    ended({ id: "same", tool: "ask_active_session" });
+    expect(cell("ask_active_session", "2026-11-17")?.textContent).toBe("3");
+    expect(since("ask_active_session")).toBe("1");
+  });
+
+  test("a call that ends while the counts are read again is counted once, whichever way it falls", async () => {
+    const b = await openHealth();
+    let answer: (totals: CallTotals) => void = () => {};
+    b.callTotals.mockReturnValue(new Promise((done) => (answer = done)));
+    // The bridge's newest calls already include "early", so its totals count it; "late" came after.
+    b.recentCalls.mockResolvedValue({
+      calls: [call({ id: "early", tool: "ask_active_session" })],
+      running: [],
+    });
+    FakeSource.last?.onerror?.(new Event("error"));
+    FakeSource.last?.onopen?.(new Event("open"));
+    ended({ id: "early", tool: "ask_active_session" });
+    ended({ id: "late", tool: "ask_active_session" });
+    answer({
+      ...TOTALS,
+      rows: [
+        { day: "2026-11-17", tool: "ask_active_session", calls: 10, errors: 0, median_ms: 1, p95_ms: 1 },
+      ],
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(cell("ask_active_session", "2026-11-17")?.textContent).toBe("11");
+  });
+
+  test("when midnight passes in Oslo, the map moves on a day and keeps its colours", async () => {
+    // 23.59 in Oslo on 17.11.
+    vi.setSystemTime("2026-11-17T22:59:00Z");
+    const b = await openHealth();
+    const scale = root.querySelector<HTMLElement>(".calls .map")?.dataset.scale;
+    b.callTotals.mockResolvedValue({ ...TOTALS, today: "2026-11-18" });
+    await vi.advanceTimersByTimeAsync(61_000);
+    expect(b.callTotals).toHaveBeenLastCalledWith("2026-11-05", "2026-11-18");
+    expect(root.querySelectorAll('.calls .map .cell[data-day="2026-11-18"]').length).toBeGreaterThan(0);
+    expect(root.querySelector<HTMLElement>(".calls .map")?.dataset.scale).toBe(scale);
   });
 });
