@@ -121,8 +121,8 @@ export interface CallLog {
   running: Running[];
   /** Calls ended since the page opened, or since Reset, by tool. */
   since: Map<string, number>;
-  /** The calls the stream has reported ending, so one reported twice counts once. */
-  ended: Set<string>;
+  /** The calls the stream has reported ending, with their Oslo day, so one reported twice counts once. */
+  ended: Map<string, string>;
   /** The calls the last totals read already hold, by the newest calls read with them. */
   counted: Set<string>;
   /** "none" when the bridge keeps no log; "unreadable" when it did not answer. */
@@ -140,7 +140,7 @@ export function emptyLog(today: string): CallLog {
     recent: [],
     running: [],
     since: new Map(),
-    ended: new Set(),
+    ended: new Map(),
     counted: new Set(),
     problem: null,
     day: null,
@@ -168,6 +168,7 @@ function cellOf(log: CallLog, tool: string, day: string) {
 export function takeTotals(log: CallLog, totals: CallTotals, setScale: boolean) {
   log.days = daysUpTo(totals.today || log.days.at(-1) || "", DAYS);
   log.counts = new Map();
+  forgetOld(log);
   for (const row of totals.rows) {
     const cell = cellOf(log, row.tool, row.day);
     cell.calls += row.calls;
@@ -198,11 +199,18 @@ function asCall(end: CallEnd, began: Running | undefined): Call {
   };
 }
 
+/** Forget the calls seen ending before yesterday, so a page left open for weeks stays small. */
+function forgetOld(log: CallLog) {
+  const yesterday = log.days.at(-2) ?? "";
+  // RULE: a page left open for days remembers only the last two days' calls
+  for (const [id, day] of log.ended) if (day < yesterday) log.ended.delete(id);
+}
+
 /** A call ended: it leaves the running ones, joins the strip, and counts on its day and since opening. */
 export function callEnded(log: CallLog, end: CallEnd) {
   // RULE: the same call ending twice on the stream counts once
   if (log.ended.has(end.id)) return;
-  log.ended.add(end.id);
+  log.ended.set(end.id, osloDay(end.ended_at));
   const call = asCall(
     end,
     log.running.find((r) => r.id === end.id),
