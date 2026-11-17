@@ -260,6 +260,10 @@ async function read<T>(response: Response): Promise<T> {
   return (await response.json()) as T;
 }
 
+/** Read what the bridge has at `path`, never from the browser's cache. */
+const get = async <T>(fetch: Fetch, path: string): Promise<T> =>
+  read<T>(await fetch(`${BASE}${path}`, { cache: "no-store" }));
+
 /** 409: the answer does not fit; 502: the other computer the prompt belongs to did not take it. */
 const NOT_FITTING = new Set([409, 502]);
 
@@ -290,18 +294,10 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
     async signOut() {
       await fetch(`${BASE}/signout`, { method: "POST" });
     },
-    async snapshot() {
-      return read<Snapshot>(await fetch(`${BASE}/sessions`, { cache: "no-store" }));
-    },
-    async doctor() {
-      return read<Doctor>(await fetch(`${BASE}/doctor`, { cache: "no-store" }));
-    },
-    async usage() {
-      return read<Usage>(await fetch(`${BASE}/usage`, { cache: "no-store" }));
-    },
-    async bridgeInfo() {
-      return read<BridgeInfo>(await fetch(`${BASE}/bridge`, { cache: "no-store" }));
-    },
+    snapshot: () => get<Snapshot>(fetch, "/sessions"),
+    doctor: () => get<Doctor>(fetch, "/doctor"),
+    usage: () => get<Usage>(fetch, "/usage"),
+    bridgeInfo: () => get<BridgeInfo>(fetch, "/bridge"),
     async startUpdate() {
       const response = await fetch(`${BASE}/update`, { method: "POST" });
       if (response.status === 409) return { outcome: "running", note: "" };
@@ -309,9 +305,7 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
       const body = await read<{ note?: string }>(response);
       return { outcome: "started", note: body.note ?? "" };
     },
-    async lastUpdate() {
-      return read<UpdateRun>(await fetch(`${BASE}/update`, { cache: "no-store" }));
-    },
+    lastUpdate: () => get<UpdateRun>(fetch, "/update"),
     async output(session, after) {
       const more = after === undefined ? "" : `&after=${after}`;
       return read<Output>(await fetch(`${one(session)}/output?limit=6${more}`, { cache: "no-store" }));
@@ -337,12 +331,8 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
       const refused = (await response.json().catch(() => ({}))) as { error?: string };
       return refused.error ?? String(response.status);
     },
-    async health() {
-      return read<SoftwareHealth>(await fetch(`${BASE}/health/software`, { cache: "no-store" }));
-    },
-    async settings() {
-      return read<Settings>(await fetch(`${BASE}/settings`, { cache: "no-store" }));
-    },
+    health: () => get<SoftwareHealth>(fetch, "/health/software"),
+    settings: () => get<Settings>(fetch, "/settings"),
     async changeSettings(change) {
       return read<Settings>(
         await fetch(`${BASE}/settings`, {
@@ -380,13 +370,9 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
       if (response.status === 404) return null;
       return read<CallTotals>(response);
     },
-    async recentCalls(limit) {
-      return read<RecentCalls>(await fetch(`${BASE}/calls/recent?limit=${limit}`, { cache: "no-store" }));
-    },
-    async dayCalls(day, tool) {
-      const where = `${BASE}/calls/day/${encodeURIComponent(day)}/${encodeURIComponent(tool)}`;
-      return read<DayCalls>(await fetch(where, { cache: "no-store" }));
-    },
+    recentCalls: (limit) => get<RecentCalls>(fetch, `/calls/recent?limit=${limit}`),
+    dayCalls: (day, tool) =>
+      get<DayCalls>(fetch, `/calls/day/${encodeURIComponent(day)}/${encodeURIComponent(tool)}`),
     async whoami() {
       const response = await fetch(`${BASE}/whoami`, { cache: "no-store" });
       if (response.status === 404) return { here: false };
