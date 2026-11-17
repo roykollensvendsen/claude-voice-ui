@@ -24,6 +24,7 @@ import {
   type Whoami,
   type Work,
 } from "../src/bridge";
+import type { CallTotals, DayCalls, RecentCalls } from "../src/calls";
 import type { EventSourceLike } from "../src/live";
 import type { Session } from "../src/states";
 import type { Usage } from "../src/usage";
@@ -185,6 +186,13 @@ export function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignI
     org: vi.fn(async (_programme: string): Promise<OrgProgramme | null> => null),
     whoami: vi.fn(async (): Promise<Whoami> => ({ here: false })),
     focus: vi.fn(async (_id: string): Promise<Focused> => ({ done: "raised" })),
+    callTotals: vi.fn(
+      async (_from: string, _to: string): Promise<CallTotals | null> => ({ today: "", rows: [], unused: [] }),
+    ),
+    recentCalls: vi.fn(async (_limit: number): Promise<RecentCalls> => ({ calls: [], running: [] })),
+    dayCalls: vi.fn(
+      async (day: string, tool: string): Promise<DayCalls> => ({ day, tool, counted_only: false, calls: [] }),
+    ),
   } satisfies Bridge & { snapshotCalls: () => number };
 }
 
