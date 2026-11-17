@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { start } from "../src/app";
-import type { Call, CallTotals, DayCalls, RecentCalls } from "../src/calls";
+import {
+  type Call,
+  type CallTotals,
+  callEnded,
+  type DayCalls,
+  emptyLog,
+  type RecentCalls,
+  takeTotals,
+} from "../src/calls";
 import { setLanguage } from "../src/i18n";
 import { FakeSource, fakeBridge, ONE } from "./fakes";
 
@@ -396,5 +404,19 @@ describe("the counts stay right across midnight and a dropped stream", () => {
     expect(b.callTotals).toHaveBeenLastCalledWith("2026-11-05", "2026-11-18");
     expect(root.querySelectorAll('.calls .map .cell[data-day="2026-11-18"]').length).toBeGreaterThan(0);
     expect(root.querySelector<HTMLElement>(".calls .map")?.dataset.scale).toBe(scale);
+  });
+});
+
+describe("a page left open for days", () => {
+  test("a page left open for days remembers only the last two days' calls", () => {
+    const log = emptyLog("2026-11-17");
+    for (const [id, day] of [
+      ["old", "2026-11-15T10:00:00Z"],
+      ["yesterday", "2026-11-16T10:00:00Z"],
+      ["today", "2026-11-17T08:00:00Z"],
+    ] as const)
+      callEnded(log, { id, tool: "garage_status", outcome: "ok", error_class: null, ms: 1, ended_at: day });
+    takeTotals(log, { today: "2026-11-17", rows: [], unused: [] }, false);
+    expect([...log.ended.keys()].sort()).toEqual(["today", "yesterday"]);
   });
 });
