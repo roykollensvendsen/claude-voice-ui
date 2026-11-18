@@ -24,6 +24,7 @@ export function freshHome(keep: Keep | undefined): Home {
     peeks: [],
     placed: [],
     prompts: [],
+    promptsRead: false,
     settings: null,
     health: null,
     calls: null,

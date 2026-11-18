@@ -283,8 +283,10 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   async function readPrompts() {
     try {
       home.prompts = await deps.bridge.prompts();
+      home.promptsRead = true;
       draw();
     } catch (error) {
+      home.promptsRead = false;
       failed(error);
     }
   }

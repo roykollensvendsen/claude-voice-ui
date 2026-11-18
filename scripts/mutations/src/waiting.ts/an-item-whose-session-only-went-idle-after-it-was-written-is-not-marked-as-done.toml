@@ -1,0 +1,5 @@
+[[rule]]
+name = "an item whose session only went idle after it was written is not marked as done"
+file = "src/waiting.ts"
+find = 'const working = \(s\.state \?\? s\.status\) === "busy";'
+replace = '  const working = true;'

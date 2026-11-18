@@ -70,6 +70,8 @@ export interface Home {
   placed: string[];
   /** Questions and approvals the sessions hold for the phone. */
   prompts: Prompt[];
+  /** Whether the last read of the pending prompts succeeded, so a missing one was really answered. */
+  promptsRead: boolean;
   /** How the bridge starts new sessions; null when it has no such settings. */
   settings: Settings | null;
   /** The page of how both programs' code is doing, when open; `data` is null while it loads. */
