@@ -22,6 +22,8 @@ export interface Work {
     repo: string | null;
     /** The session it is about, by the name on its page. */
     session: string | null;
+    /** The pending prompt it waits on, when the team knows it; absent from an older bridge. */
+    prompt?: string | null;
   }[];
   open_prs: {
     repo: string;
