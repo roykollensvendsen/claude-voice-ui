@@ -214,7 +214,7 @@ describe("the activity view on the code-health page", () => {
 
   test("closing the code-health page stops every activity read", async () => {
     const b = await openHealth();
-    root.querySelector<HTMLButtonElement>(".health .close")?.click();
+    root.querySelector<HTMLButtonElement>(".health .back")?.click();
     await vi.advanceTimersByTimeAsync(0);
     const now = b.activityNow.mock.calls.length;
     const series = b.activitySeries.mock.calls.length;
@@ -232,8 +232,10 @@ describe("the activity view on the code-health page", () => {
   });
 
   test("the activity view is in Norwegian on a Norwegian page", async () => {
+    await openHealth();
     setLanguage("nb");
-    await openHealth(OFF);
-    expect(section()?.querySelector(".switch")?.textContent).toBe("Start opptak");
+    // The live list's next read draws the page again, now in Norwegian.
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(section()?.querySelector(".switch")?.textContent).toBe("Stopp opptak");
   });
 });

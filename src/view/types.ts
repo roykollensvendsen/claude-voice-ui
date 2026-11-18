@@ -1,5 +1,6 @@
 // The state the screens are drawn from, and what a tap on them asks for.
 
+import type { ActivityView, Duration, Window } from "../activity";
 import {
   type Active,
   type BridgeInfo,
@@ -78,6 +79,8 @@ export interface Home {
   health: { data: SoftwareHealth | null } | null;
   /** The voice tools' calls while the code-health page is open; null while they load or it is shut. */
   calls: CallLog | null;
+  /** The activity section while the code-health page is open; null when the bridge cannot record. */
+  activity: ActivityView | null;
   /** What came of an answer: a refusal by prompt id, or a note by session id once it is gone. */
   replies: Record<string, { error?: string; note?: string }>;
   /** Whether the owner has opened the list of what is missing. */
@@ -175,6 +178,16 @@ export interface Actions {
   setTheme(theme: Theme): void;
   setLanguage(language: Language | "system"): void;
   update: UpdateActions;
+  activity: ActivityActions;
+}
+
+/** The activity section: the recording switch, its duration, clearing, and what the charts show. */
+export interface ActivityActions {
+  toggle(): void;
+  setFor(duration: Duration): void;
+  clear(): void;
+  pickScope(scope: string): void;
+  pickWindow(window: Window): void;
 }
 
 export interface UpdateActions {

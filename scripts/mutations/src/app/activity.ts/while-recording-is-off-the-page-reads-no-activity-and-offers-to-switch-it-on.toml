@@ -1,0 +1,5 @@
+[[rule]]
+name = "while recording is off the page reads no activity, and offers to switch it on"
+file = "src/app/activity.ts"
+find = 'if \(!view\?\.state\.on\) return draw\(\);'
+replace = '    if (false) return draw();'

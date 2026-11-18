@@ -43,7 +43,7 @@ _NAMES = """
     cvu expanded view theme lang keep app text home language hide question-text
     up_to_date unavailable wrong unreachable too-many
     waiting_on_owner
-    call_start call_end id outcome error_class ms ended_at refused timeout unreadable en CA numeric digit
+    yellow all call_start call_end id outcome error_class ms ended_at refused timeout unreadable en CA numeric digit
     """
 NAMES = set(_NAMES.split())
 STRING = re.compile(r'"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\]|\\.)*)`')

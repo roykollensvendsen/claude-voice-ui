@@ -1,6 +1,5 @@
 [[rule]]
 name = "a bridge without a call log is told apart from one that did not answer"
 file = "src/bridge.ts"
-find = 'if \(response\.status === 404\) return null;'
-replace = 'if (false) return null;'
-occurrence = 2
+find = 'return response\.status === 404 \? null : read<T>\(response\);'
+replace = '  return read<T>(response);'
