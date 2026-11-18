@@ -25,6 +25,21 @@ export function activityPart({ home, deps, draw, failed }: Context): ActivityPar
     nowTimer = seriesTimer = undefined;
   }
 
+  /** A read failed while recording: ask whether it has stopped itself, and if so offer the switch again. */
+  async function lost(error: unknown) {
+    if (error instanceof SignedOut) return failed(error);
+    const view = home.activity;
+    const state = await deps.bridge.activity().catch(() => null);
+    if (!view || home.activity !== view) return;
+    // RULE: when recording stops itself while the page is open, the section offers the switch again
+    if (state && !state.on) {
+      view.state = state;
+      view.problem = null;
+      stopReading();
+    } else view.problem = t("activity.unreadable");
+    draw();
+  }
+
   /** What went wrong: signed out goes back to sign-in; anything else is shown in the bridge's words. */
   function said(error: unknown) {
     if (error instanceof SignedOut) return failed(error);
@@ -41,7 +56,7 @@ export function activityPart({ home, deps, draw, failed }: Context): ActivityPar
       const series = await deps.bridge.activitySeries(scope, window);
       if (home.activity === view && view.scope === scope && view.window === window) view.series = series;
     } catch (error) {
-      return said(error);
+      return lost(error);
     }
     draw();
   }
@@ -53,7 +68,7 @@ export function activityPart({ home, deps, draw, failed }: Context): ActivityPar
       const now = await deps.bridge.activityNow(view.scope);
       if (home.activity === view) view.now = now;
     } catch (error) {
-      return said(error);
+      return lost(error);
     }
     draw();
   }

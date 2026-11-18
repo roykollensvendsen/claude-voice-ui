@@ -247,7 +247,9 @@ describe("the activity view on the code-health page", () => {
     const b = await openHealth();
     b.activityNow.mockRejectedValue(new Error("the bridge answered 500"));
     await vi.advanceTimersByTimeAsync(10_000);
-    expect(section()?.querySelector(".problem")?.textContent).toBe("The activity could not be read just now.");
+    expect(section()?.querySelector(".problem")?.textContent).toBe(
+      "The activity could not be read just now.",
+    );
   });
 
   test("the activity view is in Norwegian on a Norwegian page", async () => {

@@ -1,0 +1,5 @@
+[[rule]]
+name = "when recording stops itself while the page is open, the section offers the switch again"
+file = "src/app/activity.ts"
+find = 'if \(state && !state\.on\) \{'
+replace = '    if (false) {'

@@ -340,5 +340,6 @@
   "activity.key.write": "editar",
   "activity.key.run": "ejecutar",
   "activity.key.mcp": "MCP",
-  "activity.key.agent": "agente"
+  "activity.key.agent": "agente",
+  "activity.unreadable": "No se pudo leer la actividad ahora mismo."
 }

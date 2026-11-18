@@ -340,5 +340,6 @@
   "activity.key.write": "endre",
   "activity.key.run": "kjøre",
   "activity.key.mcp": "MCP",
-  "activity.key.agent": "agent"
+  "activity.key.agent": "agent",
+  "activity.unreadable": "Aktiviteten kunne ikke leses akkurat nå."
 }
