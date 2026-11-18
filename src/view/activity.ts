@@ -179,6 +179,10 @@ function pickers(view: ActivityView, act: ActivityActions): HTMLElement {
   );
 }
 
+/** The section, or nothing from a bridge that cannot record. */
+export const activityBlock = (view: ActivityView | null, act: ActivityActions): HTMLElement[] =>
+  view ? [activitySection(view, act)] : [];
+
 export function activitySection(view: ActivityView, act: ActivityActions): HTMLElement {
   const box = el("section", "activity", el("h3", undefined, t("activity.title")));
   const { on, until } = view.state;
