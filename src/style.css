@@ -1613,3 +1613,13 @@ a.hint-how {
   color: var(--text);
   font-weight: 600;
 }
+
+/* An item waiting on the owner that may no longer be needed: faded, with the reason. */
+.work-waiting li.session-ended,
+.work-waiting li.maybe-done {
+  opacity: 0.6;
+}
+.work-waiting .why {
+  display: block;
+  font-size: 0.85rem;
+}

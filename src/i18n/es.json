@@ -302,5 +302,7 @@
   "calls.noAnswer": "el dispositivo no respondió",
   "calls.refused": "rechazada",
   "calls.bridgeFailed": "el puente falló",
-  "calls.callerGone": "quien llamó dejó de esperar"
+  "calls.callerGone": "quien llamó dejó de esperar",
+  "work.sessionEnded": "su sesión ha terminado",
+  "work.maybeDone": "puede estar hecho: su sesión ha vuelto a trabajar"
 }

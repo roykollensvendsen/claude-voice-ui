@@ -28,6 +28,7 @@ const LAYERS: Record<string, number> = {
   "changes.ts": 1,
   "update.ts": 1,
   "team.ts": 1,
+  "waiting.ts": 1,
   "bridge.ts": 2,
   "live.ts": 2,
   "view/types.ts": 3,

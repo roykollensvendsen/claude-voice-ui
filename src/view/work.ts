@@ -4,6 +4,7 @@ import { type Key, t } from "../i18n";
 import { ago, button, el, matches } from "../view/dom";
 import { terminalRow } from "../view/terminal";
 import { type Actions, type Home } from "../view/types";
+import { type WaitingMark, waitingMark } from "../waiting";
 
 const CHECKS: Record<Work["open_prs"][number]["checks"], Key> = {
   pass: "work.checksPass",
@@ -11,9 +12,24 @@ const CHECKS: Record<Work["open_prs"][number]["checks"], Key> = {
   pending: "work.checksRunning",
 };
 
+/** Why an item is shown faded. */
+const MARKS: Record<"session-ended" | "maybe-done", Key> = {
+  "session-ended": "work.sessionEnded",
+  "maybe-done": "work.maybeDone",
+};
+
+/** The reason an item is faded, or nothing for one shown as it is. */
+const why = (mark: WaitingMark) =>
+  mark && mark !== "hidden" ? [el("span", "why muted", t(MARKS[mark]))] : [];
+
 /** What the owner has to do, shown first. The team's words are text, never markup. */
 export function waitingBlock(home: Home, act: Actions): HTMLElement[] {
-  const items = home.work?.waiting_on_owner ?? [];
+  const prompts = home.promptsRead ? home.prompts.map((p) => p.id) : null;
+  const items = (home.work?.waiting_on_owner ?? []).flatMap((w) => {
+    const s = w.session ? home.sessions.find((x) => matches(x, w.session ?? "")) : undefined;
+    const mark = waitingMark(w, s, prompts);
+    return mark === "hidden" ? [] : [{ w, s, mark }];
+  });
   if (!items.length) return [];
   return [
     el(
@@ -23,8 +39,7 @@ export function waitingBlock(home: Home, act: Actions): HTMLElement[] {
       el(
         "ul",
         undefined,
-        ...items.map((w) => {
-          const s = w.session ? home.sessions.find((x) => matches(x, w.session ?? "")) : undefined;
+        ...items.map(({ w, s, mark }) => {
           const command = w.command
             ? [
                 el(
@@ -40,15 +55,18 @@ export function waitingBlock(home: Home, act: Actions): HTMLElement[] {
               ]
             : [];
           const to = s ? [button(s.name || s.id, () => act.openPage(s.id), "to-session")] : [];
-          return el(
+          const row = el(
             "li",
-            undefined,
+            mark ?? undefined,
             el("span", "text", w.text),
             el("span", "since muted", ago(w.since)),
+            ...why(mark),
             ...command,
             ...to,
             ...terminalRow(home, s, act),
           );
+          row.dataset.id = w.id;
+          return row;
         }),
       ),
     ),

@@ -1,0 +1,5 @@
+[[rule]]
+name = "an item whose session has ended is shown faded, never hidden"
+file = "src/waiting.ts"
+find = 'if \(!s\) return "session-ended";'
+replace = '  if (!s) return "hidden";'

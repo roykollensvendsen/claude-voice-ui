@@ -302,5 +302,7 @@
   "calls.noAnswer": "enheten svarte ikke",
   "calls.refused": "avvist",
   "calls.bridgeFailed": "broen feilet",
-  "calls.callerGone": "den som spurte, ga opp å vente"
+  "calls.callerGone": "den som spurte, ga opp å vente",
+  "work.sessionEnded": "økten er avsluttet",
+  "work.maybeDone": "kan være gjort: økten har begynt å jobbe igjen"
 }

@@ -1,0 +1,5 @@
+[[rule]]
+name = "a failed read of the pending prompts hides nothing"
+file = "src/waiting.ts"
+find = 'if \(item\.prompt && prompts && !prompts\.includes\(item\.prompt\)\) return "hidden";'
+replace = '  if (item.prompt && !(prompts ?? []).includes(item.prompt)) return "hidden";'

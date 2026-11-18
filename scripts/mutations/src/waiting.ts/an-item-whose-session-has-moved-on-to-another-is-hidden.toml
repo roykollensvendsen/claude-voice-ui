@@ -1,0 +1,5 @@
+[[rule]]
+name = "an item whose session has moved on to another is hidden"
+file = "src/waiting.ts"
+find = 'if \(s\.moved_to\) return "hidden";'
+replace = '  if (false) return "hidden";'
