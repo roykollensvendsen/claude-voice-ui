@@ -231,6 +231,25 @@ describe("the activity view on the code-health page", () => {
     expect(b.activitySeries).toHaveBeenCalledTimes(2);
   });
 
+  test("when recording stops itself while the page is open, the section offers the switch again", async () => {
+    const b = await openHealth();
+    b.activityNow.mockRejectedValue(new Error("the bridge answered 404"));
+    b.activity.mockResolvedValue(OFF);
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(section()?.querySelector(".switch")?.textContent).toBe("Start recording");
+    expect(section()?.querySelector(".problem")).toBeNull();
+    const reads = b.activityNow.mock.calls.length;
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(b.activityNow).toHaveBeenCalledTimes(reads);
+  });
+
+  test("activity that cannot be read while recording says so in the page's words", async () => {
+    const b = await openHealth();
+    b.activityNow.mockRejectedValue(new Error("the bridge answered 500"));
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(section()?.querySelector(".problem")?.textContent).toBe("The activity could not be read just now.");
+  });
+
   test("the activity view is in Norwegian on a Norwegian page", async () => {
     await openHealth();
     setLanguage("nb");
