@@ -94,7 +94,7 @@ export function daysUpTo(last: string, count: number): string[] {
 
 /**
  * Where the colours change, from the cells that have any calls: three cut points, so a cell
- * falls in one of four shades. Set once as the page opens, so the colours never move under Roy.
+ * falls in one of four shades. Set once as the page opens, so the colours never move under the owner.
  */
 export function scaleOf(counts: number[]): number[] {
   const busy = counts.filter((n) => n > 0).sort((a, b) => a - b);
@@ -163,7 +163,7 @@ function cellOf(log: CallLog, tool: string, day: string) {
 
 /**
  * Take in the totals the bridge read. The colour scale is set from them only as the page opens;
- * a later read, after the stream dropped, keeps the scale Roy is already looking at.
+ * a later read, after the stream dropped, keeps the scale the owner is already looking at.
  */
 export function takeTotals(log: CallLog, totals: CallTotals, setScale: boolean) {
   log.days = daysUpTo(totals.today || log.days.at(-1) || "", DAYS);

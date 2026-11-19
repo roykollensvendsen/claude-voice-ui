@@ -158,7 +158,7 @@ real browser. Such a cell may be marked exempt, and only like this:
 [[exempt]]
 measure = "complexity"
 reason = "the event handler is one long switch on the event's kind"
-approved = "Roy, 2026-11-11, in pull request #212"
+approved = "the owner, 2026-11-11, in pull request #212"
 ```
 
 The page then shows that cell as exempt, with the reason, never as green. An
