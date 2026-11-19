@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted by Roy Kollen Svendsen for claude-voice on 2026-10-05 (ADR-CV-005 there); adopted here unchanged on 2026-11-02.
+Accepted by the owner for claude-voice on 2026-10-05 (ADR-CV-005 there); adopted here unchanged on 2026-11-02.
 
 ## Context
 

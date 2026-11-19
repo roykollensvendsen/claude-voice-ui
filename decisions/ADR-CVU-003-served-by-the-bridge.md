@@ -2,8 +2,8 @@
 
 ## Status
 
-Proposed by Claude for Roy Kollen Svendsen, 2026-11-02. Setting it up changes
-the bridge's service settings on Roy's computer, so it waits for his yes.
+Proposed by Claude for the owner, 2026-11-02. Setting it up changes
+the bridge's service settings on the owner's computer, so it waits for their yes.
 
 ## Context
 
@@ -13,7 +13,7 @@ The bridge signs a page in with a cookie that is sent only to the same site
 when `CLAUDE_VOICE_UI_DIR` names it, and answers another origin only when
 `CLAUDE_VOICE_UI_ORIGINS` lists it.
 
-The owner wants the app reachable only inside his tailnet, not over the public
+The owner wants the app reachable only inside their tailnet, not over the public
 Funnel address the voice connector uses. The bridge's maintainers propose a
 second `tailscale serve` port in front of the same bridge, which refuses `/api/`
 and `/ui/` to anything arriving through Funnel.
@@ -40,7 +40,7 @@ the page still calls its own origin.
 
 - The app holds no secret: the cookie is out of reach of its scripts.
 - A new version reaches the phone only when the folder the bridge serves is
-  rebuilt, so deploying is a build on Roy's computer.
+  rebuilt, so deploying is a build on the owner's computer.
 - Worse: the app cannot be tried against the bridge from any other address
   without changing the bridge's settings.
 

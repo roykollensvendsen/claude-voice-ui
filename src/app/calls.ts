@@ -26,7 +26,7 @@ export interface CallsPart {
   /** The code-health page opened: read the calls, set the colour scale, and start the timer. */
   open(): Promise<void>;
   close(): void;
-  /** Read again after the stream dropped, keeping the colour scale Roy is looking at. */
+  /** Read again after the stream dropped, keeping the colour scale the owner is looking at. */
   readAgain(): Promise<void>;
   started(running: Running): void;
   ended(end: CallEnd): void;

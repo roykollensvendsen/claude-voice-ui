@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed by Claude for Roy Kollen Svendsen, 2026-11-02. Roy's yes makes it
+Proposed by Claude for the owner, 2026-11-02. The owner's yes makes it
 Accepted.
 
 ## Context
