@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { start } from "../src/app";
 import type { Prompt, Work } from "../src/bridge";
-import type { Session } from "../src/states";
+import { type Session, spokenName } from "../src/states";
 import { FakeSource, fakeBridge, session } from "./fakes";
 
 const SINCE = "2026-11-18T17:00:00Z";
@@ -133,5 +133,24 @@ describe("what waits on the owner leaves when it is done", () => {
   test("an item about no session and no prompt always stays", async () => {
     await open([item({ session: null })], []);
     expect(ids()).toEqual(["w1"]);
+  });
+
+  test("a failed read of the sessions marks no item as ended", async () => {
+    const b = await open([item({})], [waitingOn()]);
+    b.snapshot.mockRejectedValue(new Error("the bridge answered 500"));
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(b.snapshot).toHaveBeenCalledTimes(2);
+    expect(ids()).toEqual(["w1"]);
+    expect(shown()[0]?.classList.contains("session-ended")).toBe(false);
+  });
+
+  test.each([
+    ["its id", (s: Session) => s.id],
+    ["its spoken name", (s: Session) => spokenName(s)],
+  ])("an item about a session on another machine finds it by %s", async (_how, key) => {
+    const elsewhere = waitingOn({ id: "o1", name: "build", machine: "other-laptop" });
+    await open([item({ session: key(elsewhere) })], [elsewhere]);
+    expect(ids()).toEqual(["w1"]);
+    expect(shown()[0]?.classList.contains("session-ended")).toBe(false);
   });
 });
