@@ -1,0 +1,5 @@
+[[rule]]
+name = "only an https work board address is linked"
+file = "src/view/top.ts"
+find = 'if \(protocol !== "https:"\) return \[\];'
+replace = '  if (false) return [];'

@@ -881,6 +881,17 @@ button {
 .menu .signout {
   justify-self: start;
 }
+/* The work board opens elsewhere, but looks like the menu's other entries. */
+.menu a.open-board {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  text-decoration: none;
+}
 
 /* A link into the Claude app: a quiet button on the page and cards, a small mark in a tile's corner. */
 a.open-claude {

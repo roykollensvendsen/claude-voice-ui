@@ -181,6 +181,7 @@
   "timeline.prMerged": "Pull request merged: {text}",
   "timeline.compact": "Context compacted",
   "menu.health": "How the code is doing",
+  "menu.board": "Work board",
   "health.title": "How the code is doing",
   "health.loading": "Reading the measures…",
   "health.measured": "Measured {ago}",

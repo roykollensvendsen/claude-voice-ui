@@ -181,6 +181,7 @@
   "timeline.prMerged": "Pull request fusionado: {text}",
   "timeline.compact": "Contexto compactado",
   "menu.health": "Cómo va el código",
+  "menu.board": "Tablero de trabajo",
   "health.title": "Cómo va el código",
   "health.loading": "Leyendo las medidas…",
   "health.measured": "Medido {ago}",

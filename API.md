@@ -17,7 +17,9 @@ In short:
   ids carry the machine's name in front and are used as they are.
 - show the team's work: `/api/v1/work` gives what waits on the owner and the
   open pull requests across the repositories, and the `work` event carries
-  the same whenever it changes.
+  the same whenever it changes. Its `board_url`, from the bridge's own
+  settings, is the team's shared work board; the menu links to it only when
+  it is an https address, and shows nothing when it is null or absent.
 - open a session where the owner is: `GET /api/v1/whoami` says whether the
   page was opened on the bridge's own computer, and only then does the page
   offer `POST /api/v1/sessions/{id}/focus` for a session that runs there. The
