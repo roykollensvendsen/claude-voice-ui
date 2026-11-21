@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { type Activity, type ActivityNow, type ActivitySeries, type Point, slots } from "../src/activity";
 import { start } from "../src/app";
+import { Refused } from "../src/bridge";
 import { setLanguage } from "../src/i18n";
 import { FakeSource, fakeBridge, ONE } from "./fakes";
 
@@ -126,6 +127,22 @@ describe("the activity series, bucket by bucket", () => {
     expect(row[21]?.tok_in).toBe(1200);
     expect(row[59]?.busy_s).toBe(0);
   });
+
+  test("a window that ends partway into a bucket keeps that bucket, and no more", () => {
+    const later = (seconds: number) => new Date(Date.parse(NOW) + seconds * 1000).toISOString();
+    expect(slots({ ...SERIES, to: later(24) })).toHaveLength(61);
+    expect(slots({ ...SERIES, to: later(40) })).toHaveLength(61);
+    expect(slots({ ...SERIES, to: NOW })).toHaveLength(60);
+  });
+
+  test("a bucket that recording covered only part of counts as recorded", () => {
+    const half = (minutesAgo: number) => new Date(Date.parse(at(minutesAgo)) + 30_000).toISOString();
+    const row = slots({ ...SERIES, points: [], recording: [{ from: half(40), to: half(10) }] });
+    expect(row[19]).toBeNull();
+    expect(row[20]?.tok_in).toBe(0);
+    expect(row[50]?.tok_in).toBe(0);
+    expect(row[51]).toBeNull();
+  });
 });
 
 describe("the activity view on the code-health page", () => {
@@ -157,7 +174,7 @@ describe("the activity view on the code-health page", () => {
 
   test("a switch the bridge refuses says why in its words", async () => {
     const b = await openHealth(OFF);
-    b.setActivity.mockRejectedValue(new Error("Only the owner can switch recording."));
+    b.setActivity.mockRejectedValue(new Refused("Only the owner can switch recording."));
     section()?.querySelector<HTMLButtonElement>(".switch")?.click();
     await vi.advanceTimersByTimeAsync(0);
     expect(section()?.querySelector(".problem")?.textContent).toBe("Only the owner can switch recording.");
@@ -250,6 +267,56 @@ describe("the activity view on the code-health page", () => {
     expect(section()?.querySelector(".problem")?.textContent).toBe(
       "The activity could not be read just now.",
     );
+  });
+
+  test("a slow answer for a scope no longer chosen never replaces the live list", async () => {
+    const b = await openHealth();
+    let late: (now: ActivityNow) => void = () => {};
+    b.activityNow.mockImplementation((scope: string) =>
+      scope === "org:voice" ? new Promise((resolve) => (late = resolve)) : Promise.resolve(NOW_ANSWER),
+    );
+    await pick("scope", "org:voice");
+    await pick("scope", "session:demo-core");
+    const stale = NOW_ANSWER.sessions.map((s) => ({ ...s, name: "voice-only" }));
+    late({ at: NOW, sessions: stale });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(section()?.querySelector('.now li[data-session="voice-only"]')).toBeNull();
+    expect(section()?.querySelector('.now li[data-session="dreame-mcp-work"]')).not.toBeNull();
+  });
+
+  test("a read that works again takes away the earlier could-not-be-read", async () => {
+    const b = await openHealth();
+    b.activityNow.mockRejectedValueOnce(new Error("the bridge answered 500"));
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(section()?.querySelector(".problem")).not.toBeNull();
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(section()?.querySelector(".problem")).toBeNull();
+  });
+
+  test("when the time recording was switched on for runs out, the section offers the switch again", async () => {
+    const b = await openHealth({ ...ON, until: at(-5) });
+    b.activity.mockResolvedValue(OFF);
+    await vi.advanceTimersByTimeAsync(5 * 60_000 + 1000);
+    expect(section()?.querySelector(".switch")?.textContent).toBe("Start recording");
+    const reads = b.activityNow.mock.calls.length;
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(b.activityNow).toHaveBeenCalledTimes(reads);
+  });
+
+  test("how long a command has run is counted on the bridge's clock, not the phone's", async () => {
+    vi.setSystemTime(Date.parse(NOW) + 30 * 60_000);
+    await openHealth();
+    const row = section()?.querySelector('.now li[data-session="dreame-mcp-work"]');
+    expect(row?.textContent).toContain("pytest 14 min");
+    expect(row?.textContent).not.toContain("44 min");
+  });
+
+  test("a clear the bridge could not be reached for says so in the page's words", async () => {
+    const b = await openHealth();
+    b.clearActivity.mockRejectedValue(new TypeError("Failed to fetch"));
+    section()?.querySelector<HTMLButtonElement>(".clear")?.click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(section()?.querySelector(".problem")?.textContent).toBe("The bridge did not clear it.");
   });
 
   test("the activity view is in Norwegian on a Norwegian page", async () => {
