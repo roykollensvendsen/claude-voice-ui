@@ -128,14 +128,14 @@ describe("the activity series, bucket by bucket", () => {
     expect(row[59]?.busy_s).toBe(0);
   });
 
-  test("a window that ends partway into a bucket keeps that bucket, and no more", () => {
+  test("a window that ends partway into a bucket keeps that bucket", () => {
     const later = (seconds: number) => new Date(Date.parse(NOW) + seconds * 1000).toISOString();
     expect(slots({ ...SERIES, to: later(24) })).toHaveLength(61);
     expect(slots({ ...SERIES, to: later(40) })).toHaveLength(61);
     expect(slots({ ...SERIES, to: NOW })).toHaveLength(60);
   });
 
-  test("a bucket that recording covered only part of counts as recorded", () => {
+  test("a bucket that recording covered only in part counts as recorded", () => {
     const half = (minutesAgo: number) => new Date(Date.parse(at(minutesAgo)) + 30_000).toISOString();
     const row = slots({ ...SERIES, points: [], recording: [{ from: half(40), to: half(10) }] });
     expect(row[19]).toBeNull();
@@ -269,7 +269,7 @@ describe("the activity view on the code-health page", () => {
     );
   });
 
-  test("a slow answer for a scope no longer chosen never replaces the live list", async () => {
+  test("a live list read for a scope no longer chosen is never shown", async () => {
     const b = await openHealth();
     let late: (now: ActivityNow) => void = () => {};
     b.activityNow.mockImplementation((scope: string) =>
@@ -293,7 +293,7 @@ describe("the activity view on the code-health page", () => {
     expect(section()?.querySelector(".problem")).toBeNull();
   });
 
-  test("when the time recording was switched on for runs out, the section offers the switch again", async () => {
+  test("when the time recording was switched on for runs out, the section asks the bridge again", async () => {
     const b = await openHealth({ ...ON, until: at(-5) });
     b.activity.mockResolvedValue(OFF);
     await vi.advanceTimersByTimeAsync(5 * 60_000 + 1000);
@@ -311,7 +311,7 @@ describe("the activity view on the code-health page", () => {
     expect(row?.textContent).not.toContain("44 min");
   });
 
-  test("a clear the bridge could not be reached for says so in the page's words", async () => {
+  test("a switch or clear that failed without the bridge's reason is said in the page's own words", async () => {
     const b = await openHealth();
     b.clearActivity.mockRejectedValue(new TypeError("Failed to fetch"));
     section()?.querySelector<HTMLButtonElement>(".clear")?.click();

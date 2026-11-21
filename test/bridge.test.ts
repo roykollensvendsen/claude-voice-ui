@@ -176,7 +176,7 @@ describe("the voice tools' call log", () => {
 });
 
 describe("switching and clearing the activity recording", () => {
-  test("a refusal with a reason throws the bridge's own sentence, marked as a refusal", async () => {
+  test("only a refusal the bridge gave a reason for is shown in the bridge's words", async () => {
     const fetch = async () => answer(403, { error: "Only the owner can switch recording." });
     const refusal = bridge(fetch).setActivity({ on: false });
     await expect(refusal).rejects.toBeInstanceOf(Refused);
