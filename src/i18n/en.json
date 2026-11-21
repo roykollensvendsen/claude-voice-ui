@@ -334,6 +334,7 @@
   "activity.hours": "{h} h {m} min",
   "activity.child": "longest child process: {program}, {age}",
   "activity.refused": "The bridge did not switch it.",
+  "activity.notCleared": "The bridge did not clear it.",
   "activity.key.in": "in",
   "activity.key.out": "out",
   "activity.key.read": "read",

@@ -1,0 +1,5 @@
+[[rule]]
+name = "only a refusal the bridge gave a reason for is shown in the bridge's words"
+file = "src/bridge.ts"
+find = 'if \(body\.error\) throw new Refused\(body\.error\);'
+replace = '  throw new Refused(body.error ?? "");'

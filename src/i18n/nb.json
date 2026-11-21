@@ -334,6 +334,7 @@
   "activity.hours": "{h} t {m} min",
   "activity.child": "lengst kjørende underprosess: {program}, {age}",
   "activity.refused": "Broen byttet det ikke.",
+  "activity.notCleared": "Broen tømte det ikke.",
   "activity.key.in": "inn",
   "activity.key.out": "ut",
   "activity.key.read": "lese",

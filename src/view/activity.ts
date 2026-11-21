@@ -95,9 +95,9 @@ const CHARTS: { key: string; label: Key; measures: [string, (p: Point, bucket: n
   { key: "cpu", label: "activity.cpu", measures: [["cpu", (p, b) => p.cpu_ms / (b * 10)]] },
 ];
 
-function chart(key: string, label: string, top: string, ...marks: Element[]): HTMLElement {
+function chart(key: string, label: string, top: string, width: number, ...marks: Element[]): HTMLElement {
   const svg = svgNode("svg", {
-    viewBox: `0 0 ${marks.length ? 1 : 1} ${HEIGHT}`,
+    viewBox: `0 0 ${width} ${HEIGHT}`,
     preserveAspectRatio: "none",
   });
   svg.append(...marks);
@@ -135,24 +135,31 @@ function charts(view: ActivityView): HTMLElement[] {
     const bucketed = measures.map(
       ([n, v]) => [n, (p: Point) => v(p, series.bucket_s)] as [string, (p: Point) => number],
     );
-    const box = chart(key, t(label), String(Math.round(max)), ...gaps(row), ...lines(row, bucketed, max));
+    const box = chart(
+      key,
+      t(label),
+      String(Math.round(max)),
+      row.length,
+      ...gaps(row),
+      ...lines(row, bucketed, max),
+    );
     if (measures.length > 1) box.append(legend(measures.map(([n]) => n)));
     return box;
   });
-  shown.push(chart("status", t("activity.status"), "", ...gaps(row), ...statusBand(row)));
+  shown.push(chart("status", t("activity.status"), "", row.length, ...gaps(row), ...statusBand(row)));
   // A window longer than an hour can cross midnight, so its ends carry the day too.
   const when = series.bucket_s > 60 ? dayAndClock : clock;
   shown.push(
     el("p", "axis", el("span", undefined, when(series.from)), el("span", undefined, when(series.to))),
   );
-  for (const box of shown) box.querySelector("svg")?.setAttribute("viewBox", `0 0 ${row.length} ${HEIGHT}`);
   return shown;
 }
 
-function nowRow(s: NowSession): HTMLElement {
+function nowRow(s: NowSession, at: string): HTMLElement {
   const parts = [s.name, t(`activity.${s.status}` as Key)];
   if (s.call) {
-    const running = (Date.now() - Date.parse(s.call.started)) / 1000;
+    // RULE: how long a command has run is counted on the bridge's clock, not the phone's
+    const running = (Date.parse(at) - Date.parse(s.call.started)) / 1000;
     parts.push(`${s.call.program ?? s.call.tool} ${age(running)}`);
   }
   parts.push(`${Math.round(s.cpu_pct)} % CPU`, `${Math.round(s.rss_mb)} MB`);
@@ -199,11 +206,13 @@ export function activitySection(view: ActivityView, act: ActivityActions): HTMLE
       button(t("activity.clear"), act.clear, "clear"),
     );
   }
-  if (view.problem) box.append(el("p", "problem", view.problem));
+  const problem = view.problem ?? (view.unreadable ? t("activity.unreadable") : null);
+  if (problem) box.append(el("p", "problem", problem));
   if (!on) return box;
   if (!view.state.scopes.orgs.length) box.append(el("p", "hint", t("activity.noOrgs")));
   box.append(pickers(view, act));
-  if (view.now) box.append(el("ul", "now", ...view.now.sessions.map(nowRow)));
+  const now = view.now;
+  if (now) box.append(el("ul", "now", ...now.sessions.map((s) => nowRow(s, now.at))));
   box.append(...charts(view));
   return box;
 }

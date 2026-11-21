@@ -205,6 +205,9 @@ export interface Prs {
 export type SignIn = "ok" | "wrong" | "too-many" | "unreachable";
 
 /** The bridge answered 401: the sign-in cookie is missing or has run out. */
+/** The bridge refused, and said why in a sentence to show as it is. */
+export class Refused extends Error {}
+
 export class SignedOut extends Error {
   constructor() {
     super("signed out"); // not shown
@@ -279,11 +282,13 @@ async function getOrNull<T>(fetch: Fetch, path: string): Promise<T | null> {
 const send = (fetch: Fetch, method: "POST" | "PUT", path: string, body: unknown) =>
   fetch(`${BASE}${path}`, { method, headers: JSON_HEADERS, body: JSON.stringify(body) });
 
-/** As `read`, but a refusal throws the bridge's own sentence, to be shown as it is. */
+/** As `read`, but a refusal with a reason throws that sentence, to be shown as it is. */
 async function said<T>(response: Response): Promise<T> {
-  if (response.status === 401 || response.ok) return read<T>(response);
+  if (response.status === 401 || response.ok || response.status >= 500) return read<T>(response);
   const body = (await response.json().catch(() => ({}))) as { error?: string };
-  throw new Error(body.error ?? ""); // empty: the page says it in its own words
+  // RULE: only a refusal the bridge gave a reason for is shown in the bridge's words
+  if (body.error) throw new Refused(body.error);
+  return read<T>(response);
 }
 
 /** Read what the bridge has at `path`, never from the browser's cache. */

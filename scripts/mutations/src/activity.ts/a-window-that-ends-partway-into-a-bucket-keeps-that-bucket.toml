@@ -1,0 +1,5 @@
+[[rule]]
+name = "a window that ends partway into a bucket keeps that bucket"
+file = "src/activity.ts"
+find = 'const count = Math\.ceil\(\(Date\.parse\(series\.to\) - from\) / step\);'
+replace = '  const count = Math.round((Date.parse(series.to) - from) / step);'

@@ -334,6 +334,7 @@
   "activity.hours": "{h} h {m} min",
   "activity.child": "subproceso más largo: {program}, {age}",
   "activity.refused": "El puente no lo cambió.",
+  "activity.notCleared": "El puente no lo borró.",
   "activity.key.in": "entrada",
   "activity.key.out": "salida",
   "activity.key.read": "leer",

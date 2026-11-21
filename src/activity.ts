@@ -76,6 +76,8 @@ export interface ActivityView {
   now: ActivityNow | null;
   /** The bridge's own sentence when it refused a switch or a clear. */
   problem: string | null;
+  /** The last read failed while recording; the next one that works takes it away. */
+  unreadable: boolean;
 }
 
 export const newView = (state: Activity): ActivityView => ({
@@ -86,6 +88,7 @@ export const newView = (state: Activity): ActivityView => ({
   series: null,
   now: null,
   problem: null,
+  unreadable: false,
 });
 
 const empty = (t: string): Point => ({
@@ -109,7 +112,8 @@ const empty = (t: string): Point => ({
 export function slots(series: ActivitySeries): (Point | null)[] {
   const step = series.bucket_s * 1000;
   const from = Date.parse(series.from);
-  const count = Math.round((Date.parse(series.to) - from) / step);
+  // RULE: a window that ends partway into a bucket keeps that bucket
+  const count = Math.ceil((Date.parse(series.to) - from) / step);
   const byBucket = new Map(series.points.map((p) => [Math.floor((Date.parse(p.t) - from) / step), p]));
   const spans = series.recording.map((r) => [Date.parse(r.from), Date.parse(r.to)] as const);
   return Array.from({ length: count }, (_, i) => {
@@ -117,6 +121,7 @@ export function slots(series: ActivitySeries): (Point | null)[] {
     const point = byBucket.get(i);
     if (point) return point;
     // RULE: a bucket outside every recorded span is a gap, never a zero
-    return spans.some(([a, b]) => t >= a && t < b) ? empty(new Date(t).toISOString()) : null;
+    // RULE: a bucket that recording covered only in part counts as recorded
+    return spans.some(([a, b]) => t < b && t + step > a) ? empty(new Date(t).toISOString()) : null;
   });
 }

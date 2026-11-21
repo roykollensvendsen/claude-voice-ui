@@ -1,0 +1,5 @@
+[[rule]]
+name = "when the time recording was switched on for runs out, the section asks the bridge again"
+file = "src/app/activity.ts"
+find = 'if \(view\.state\.until\) \{'
+replace = '    if (false) {'
