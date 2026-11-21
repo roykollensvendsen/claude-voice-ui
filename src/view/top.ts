@@ -29,6 +29,25 @@ export function micJump(home: Home): HTMLElement[] {
   return [jump];
 }
 
+/** A link to the team's work board, opened in a new tab, when the bridge names one. */
+function boardLink(home: Home): HTMLElement[] {
+  const address = home.work?.board_url;
+  if (!address) return [];
+  let protocol = "";
+  try {
+    protocol = new URL(address).protocol;
+  } catch {
+    return [];
+  }
+  // RULE: only an https work board address is linked
+  if (protocol !== "https:") return [];
+  const a = el("a", "open-board", t("menu.board"));
+  a.href = address;
+  a.target = "_blank";
+  a.rel = "noopener";
+  return [a];
+}
+
 /** The top bar's menu: the theme, and signing out. */
 export function menu(home: Home, act: Actions): HTMLElement[] {
   if (!home.menuOpen) return [];
@@ -84,6 +103,7 @@ export function menu(home: Home, act: Actions): HTMLElement[] {
           ]
         : []),
       button(t("menu.health"), act.openHealth, "open-health"),
+      ...boardLink(home),
       button(t("menu.signOut"), act.signOut, "signout"),
     ),
   ];

@@ -35,6 +35,8 @@ export interface Work {
   }[];
   /** Repositories whose pull requests could not be read just now. */
   unreadable?: string[];
+  /** The team's shared work board, from the bridge's settings; null or absent when there is none. */
+  board_url?: string | null;
 }
 
 /** A larger piece of work with sessions of its own, in the order the bridge shows them. */
