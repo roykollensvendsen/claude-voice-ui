@@ -1,4 +1,5 @@
 // The bridge's event API, as this app uses it. The specification is API.md.
+import type { Activity, ActivityNow, ActivitySeries, Duration, Window } from "./activity";
 import type { CallTotals, DayCalls, RecentCalls } from "./calls";
 import type { Git } from "./git";
 import type { Session } from "./states";
@@ -204,6 +205,9 @@ export interface Prs {
 export type SignIn = "ok" | "wrong" | "too-many" | "unreachable";
 
 /** The bridge answered 401: the sign-in cookie is missing or has run out. */
+/** The bridge refused, and said why in a sentence to show as it is. */
+export class Refused extends Error {}
+
 export class SignedOut extends Error {
   constructor() {
     super("signed out"); // not shown
@@ -243,6 +247,13 @@ export interface Bridge {
   callTotals(from: string, to: string): Promise<CallTotals | null>;
   recentCalls(limit: number): Promise<RecentCalls>;
   dayCalls(day: string, tool: string): Promise<DayCalls>;
+  /** Whether the bridge records activity; null from a bridge that cannot. */
+  activity(): Promise<Activity | null>;
+  /** Switch recording on for a while, or off; a refusal throws the bridge's own sentence. */
+  setActivity(change: { on: boolean; for?: Duration }): Promise<Activity>;
+  clearActivity(): Promise<void>;
+  activitySeries(scope: string, window: Window): Promise<ActivitySeries>;
+  activityNow(scope: string): Promise<ActivityNow>;
 }
 
 /** The API is always at /api/v1 on the page's own origin, wherever the page itself is served. */
@@ -258,6 +269,26 @@ async function read<T>(response: Response): Promise<T> {
   if (response.status === 401) throw new SignedOut();
   if (!response.ok) throw new Error(`the bridge answered ${response.status}`); // not shown
   return (await response.json()) as T;
+}
+
+/** As `get`, but null from an older bridge that has nothing at `path`. */
+async function getOrNull<T>(fetch: Fetch, path: string): Promise<T | null> {
+  const response = await fetch(`${BASE}${path}`, { cache: "no-store" });
+  // RULE: a bridge without a call log is told apart from one that did not answer
+  return response.status === 404 ? null : read<T>(response);
+}
+
+/** Send `body` as JSON to `path`. */
+const send = (fetch: Fetch, method: "POST" | "PUT", path: string, body: unknown) =>
+  fetch(`${BASE}${path}`, { method, headers: JSON_HEADERS, body: JSON.stringify(body) });
+
+/** As `read`, but a refusal with a reason throws that sentence, to be shown as it is. */
+async function said<T>(response: Response): Promise<T> {
+  if (response.status === 401 || response.ok || response.status >= 500) return read<T>(response);
+  const body = (await response.json().catch(() => ({}))) as { error?: string };
+  // RULE: only a refusal the bridge gave a reason for is shown in the bridge's words
+  if (body.error) throw new Refused(body.error);
+  return read<T>(response);
 }
 
 /** Read what the bridge has at `path`, never from the browser's cache. */
@@ -291,9 +322,7 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
       if (response.status === 429) return "too-many";
       return "unreachable";
     },
-    async signOut() {
-      await fetch(`${BASE}/signout`, { method: "POST" });
-    },
+    signOut: async () => void (await fetch(`${BASE}/signout`, { method: "POST" })),
     snapshot: () => get<Snapshot>(fetch, "/sessions"),
     doctor: () => get<Doctor>(fetch, "/doctor"),
     usage: () => get<Usage>(fetch, "/usage"),
@@ -310,15 +339,10 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
       const more = after === undefined ? "" : `&after=${after}`;
       return read<Output>(await fetch(`${one(session)}/output?limit=6${more}`, { cache: "no-store" }));
     },
-    async pending(session) {
-      return read<Pending>(await fetch(`${one(session)}/pending`, { cache: "no-store" }));
-    },
-    async prs(session) {
-      return read<Prs>(await fetch(`${one(session)}/prs`, { cache: "no-store" }));
-    },
-    async detail(session) {
-      return read<SessionDetail>(await fetch(`${one(session)}/detail`, { cache: "no-store" }));
-    },
+    pending: async (session) => read<Pending>(await fetch(`${one(session)}/pending`, { cache: "no-store" })),
+    prs: async (session) => read<Prs>(await fetch(`${one(session)}/prs`, { cache: "no-store" })),
+    detail: async (session) =>
+      read<SessionDetail>(await fetch(`${one(session)}/detail`, { cache: "no-store" })),
     async summarize(session, language) {
       const response = await fetch(`${one(session)}/summary`, {
         method: "POST",
@@ -333,15 +357,7 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
     },
     health: () => get<SoftwareHealth>(fetch, "/health/software"),
     settings: () => get<Settings>(fetch, "/settings"),
-    async changeSettings(change) {
-      return read<Settings>(
-        await fetch(`${BASE}/settings`, {
-          method: "PUT",
-          headers: JSON_HEADERS,
-          body: JSON.stringify(change),
-        }),
-      );
-    },
+    changeSettings: async (change) => read<Settings>(await send(fetch, "PUT", "/settings", change)),
     async prompts() {
       return (await read<{ prompts: Prompt[] }>(await fetch(`${BASE}/prompts`, { cache: "no-store" })))
         .prompts;
@@ -359,17 +375,8 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
       }
       return refusedBy(response);
     },
-    async work() {
-      const response = await fetch(`${BASE}/work`, { cache: "no-store" });
-      if (response.status === 404) return null;
-      return read<Work>(response);
-    },
-    async callTotals(from, to) {
-      const response = await fetch(`${BASE}/calls/totals?from=${from}&to=${to}`, { cache: "no-store" });
-      // RULE: a bridge without a call log is told apart from one that did not answer
-      if (response.status === 404) return null;
-      return read<CallTotals>(response);
-    },
+    work: () => getOrNull<Work>(fetch, "/work"),
+    callTotals: (from, to) => getOrNull<CallTotals>(fetch, `/calls/totals?from=${from}&to=${to}`),
     recentCalls: (limit) => get<RecentCalls>(fetch, `/calls/recent?limit=${limit}`),
     dayCalls: (day, tool) =>
       get<DayCalls>(fetch, `/calls/day/${encodeURIComponent(day)}/${encodeURIComponent(tool)}`),
@@ -383,18 +390,15 @@ export function bridge(fetch: Fetch = globalThis.fetch.bind(globalThis)): Bridge
       if ([403, 409, 501].includes(response.status)) return (await response.json()) as Focused;
       return read<Focused>(response);
     },
-    async org(programme) {
-      const response = await fetch(`${BASE}/org/${encodeURIComponent(programme)}`, { cache: "no-store" });
-      return response.status === 404 ? null : read<OrgProgramme>(response);
+    org: (programme) => getOrNull<OrgProgramme>(fetch, `/org/${encodeURIComponent(programme)}`),
+    choose: async (session) => read<Active>(await send(fetch, "PUT", "/active", { session })),
+    activity: () => getOrNull<Activity>(fetch, "/activity"),
+    setActivity: async (change) => said<Activity>(await send(fetch, "POST", "/activity", change)),
+    async clearActivity() {
+      await said<unknown>(await send(fetch, "POST", "/activity/clear", {}));
     },
-    async choose(session) {
-      return read<Active>(
-        await fetch(`${BASE}/active`, {
-          method: "PUT",
-          headers: JSON_HEADERS,
-          body: JSON.stringify({ session }),
-        }),
-      );
-    },
+    activitySeries: (scope, window) =>
+      get<ActivitySeries>(fetch, `/activity/series?scope=${encodeURIComponent(scope)}&window=${window}`),
+    activityNow: (scope) => get<ActivityNow>(fetch, `/activity/now?scope=${encodeURIComponent(scope)}`),
   };
 }

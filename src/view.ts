@@ -1,5 +1,6 @@
 // Drawing the screens. Each function builds fresh elements from the state it is given.
 import { t } from "./i18n";
+import { activityBlock } from "./view/activity";
 import { callsSection } from "./view/calls";
 import { detailScreen } from "./view/detail";
 import { button, el } from "./view/dom";
@@ -65,6 +66,7 @@ function asideScreen(home: Home, act: Actions): HTMLElement | null {
     const screen = healthScreen(home.health.data, act);
     // The voice tools' calls sit under the measures, on the same page.
     screen.append(callsSection(home.calls, act));
+    screen.append(...activityBlock(home.activity, act.activity));
     return screen;
   }
   return null;

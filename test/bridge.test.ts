@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { bridge, SignedOut } from "../src/bridge";
+import { bridge, Refused, SignedOut } from "../src/bridge";
 
 function answer(status: number, body?: unknown): Response {
   return new Response(body === undefined ? null : JSON.stringify(body), {
@@ -172,5 +172,23 @@ describe("the voice tools' call log", () => {
     expect(await bridge(async () => answer(404)).callTotals("a", "b")).toBeNull();
     await expect(bridge(async () => answer(500)).callTotals("a", "b")).rejects.toThrow();
     await expect(bridge(async () => answer(401)).callTotals("a", "b")).rejects.toBeInstanceOf(SignedOut);
+  });
+});
+
+describe("switching and clearing the activity recording", () => {
+  test("only a refusal the bridge gave a reason for is shown in the bridge's words", async () => {
+    const fetch = async () => answer(403, { error: "Only the owner can switch recording." });
+    const refusal = bridge(fetch).setActivity({ on: false });
+    await expect(refusal).rejects.toBeInstanceOf(Refused);
+    await expect(refusal).rejects.toThrow("Only the owner can switch recording.");
+  });
+
+  test.each([
+    ["a server error that is not JSON", async () => new Response("Bad gateway", { status: 502 })],
+    ["a refusal without a reason", async () => answer(400, {})],
+  ])("%s is not passed off as the bridge's sentence", async (_what, fetch) => {
+    const clearing = bridge(fetch).clearActivity();
+    await expect(clearing).rejects.toThrow();
+    await expect(clearing).rejects.not.toBeInstanceOf(Refused);
   });
 });

@@ -1,0 +1,5 @@
+[[rule]]
+name = "a bucket that recording covered only in part counts as recorded"
+file = "src/activity.ts"
+find = 'return spans\.some\(\(\[a, b\]\) => t < b && t \+ step > a\)'
+replace = '    return spans.some(([a, b]) => t >= a && t < b) ? empty(new Date(t).toISOString()) : null;'

@@ -1,5 +1,6 @@
 // Stand-ins for the bridge and its event stream, shared by the app's tests.
 import { vi } from "vitest";
+import type { Activity, ActivityNow, ActivitySeries, Duration, Window } from "../src/activity";
 import {
   type Active,
   type Answered,
@@ -193,6 +194,28 @@ export function fakeBridge(snapshots: (Snapshot | "signed-out")[], signIn: SignI
     dayCalls: vi.fn(
       async (day: string, tool: string): Promise<DayCalls> => ({ day, tool, counted_only: false, calls: [] }),
     ),
+    activity: vi.fn(async (): Promise<Activity | null> => null),
+    setActivity: vi.fn(
+      async (_change: { on: boolean; for?: Duration }): Promise<Activity> => ({
+        on: false,
+        until: null,
+        durations: [],
+        scopes: { orgs: [], sessions: [] },
+      }),
+    ),
+    clearActivity: vi.fn(async (): Promise<void> => undefined),
+    activitySeries: vi.fn(
+      async (scope: string, window: Window): Promise<ActivitySeries> => ({
+        scope,
+        window,
+        bucket_s: 60,
+        from: "",
+        to: "",
+        recording: [],
+        points: [],
+      }),
+    ),
+    activityNow: vi.fn(async (_scope: string): Promise<ActivityNow> => ({ at: "", sessions: [] })),
   } satisfies Bridge & { snapshotCalls: () => number };
 }
 

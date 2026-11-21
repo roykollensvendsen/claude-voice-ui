@@ -1,0 +1,5 @@
+[[rule]]
+name = "closing the code-health page stops every activity read"
+file = "src/app/actions.ts"
+find = '^\s*means\.activity\.close\(\);$'
+replace = '      void 0;'

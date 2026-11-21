@@ -1,0 +1,5 @@
+[[rule]]
+name = "a session stuck in one command is shown red with its program and how long it has run"
+file = "src/view/activity.ts"
+find = 'const row = el\("li", s\.state, parts\.join\(" · "\)\);'
+replace = '  const row = el("li", undefined, parts.join(" · "));'

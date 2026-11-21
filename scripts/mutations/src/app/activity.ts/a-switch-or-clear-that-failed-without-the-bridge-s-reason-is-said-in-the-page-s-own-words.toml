@@ -1,0 +1,5 @@
+[[rule]]
+name = "a switch or clear that failed without the bridge's reason is said in the page's own words"
+file = "src/app/activity.ts"
+find = 'if \(home\.activity\) home\.activity\.problem = error instanceof Refused'
+replace = '    if (home.activity) home.activity.problem = error instanceof Error ? error.message : t(otherwise);'

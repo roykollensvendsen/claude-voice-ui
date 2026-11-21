@@ -1,0 +1,5 @@
+[[rule]]
+name = "how long a command has run is counted on the bridge's clock, not the phone's"
+file = "src/view/activity.ts"
+find = 'const running = \(Date\.parse\(at\) - Date\.parse\(s\.call\.started\)\) / 1000;'
+replace = '    const running = (Date.now() - Date.parse(s.call.started)) / 1000;'

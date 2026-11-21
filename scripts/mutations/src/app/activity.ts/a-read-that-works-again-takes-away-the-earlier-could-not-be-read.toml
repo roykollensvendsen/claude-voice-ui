@@ -1,0 +1,5 @@
+[[rule]]
+name = "a read that works again takes away the earlier could-not-be-read"
+file = "src/app/activity.ts"
+find = 'Object\.assign\(view, \{ now, unreadable: false \}\);'
+replace = '        view.now = now;'

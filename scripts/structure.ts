@@ -23,6 +23,7 @@ const LAYERS: Record<string, number> = {
   "remember.ts": 0,
   "states.ts": 1,
   "calls.ts": 1,
+  "activity.ts": 1,
   "usage.ts": 1,
   "git.ts": 1,
   "changes.ts": 1,
@@ -44,6 +45,7 @@ const LAYERS: Record<string, number> = {
   "view/hints.ts": 4,
   "view/org.ts": 4,
   "view/calls.ts": 4,
+  "view/activity.ts": 4,
   "view.ts": 5,
   "app/context.ts": 6,
   "app/preferences.ts": 6,
@@ -54,6 +56,7 @@ const LAYERS: Record<string, number> = {
   "app/actions.ts": 7,
   "app/sections.ts": 7,
   "app/calls.ts": 7,
+  "app/activity.ts": 7,
   "app.ts": 8,
   "main.ts": 9,
 };

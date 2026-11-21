@@ -28,6 +28,7 @@ export function freshHome(keep: Keep | undefined): Home {
     settings: null,
     health: null,
     calls: null,
+    activity: null,
     replies: {},
     connection: "connecting",
     problem: null,

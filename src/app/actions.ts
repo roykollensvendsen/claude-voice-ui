@@ -5,6 +5,7 @@ import { t } from "../i18n";
 import { recall, remember } from "../remember";
 import { type Session, waitsForOwner } from "../states";
 import { type Actions, hasPrompt, type UpdateActions } from "../view";
+import type { ActivityPart } from "./activity";
 import type { CallsPart } from "./calls";
 import type { Context } from "./context";
 import {
@@ -77,6 +78,7 @@ export interface Means {
   /** The newest build the page has heard of, or "" before it has asked. */
   latestBuild(): string;
   update: UpdateActions;
+  activity: ActivityPart;
   calls: CallsPart;
 }
 
@@ -193,7 +195,7 @@ export function tapActions({ home, deps, keep, draw, failed }: Context, means: M
       home.menuOpen = false;
       home.health = { data: null };
       draw();
-      await Promise.all([readHealth(), means.calls.open()]);
+      await Promise.all([readHealth(), means.calls.open(), means.activity.open()]);
     },
     dismissRestart() {
       home.restarted = null;
@@ -252,6 +254,8 @@ export function tapActions({ home, deps, keep, draw, failed }: Context, means: M
     closeHealth() {
       home.health = null;
       means.calls.close();
+      // RULE: closing the code-health page stops every activity read
+      means.activity.close();
       draw();
     },
     resetSince: () => means.calls.resetSince(),
@@ -313,5 +317,6 @@ export function tapActions({ home, deps, keep, draw, failed }: Context, means: M
       draw();
     },
     update: means.update,
+    activity: means.activity.actions,
   };
 }

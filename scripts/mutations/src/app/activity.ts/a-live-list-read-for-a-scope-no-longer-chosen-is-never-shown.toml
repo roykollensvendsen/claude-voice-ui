@@ -1,0 +1,5 @@
+[[rule]]
+name = "a live list read for a scope no longer chosen is never shown"
+file = "src/app/activity.ts"
+find = 'if \(home\.activity === view && view\.scope === scope\) \{'
+replace = '      if (home.activity === view) {'

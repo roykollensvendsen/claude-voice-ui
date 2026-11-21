@@ -1,6 +1,7 @@
 // The app: signs in, shows the cards, and keeps them current.
 
 import { tapActions } from "./app/actions";
+import { activityPart } from "./app/activity";
 import { callsPart } from "./app/calls";
 import type { Context, Deps } from "./app/context";
 import { freshHome, takeSnapshot } from "./app/home";
@@ -184,6 +185,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
   const page = sessionPage(ctx);
   const update = updating(ctx);
   const calls = callsPart(ctx);
+  const activity = activityPart(ctx);
   const stream = streamHandlers(ctx, page, update, {
     refresh,
     readPrompts,
@@ -205,6 +207,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     latestBuild: () => latestBuild,
     update: update.actions,
     calls,
+    activity,
   });
 
   function toggleDoctor() {
@@ -230,6 +233,7 @@ export function start(root: HTMLElement, deps: Deps): () => void {
     clearInterval(poll);
     stream.stop();
     calls.stop();
+    activity.close();
     clearInterval(doctorTimer);
     clearInterval(usageTimer);
     clearInterval(versionTimer);

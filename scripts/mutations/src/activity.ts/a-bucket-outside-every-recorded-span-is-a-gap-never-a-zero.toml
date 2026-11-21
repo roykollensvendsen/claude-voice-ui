@@ -1,0 +1,5 @@
+[[rule]]
+name = "a bucket outside every recorded span is a gap, never a zero"
+file = "src/activity.ts"
+find = 'return spans\.some\(\(\[a, b\]\) => t < b && t \+ step > a\) \? empty\(new Date\(t\)\.toISOString\(\)\) : null;'
+replace = '    return empty(new Date(t).toISOString());'
